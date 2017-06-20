@@ -2,5 +2,6 @@
 /header.txt
 #Databse
 /guardians.db
-*.pyc
-*.json
+Clan/
+Users/
+Stats/
