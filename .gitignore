@@ -1,2 +1,3 @@
 header.txt #Contains bot token
 guardians.db #Database
+*.pyc
