@@ -2,6 +2,7 @@
 /header.txt
 #Databse
 /guardians.db
+*.pyc
 Clan/
 Users/
 Stats/
