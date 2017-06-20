@@ -3,3 +3,4 @@
 #Databse
 /guardians.db
 *.pyc
+*.json
