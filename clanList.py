@@ -3,7 +3,7 @@ import json
 import sqlite3 as lite
 import sys
 
-HEADERS = {"X-API-KEY":'b8a96202e0a44a80bb7c7e1568b4bf59'}
+HEADERS = {"X-API-KEY":''}
 
 def getUsersInClan():
     userDict = {}
