@@ -28,15 +28,18 @@ def retrieveClanUserJSON():
         pageCounter+=1
 
 def parseClanUserJSON():
-    players = ()
+    players = []
     for filename in os.listdir('./Clan/'):
         if filename.endswith(".json"):
             with open('./Clan/'+filename) as data_file:
                 data = json.load(data_file)
                 for result in data['Response']['results']:
                     name = str(result['user']['displayName'])
-                    players = players,(result['membershipId'],name)
-    return players[1:]
+                    players.append((result['membershipId'],name))
+    for player in players:
+        print player
+    
+    return tuple(players)
 
 def addToDatabase(players):
     con = lite.connect('guardians.db')
