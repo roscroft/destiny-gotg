@@ -3,8 +3,12 @@ import json
 import sqlite3 as lite
 import sys
 
-HEADERS = {"X-API-KEY":''}
 
+def getHeader():
+    with open('header.txt','r') as f:
+        header = f.readline().strip()
+    return {"X-API-KEY":header}
+HEADERS = getHeader()
 def getUsersInClan():
     userDict = {}
     morePages = True
@@ -61,11 +65,11 @@ def getUserData(userDict):
             membershipId = str(characters['userInfo']['membershipId'])
             membershipType = str(characters['userInfo']['membershipType'])
     
-        for character in characters:
-            characterIds.append(['characterId'])
+            for character in characters:
+                characterIds.append(['characterId'])
     
-        userKey = (membershipId, membershipType, displayName)
-        userInfoDict.update({userKey:characterIds})
+            userKey = (membershipId, membershipType, displayName)
+            userInfoDict.update({userKey:characterIds})
     
     return userInfoDict
     #for (indexes, characterIds) in userInfoDict.items():
