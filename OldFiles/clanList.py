@@ -3,12 +3,13 @@ import json
 import sqlite3 as lite
 import sys
 
+HEADERS = getHeader()
 
 def getHeader():
     with open('header.txt','r') as f:
         header = f.readline().strip()
     return {"X-API-KEY":header}
-HEADERS = getHeader()
+
 def getUsersInClan():
     userDict = {}
     morePages = True

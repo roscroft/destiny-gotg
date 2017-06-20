@@ -2,11 +2,7 @@
 
 import json
 import requests
-
-def getHeader():
-    with open('header.txt','r') as f:
-        header = f.readline().strip()
-    return {"X-API-KEY":header}
+from getHeader import getHeader
 
 def retrieveClanUserJSON():
     morePages = True

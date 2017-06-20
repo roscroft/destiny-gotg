@@ -4,11 +4,7 @@ import json
 import requests
 import sqlite3 as lite
 import sys
-
-def getHeader():
-    with open('header.txt','r') as f:
-        header = f.readline().strip()
-    return {"X-API-KEY":header}
+from getHeader import getHeader
 
 def getUsersFromBungieTable():
     con = lite.connect('guardians.db')
@@ -18,10 +14,8 @@ def getUsersFromBungieTable():
         while True:
             row = cur.fetchone()
             if row == None:
-                print "We found a none row..."
                 break
             else:
-                print row[0], row[1]
                 retrieveDestinyUserJSON(row[0],row[1])
 
 def retrieveDestinyUserJSON(bungieID, displayName):
