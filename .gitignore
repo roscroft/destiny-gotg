@@ -1,3 +1,5 @@
-/header.txt #Contains bot token
-/guardians.db #Database
+#Contains bot token
+/header.txt
+#Databse
+/guardians.db
 *.pyc
