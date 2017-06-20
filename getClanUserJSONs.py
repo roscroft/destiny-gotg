@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import json
 import requests
 
@@ -24,5 +26,8 @@ def retrieveClanUserJSON():
         morePages = hasMore
         pageCounter+=1
 
-if __name__ == "__main__":
+def getClanUserJSONs():
     retrieveClanUserJSON()
+
+if __name__ == "__main__":
+    getClanUserJSONs()

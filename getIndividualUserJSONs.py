@@ -1,5 +1,9 @@
+#!/usr/bin/python
+
 import json
 import requests
+import sqlite3 as lite
+import sys
 
 def getHeader():
     with open('header.txt','r') as f:
@@ -10,12 +14,15 @@ def getUsersFromBungieTable():
     con = lite.connect('guardians.db')
     with con:
         cur = con.cursor()
-        cur.execute("SELECT * FROM Bungie")
+        cur.execute("SELECT * FROM Bungie;")
         while True:
             row = cur.fetchone()
             if row == None:
+                print "We found a none row..."
                 break
-            retrieveDestinyUserJSON(row[0],row[1])
+            else:
+                print row[0], row[1]
+                retrieveDestinyUserJSON(row[0],row[1])
 
 def retrieveDestinyUserJSON(bungieID, displayName):
     user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
@@ -31,3 +38,8 @@ def retrieveDestinyUserJSON(bungieID, displayName):
         with open('./Users/'+displayName+'.json','w') as f:
             json.dump(userData, f)
 
+def getIndividualUserJSONs():
+    getUsersFromBungieTable()
+
+if __name__ == "__main__":
+    getIndividualUserJSONs()

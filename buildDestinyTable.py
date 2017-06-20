@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sqlite3 as lite
 import sys
 import os
@@ -22,5 +24,17 @@ def parseUserJSON():
 #        print player
     return tuple(players)
 
+def addToDatabase(players):
+    con = lite.connect('guardians.db')
+    with con:
+        cur = con.cursor()
+        cur.execute("DROP TABLE IF EXISTS Destiny")
+        cur.execute("CREATE TABLE Destiny(Id INT, Type INT)")
+        cur.executemany("INSERT INTO Destiny VALUES(?, ?)", players)
+
+def buildDestinyTable():
+    players = parseUserJSON()
+    addToDatabase(players)
+
 if __name__ == "__main__":
-    parseUserJSON()
+    buildDestinyTable()

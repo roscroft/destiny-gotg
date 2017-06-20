@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sqlite3 as lite
 import sys
 import os
@@ -23,7 +25,10 @@ def addToDatabase(players):
         cur.execute("DROP TABLE IF EXISTS Bungie")
         cur.execute("CREATE TABLE Bungie(Id INT, Name TEXT)")
         cur.executemany("INSERT INTO Bungie VALUES(?, ?)", players)
-            
-if __name__ == "__main__":
+
+def buildBungieTable():
     players = parseClanUserJSON()
     addToDatabase(players)
+
+if __name__ == "__main__":
+    buildBungieTable()
