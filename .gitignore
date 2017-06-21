@@ -1,8 +1,12 @@
-#Contains bot token
+#Contains Bungie API token
 /header.txt
+#Contains Discord bot token
+/botToken.txt
 #Databse
 /guardians.db
+#Compiled Python files
 *.pyc
+#User data directories
 Clan/
 Users/
 Stats/
