@@ -1,7 +1,7 @@
 import json
 
 with open('./Stats/Roscroft.json','r') as f:
-    with open('trackedStats.txt','w') as g:
+    with open('trackedPvPStats.txt','w') as g:
         data = json.load(f)
         path = data['Response']['mergedAllCharacters']['results']['allPvP']['allTime']
         sortedStats = []
