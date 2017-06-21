@@ -2,6 +2,8 @@
 header.txt
 #Contains Discord bot token
 botToken.txt
+#Entire Leaderboard token folder
+./Leaderboard/Tokens
 #Contains Clan ID
 clanId.txt
 #Databse
