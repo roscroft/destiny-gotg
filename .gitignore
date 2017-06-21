@@ -6,7 +6,3 @@ botToken.txt
 guardians.db
 #Compiled Python files
 *.pyc
-#User data directories
-Leaderboard/Clan/
-Leaderboard/Users/
-Leaderboard/Stats/
