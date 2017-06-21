@@ -1,6 +1,8 @@
 import discord
 import asyncio
 import datetime
+import sqlite3 as lite
+import sys
 
 client = discord.Client()
 
@@ -40,9 +42,32 @@ async def on_message(message):
                 await client.send_message(message.channel, line)
     elif message.content.startswith('Say goodbye'):
         await client.send_message(message.channel, 'beep boop')
+    elif message.content.startswith('!sql'):
+        roles = message.author.roles
+        if "@administrator" in [role.name for role in roles]:
+            statement = message.content[5:]
+            output = queryDatabase(statement)
+            await client.send_message(message.channel, output)
+        else:
+            await client.send_message(message.channel, "Unauthorized user!")
+
+def queryDatabase(statement):
+    output = []
+    con = lite.connect("../Leaderboard/guardians.db")
+    
+    cur = con.cursor()
+
+    if statement.startswith("DROP"):
+        return "No way pal"
+    else:
+        cur.execute(statement)
+        rows = cur.fetchall()
+        for row in rows:
+            output.append(row)
+
+    return output[0][0]
 
 with open('botToken.txt','r') as f:
     botToken = f.readline().strip()
-print(botToken)
 
 client.run(botToken)
