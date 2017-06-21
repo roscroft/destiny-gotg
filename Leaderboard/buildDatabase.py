@@ -1,15 +1,26 @@
 #!/usr/bin/python
-
 from getClanUserJSONs import getClanUserJSONs
-from buildBungieTable import buildBungieTable
+from BuildTables.buildBungieTable import buildBungieTable
 from getIndividualUserJSONs import getIndividualUserJSONs
-from buildDestinyTable import buildDestinyTable
+from BuildTables.buildDestinyTable import buildDestinyTable
 from getUserStatsJSONs import getUserStatsJSONs
-from buildPvPTables import buildPvPTables
+from BuildTables.buildPvPTables import buildPvPTables
+from BuildTables.buildPvETables import buildPvETables
 
-getClanUserJSONs()
-buildBungieTable()
-getIndividualUserJSONs()
-buildDestinyTable()
-getUserStatsJSONs()
-buildPvPTables
+#Path to Clan data
+clan = './Clan/'
+#Path to User data
+users = './Users/'
+#Path to Stats data
+stats = './Stats/'
+
+#Path to database
+db = './guardians.db'
+
+#getClanUserJSONs()
+buildBungieTable(clan, db)
+#getIndividualUserJSONs()
+buildDestinyTable(users, db)
+#getUserStatsJSONs()
+buildPvPTables(stats, db)
+buildPvETables(stats, db)
