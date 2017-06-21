@@ -64,8 +64,13 @@ def queryDatabase(statement):
         rows = cur.fetchall()
         for row in rows:
             output.append(row)
-
-    return output[0][0]
+    if len(output)==1:
+        if len(output[0])==1:
+            return output[0][0]
+        else:
+            return output[0]
+    else:
+        return output
 
 with open('botToken.txt','r') as f:
     botToken = f.readline().strip()
