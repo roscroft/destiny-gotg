@@ -1,4 +1,4 @@
 def getHeader():
-    with open('header.txt','r') as f:
+    with open('./Tokens/header.txt','r') as f:
         header = f.readline().strip()
     return {"X-API-KEY":header}

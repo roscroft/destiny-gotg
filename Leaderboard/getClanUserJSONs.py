@@ -8,7 +8,7 @@ def retrieveClanUserJSON():
     morePages = True
     pageCounter = 1
     clanId = ''
-    with open('clanId.txt','r') as f:
+    with open('./Tokens/clanId.txt','r') as f:
         clanId = f.readline().strip()
     while morePages:
         clan_url = "https://bungie.net/Platform/Group/"+clanId+"/Members/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
