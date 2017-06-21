@@ -2,6 +2,8 @@
 header.txt
 #Contains Discord bot token
 botToken.txt
+#Contains Clan ID
+clanId.txt
 #Databse
 guardians.db
 #Compiled Python files

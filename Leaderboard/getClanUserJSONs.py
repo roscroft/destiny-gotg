@@ -7,8 +7,11 @@ from getHeader import getHeader
 def retrieveClanUserJSON():
     morePages = True
     pageCounter = 1
+    clanId = ''
+    with open('clanId.txt','r') as f:
+        clanId = f.readline().strip()
     while morePages:
-        clan_url = "https://bungie.net/Platform/Group//Members/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
+        clan_url = "https://bungie.net/Platform/Group/"+clanId+"/Members/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
         print "Connecting to Bungie: " + clan_url
         print "Fetching page " + str(pageCounter) + " of users."
         res = requests.get(clan_url, headers=getHeader())
