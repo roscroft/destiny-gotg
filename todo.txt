@@ -1,8 +1,7 @@
 Leaderboard/Database
-1. Pull PvE stats into database
-2. Build PvP leaderboard table
-3. Build PvE leaderboard table
-4. Build simple reporting function for leaderboards
+1. Build PvP leaderboard table
+2. Build PvE leaderboard table
+3. Build simple reporting function for leaderboards
 
 HTML/Web
 1. Build function that will take reported leaderboard and wrap it in some nice HTML
