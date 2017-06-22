@@ -1,5 +1,5 @@
 Leaderboard/Database
-1. Pull PvP and PvE stats into database
+1. Pull PvE stats into database
 2. Build PvP leaderboard table
 3. Build PvE leaderboard table
 4. Build simple reporting function for leaderboards
@@ -12,5 +12,4 @@ HTML/Web
 
 Discord
 1. Host Discord bot either from web server or on an Amazon cluster for persistence
-2. Allow Discord bot to pull info directly from database
-3. Allow Discord bot to pull leaderboards from website/server/files, whatever 
+2. Allow Discord bot to pull leaderboards from website/server/files, whatever
