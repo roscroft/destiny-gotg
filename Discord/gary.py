@@ -1,8 +1,9 @@
 import discord
 import asyncio
-import datetime
 import sqlite3 as lite
 import sys
+from singleStatCommands import singleStatCommands
+from timeLeft import timeLeft
 
 client = discord.Client()
 
@@ -15,31 +16,13 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content.startswith('!messages'):
-        counter = 0
-        tmp = await client.send_message(message.channel, 'Calculating messages...')
-        async for log in client.logs_from(message.channel, limit=100):
-            if log.author == message.author:
-                counter += 1
-        await client.edit_message(tmp, 'You have {} messages.'.format(counter))
-    #elif message.content.startswith('!sleep'):
-    #    await asyncio.sleep(5)
-    #    await client.send_message(message.channel, 'Done sleeping')
-    elif message.content.startswith('!timeleft'):
-        beta = datetime.date(2017, 7, 18)
-        release = datetime.date(2017, 9, 6)
-        today = datetime.date.today()
-        diff1 = beta-today
-        diff2 = release-today
-        await client.send_message(message.channel, 'There are '+str(diff1.days)+' days until the beta, and '+str(diff2.days)+' until release!')
+    if message.content.startswith('!timeleft'):
+        output = timeLeft()
+        await client.send_message(message.channel, output)
     elif message.content.startswith('!help'):
-        await client.send_message(message.channel, 'Current commands: !messages, !timeleft, !help.')
+        await client.send_message(message.channel, 'Commands: !timeleft, !stat.')
     elif message.content.startswith('Right Gary?'):
         await client.send_message(message.channel, 'Right.')
-    elif message.content.startswith('!leaderboard'):
-        with open('leaderboard.txt','r') as f:
-            for line in f:
-                await client.send_message(message.channel, line)
     elif message.content.startswith('Say goodbye'):
         await client.send_message(message.channel, 'beep boop')
     elif message.content.startswith('!sql'):
@@ -50,11 +33,16 @@ async def on_message(message):
             await client.send_message(message.channel, output)
         else:
             await client.send_message(message.channel, "Unauthorized user!")
+    elif message.content.startswith('!stat'):
+        req = message.content
+        discordAuthor = message.author
+        destName = registerHandler(discordAuthor)
+        output = singleStatCommands(req, destName)
+        await client.send_message(message.channel, output)
 
 def queryDatabase(statement):
     output = []
-    con = lite.connect("../Leaderboard/guardians.db")
-    
+    con = lite.connect(databasePath)
     cur = con.cursor()
 
     if statement.startswith("DROP"):
@@ -71,6 +59,33 @@ def queryDatabase(statement):
             return output[0]
     else:
         return output
+
+@client.event
+async def registerUser(discordAuthor):
+    #Need to send a DM requesting the PSN name
+    dest = discordAuthor
+    discName = discordAuthor.name
+    await client.send_message(dest, author+", please enter your PSN display name.")
+    destName = await client.wait_for_message(author=message.author)
+
+    con = lite.connect(databasePath)
+    with con:
+        cur = con.cursor()
+            cur.execute("UPDATE Discord SET destName=? WHERE discName=?",(destName, discName))
+
+def registerHandler(discordAuthor):
+    discName = discordAuthor.name
+    con = lite.connect(databasePath)
+    with con:
+        cur = con.cursor()
+        cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)",(author,))
+        if cur.fetchone():
+            cur.execute("SELECT destName FROM Discord WHERE discName=?",(author,))
+            row = cur.fetchone()
+            return row[0]
+        else:
+            destName = registerUser(discordAuthor)
+            return destName
 
 with open('botToken.txt','r') as f:
     botToken = f.readline().strip()
