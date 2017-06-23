@@ -3,7 +3,7 @@ import re
 def validateRequest(request):
     trackedStats = '../Leaderboard/TrackedStats/'
     pveStatPath = trackedStats + 'trackedPvEStats.txt'
-
+    pvpStatPath = trackedStats + 'trackedPvPStats.txt'
     def getValidStats(statPath):
         with open(statPath,'r') as f:
             return "|".join(f.read().split('\n'))[:-1]

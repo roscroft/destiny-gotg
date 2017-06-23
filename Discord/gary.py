@@ -4,6 +4,7 @@ import sqlite3 as lite
 import sys
 from singleStatCommands import singleStatCommands
 from timeLeft import timeLeft
+databasePath = '../Leaderboard/guardians.db'
 
 client = discord.Client()
 
@@ -36,7 +37,7 @@ async def on_message(message):
     elif message.content.startswith('!stat'):
         req = message.content
         discordAuthor = message.author
-        destName = registerHandler(discordAuthor)
+        destName = await registerHandler(discordAuthor)
         output = singleStatCommands(req, destName)
         await client.send_message(message.channel, output)
 
@@ -62,29 +63,48 @@ def queryDatabase(statement):
 
 @client.event
 async def registerUser(discordAuthor):
+
+    def checkIfValidUser(msg):
+        con = lite.connect(databasePath)
+        with con:
+            cur = con.cursor()
+            cur.execute("SELECT EXISTS(SELECT Name From Bungie WHERE Name=?)",(msg.content,))
+            if cur.fetchone()[0]:
+                return True
+            else:
+                return False
+
     #Need to send a DM requesting the PSN name
-    dest = discordAuthor
+    destination = discordAuthor
     discName = discordAuthor.name
-    await client.send_message(dest, author+", please enter your PSN display name.")
-    destName = await client.wait_for_message(author=message.author)
-
+    await client.send_message(destination, discName+", please enter your PSN display name.")
+    nameMsg = await client.wait_for_message(author=discordAuthor,check=checkIfValidUser)
+    destName = nameMsg.content
+    print(destName, discName)
     con = lite.connect(databasePath)
     with con:
         cur = con.cursor()
-            cur.execute("UPDATE Discord SET destName=? WHERE discName=?",(destName, discName))
+        cur.execute("UPDATE Discord SET discName=? WHERE destName=?",(discName, destName))
 
-def registerHandler(discordAuthor):
+    await client.send_message(destination, discName+", you have been successfully registered!")
+    return destName
+
+@client.event
+async def registerHandler(discordAuthor):
     discName = discordAuthor.name
     con = lite.connect(databasePath)
     with con:
         cur = con.cursor()
-        cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)",(author,))
-        if cur.fetchone():
-            cur.execute("SELECT destName FROM Discord WHERE discName=?",(author,))
+        cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)",(discName,))
+        result = cur.fetchone()[0]
+        print(result)
+        #if cur.fetchone()[0]:
+        if result:   
+            cur.execute("SELECT destName FROM Discord WHERE discName=?",(discName,))
             row = cur.fetchone()
             return row[0]
         else:
-            destName = registerUser(discordAuthor)
+            destName = await registerUser(discordAuthor)
             return destName
 
 with open('botToken.txt','r') as f:
