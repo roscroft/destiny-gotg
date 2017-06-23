@@ -34,8 +34,15 @@ def singleStatCommands(request, author):
             cur = con.cursor()
             cur.execute("SELECT " + stat + " FROM " + tableName + " WHERE Name = ?",(author,))
             row = cur.fetchone()
+            if not row:
+                return "Value does not exist."    
             value = row[0]
-            output = author+", your " + tableName[3:] + " " + stat + " are: " + str(value)
+            #output = author+", your " + tableName[3:] + " " + stat + " are: " + str(value)
+            if "pga" in tableName:
+                start = "Average "
+            else:
+                start = "Total "
+            output = start + stat + " for " + author + ": " + str(value)
             return output
 
     output = handleRequest(request, author)
