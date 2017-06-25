@@ -12,3 +12,6 @@ HTML/Web
 Discord
 1. Host Discord bot either from web server or on an Amazon cluster for persistence
 2. Allow Discord bot to pull leaderboards from website/server/files, whatever
+
+Discord Commands
+1. Give "vs" an "all" option
