@@ -38,7 +38,7 @@ async def on_message(message):
         req = message.content
         discordAuthor = message.author
         destName = await registerHandler(discordAuthor)
-        output = singleStatCommands(req, destName)
+        output = statCommand(req, destName)
         await client.send_message(message.channel, output)
 
 def queryDatabase(statement):
