@@ -115,7 +115,8 @@ def statCommand(req, auth):
     reqCode = validateRequest(req)
     
     if reqCode == 0:
-        output = statEmbed([], "Request not valid.")
+        embed = statEmbed([], "Request not valid.")
+        return embed
     (table, stat, users) = handleRequest(req, reqCode)
     
     if "pga" in table:

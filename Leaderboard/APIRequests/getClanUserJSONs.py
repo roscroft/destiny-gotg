@@ -1,9 +1,8 @@
 #!/usr/bin/python
-
 import json
 import requests
 
-def getClanUserJSONs(path, header, clanId)
+def getClanUserJSONs(path, header, clanId):
     def retrieveClanUserJSON():
         morePages = True
         pageCounter = 1
@@ -24,6 +23,8 @@ def getClanUserJSONs(path, header, clanId)
             hasMore = res.json()['Response']['hasMore']
             morePages = hasMore
             pageCounter+=1
+    
+    retrieveClanUserJSON()
 
 if __name__ == "__main__":
     path = '../Clan/'

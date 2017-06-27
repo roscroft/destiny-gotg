@@ -1,7 +1,8 @@
 #!/usr/bin/python
-
-import sqlite3 as lite
 import sys
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
 import os
 import json
 
@@ -25,12 +26,12 @@ def buildDestinyTable(path, databasePath):
         return tuple(players)
 
     def addToDatabase(players):
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("DROP TABLE IF EXISTS Destiny")
-            cur.execute("CREATE TABLE Destiny(Id INT, Type INT)")
-            cur.executemany("INSERT INTO Destiny VALUES(?, ?)", players)
+        table = "Destiny"
+        fields = "(Id INT, Type INT)"
+        db.initializeTable(table, fields)
+        for player in players:
+            request = "INSERT INTO Destiny VALUES(?,?)"
+            db.insert(request,player)
 
     players = parseUserJSON()
     addToDatabase(players)

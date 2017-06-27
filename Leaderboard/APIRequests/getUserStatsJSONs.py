@@ -1,23 +1,18 @@
 #!/usr/bin/python
 #Only grabs PS4 records
-
 import json
 import requests
-import sqlite3 as lite
 import sys
+sys.path.append('../')
+sys.path.append('../../')
+from DatabaseModules import databaseStatements as db
 
-def getUsersStatsJSONs(path, databasePath, header):
+def getUserStatsJSONs(path, databasePath, header):
     def getUsersFromDestinyTable():
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("SELECT Destiny.Type, Destiny.Id, Bungie.Name FROM Destiny INNER JOIN Bungie ON Destiny.Id = Bungie.Id;")
-            while True:
-                row = cur.fetchone()
-                if row == None:
-                    break
-                else:
-                    retrieveUserStatsJSON(row[0], row[1], row[2])
+        request = "SELECT Destiny.Type, Destiny.Id, Bungie.Name FROM Destiny INNER JOIN Bungie ON Destiny.Id = Bungie.Id"
+        users = db.select(request)
+        for user in users:
+            retrieveUserStatsJSON(user[0], user[1], user[2])
 
     def retrieveUserStatsJSON(memType, memId, dispName):
         stats_url = "https://bungie.net/platform/Destiny/Stats/Account/"+str(memType)+"/"+str(memId)
@@ -28,6 +23,8 @@ def getUsersStatsJSONs(path, databasePath, header):
         filename = path+dispName+".json" 
         with open(filename,'w') as f:
             json.dump(statsdata, f)
+    
+    getUsersFromDestinyTable()
 
 if __name__ == "__main__":
     path = '../Stats/'

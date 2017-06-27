@@ -1,9 +1,10 @@
 #!/usr/bin/python
-
-import sqlite3 as lite
-import sys
 import os
 import json
+import sys
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
 
 def buildBungieTable(path, databasePath):
     def parseClanUserJSON():
@@ -18,12 +19,12 @@ def buildBungieTable(path, databasePath):
         return tuple(players)
 
     def addToDatabase(players):
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("DROP TABLE IF EXISTS Bungie")
-            cur.execute("CREATE TABLE Bungie(Id INT, Name TEXT)")
-            cur.executemany("INSERT INTO Bungie VALUES(?, ?)", players)
+        table = "Bungie"
+        fields = "(Id INT, Name TEXT)"
+        db.initializeTable(table, fields)
+        for player in players:
+            request = "INSERT INTO Bungie VALUES(?,?)"
+            db.insert(request, player)
 
     players = parseClanUserJSON()
     addToDatabase(players)
