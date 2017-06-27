@@ -45,16 +45,22 @@ def validateRequest(request):
     pveRegex = "^pve (total|avg) ("+pveStatString+")$"
     pvpVsRegex = "^pvp (total|avg) ("+pvpStatString+") vs (("+nameString1+")|("+nameString2+"))(, (("+nameString1+")|("+nameString2+")))*$"
     pveVsRegex = "^pve (total|avg) ("+pveStatString+") vs (("+nameString1+")|("+nameString2+"))(, (("+nameString1+")|("+nameString2+")))*$"
+    pvpAllRegex = "^pvp (total|avg) ("+pvpStatString+") vs all$"
+    pveAllRegex = "^pve (total|avg) ("+pveStatString+") vs all$"
 
     pvp = re.compile(pvpRegex)
     pve = re.compile(pveRegex)
     pvpVs = re.compile(pvpVsRegex)
     pveVs = re.compile(pveVsRegex)
+    pvpAll = re.compile(pvpAllRegex)
+    pveAll = re.compile(pveAllRegex)
 
     m = pvp.match(request)
     n = pve.match(request)
     o = pvpVs.match(request)
     p = pveVs.match(request)
+    q = pvpAll.match(request)
+    r = pveAll.match(request)
 
     if m:
         return 1
@@ -64,6 +70,10 @@ def validateRequest(request):
         return 3
     elif p:
         return 4
+    elif q:
+        return 5
+    elif r:
+        return 6
     else:
         return 0
 

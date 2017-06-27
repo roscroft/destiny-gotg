@@ -28,13 +28,18 @@ def statCommand(req, auth):
             users = [re.sub(reg,'',i) for i in usersCommas]
             users.append(auth)
             return (tableName, stat, users)
-    
+        elif reqCode == 5 or reqCode == 6:
+            users = getAllDestUsers()
+            return (tableName, stat, users)
+
     def statEmbed(resultList, statTitle):
         if statTitle == "Request not valid.":
             em = discord.Embed(title = "Request not valid.")
         else:
             userList = [i[0] for i in resultList]
             userTitle = ", ".join(userList)
+            if len(userList)==18:
+                userTitle = "Top 18"
             em = discord.Embed(title = statTitle + "for: "+userTitle, colour=0xADD8E6)
             for result in resultList:
                 em.add_field(name=result[0],value=result[1])
@@ -68,6 +73,20 @@ def statCommand(req, auth):
                 else:
                     return ""
 
+    def getAllDestUsers():
+        con = lite.connect(databasePath)
+        with con:
+            cur = con.cursor()
+            cur.execute("SELECT Name FROM Bungie")
+            names = []
+            while True:
+                row = cur.fetchone()
+                if row == None:
+                    break
+                else:
+                    names.append(row[0])
+        return names
+
     def multiStatReq(tableName, stat, users):
         con = lite.connect(databasePath)
         sqlString = "SELECT Name, " + stat + " FROM " + tableName + " WHERE"
@@ -79,7 +98,7 @@ def statCommand(req, auth):
             else:
                 whereString += " Name = '" + destUser + "' OR"
         sqlString += whereString[:-3]
-        sqlString += " ORDER BY " + stat + " DESC"
+        sqlString += " ORDER BY " + stat + " DESC LIMIT 18"
         with con:
             cur = con.cursor()
             cur.execute(sqlString)
@@ -94,6 +113,7 @@ def statCommand(req, auth):
     #Grab request code - 0 is invalid, 1 is pvp, 2 is pve, 3 is pvpVs, 4 is pveVs
     req = " ".join(req.split(" ")[1:])
     reqCode = validateRequest(req)
+    
     if reqCode == 0:
         output = statEmbed([], "Request not valid.")
     (table, stat, users) = handleRequest(req, reqCode)
