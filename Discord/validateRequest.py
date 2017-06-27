@@ -9,17 +9,30 @@ def validateRequest(request):
 
     databasePath = '../Leaderboard/guardians.db'
     con = lite.connect(databasePath)
-    names = []
+    destNames = []
+    discNames = []
+
     with con:
         cur = con.cursor()
-        cur.execute("SELECT Name FROM Bungie")
+        cur.execute("SELECT destName FROM Discord")
         while True:
             row = cur.fetchone()
             if row == None:
                 break
             else:
-                names.append(row[0])
-    nameString = "|".join(names)
+                destNames.append(row[0])
+        
+        cur.execute("SELECT discName FROM Discord")
+        while True:
+            row = cur.fetchone()
+            if row == None:
+                break
+            else:
+                discNames.append(row[0])
+    
+    discNames = [i for i in discNames if i != None]
+    nameString1 = "|".join(destNames)
+    nameString2 = "|".join(discNames)
     
     def getValidStats(statPath):
         with open(statPath,'r') as f:
@@ -30,8 +43,8 @@ def validateRequest(request):
 
     pvpRegex = "^pvp (total|avg) ("+pvpStatString+")$"
     pveRegex = "^pve (total|avg) ("+pveStatString+")$"
-    pvpVsRegex = "^pvp (total|avg) ("+pvpStatString+") vs ("+nameString+")(, ("+nameString+"))*$"
-    pveVsRegex = "^pve (total|avg) ("+pveStatString+") vs ("+nameString+")(, ("+nameString+"))*$"
+    pvpVsRegex = "^pvp (total|avg) ("+pvpStatString+") vs (("+nameString1+")|("+nameString2+"))(, (("+nameString1+")|("+nameString2+")))*$"
+    pveVsRegex = "^pve (total|avg) ("+pveStatString+") vs (("+nameString1+")|("+nameString2+"))(, (("+nameString1+")|("+nameString2+")))*$"
 
     pvp = re.compile(pvpRegex)
     pve = re.compile(pveRegex)

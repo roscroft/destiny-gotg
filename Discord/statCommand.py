@@ -2,6 +2,7 @@ import sqlite3 as lite
 import sys
 from validateRequest import validateRequest
 import re
+import discord
 
 databasePath = '../Leaderboard/guardians.db'
 
@@ -9,54 +10,74 @@ databasePath = '../Leaderboard/guardians.db'
 #Request is read in as a list, always in the following order:
 #[pvp|pve], [total|avg], [stat (aliases discussed below)], ([vs], [user1], [user2], ...)
 
-def statCommand(request, author):
-    def handleRequest(request, author):
+def statCommand(req, auth):
+    def handleRequest(request, reqCode):
         #Removes !stat
-        request = " ".join(request.split(" ")[1:])
-        valid = validateRequest(request)
-        if valid == 0:
-            return "Request not valid."
         request = request.split(" ")
-        
         realm = request[0]
         style = request[1]
         if style == "avg":
             style = "pga"
         tableName = realm+style
         stat = request[2]
-        if valid == 1 or valid == 2:
-            output = singleStatReq(tableName, stat, author)
-        elif valid == 3 or valid == 4:
+        if reqCode == 1 or reqCode == 2:
+            return (tableName, stat, [])
+        elif reqCode == 3 or reqCode == 4:
             usersCommas = request[4:]
             reg = re.compile('\W+')
             users = [re.sub(reg,'',i) for i in usersCommas]
-            users.append(author)
-            output = multiStatReq(tableName, stat, users)
-        return output
+            users.append(auth)
+            return (tableName, stat, users)
+    
+    def statEmbed(resultList, statTitle):
+        if statTitle == "Request not valid.":
+            em = discord.Embed(title = "Request not valid.")
+        else:
+            userList = [i[0] for i in resultList]
+            userTitle = ", ".join(userList)
+            em = discord.Embed(title = statTitle + "for: "+userTitle, colour=0xADD8E6)
+            for result in resultList:
+                em.add_field(name=result[0],value=result[1])
+        return em
 
     def singleStatReq(tableName, stat, author):
         con = lite.connect(databasePath)
         with con:
             cur = con.cursor()
-            cur.execute("SELECT " + stat + " FROM " + tableName + " WHERE Name = ?",(author,))
+            cur.execute("SELECT Name, " + stat + " FROM " + tableName + " WHERE Name = ?",(author,))
             row = cur.fetchone()
-            if not row:
-                return "Value does not exist."    
-            value = row[0]
+            return [row]
             #output = author+", your " + tableName[3:] + " " + stat + " are: " + str(value)
-            if "pga" in tableName:
-                start = "Average "
+            #output = statTitle + " for " + author + ": " + str(value)
+            #return output
+
+    def getDestUser(user):
+        con = lite.connect(databasePath)
+        with con:
+            cur = con.cursor()
+            cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?)",(user,))
+            row = cur.fetchone()
+            if row[0] != 0:
+                cur.execute("SELECT destName FROM Discord WHERE discName = ?",(user,))
+                return cur.fetchone()[0]
             else:
-                start = "Total "
-            output = start + stat + " for " + author + ": " + str(value)
-            return output
+                cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?)",(user,))
+                row = cur.fetchone()
+                if row[0] != 0:
+                    return user
+                else:
+                    return ""
 
     def multiStatReq(tableName, stat, users):
         con = lite.connect(databasePath)
         sqlString = "SELECT Name, " + stat + " FROM " + tableName + " WHERE"
         whereString = ""
         for user in users:
-            whereString += " Name = '" + user + "' OR"
+            destUser = getDestUser(user)
+            if destUser == "":
+                continue
+            else:
+                whereString += " Name = '" + destUser + "' OR"
         sqlString += whereString[:-3]
         sqlString += " ORDER BY " + stat + " DESC"
         with con:
@@ -70,6 +91,22 @@ def statCommand(request, author):
                 else:
                     output.append(row)
         return output
+    #Grab request code - 0 is invalid, 1 is pvp, 2 is pve, 3 is pvpVs, 4 is pveVs
+    req = " ".join(req.split(" ")[1:])
+    reqCode = validateRequest(req)
+    if reqCode == 0:
+        output = statEmbed([], "Request not valid.")
+    (table, stat, users) = handleRequest(req, reqCode)
+    
+    if "pga" in table:
+        start = "Average"
+    else:
+        start = "Total"
+    statTitle = start + " " + stat + " "
+    if users == []:
+        output = singleStatReq(table, stat, auth)
+    else:
+        output = multiStatReq(table, stat, users)
+    embed = statEmbed(output, statTitle) 
+    return embed
 
-    output = handleRequest(request, author)
-    return output

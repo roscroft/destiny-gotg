@@ -2,7 +2,7 @@ import discord
 import asyncio
 import sqlite3 as lite
 import sys
-from singleStatCommands import singleStatCommands
+from statCommand import statCommand
 from timeLeft import timeLeft
 databasePath = '../Leaderboard/guardians.db'
 
@@ -35,12 +35,12 @@ async def on_message(message):
         else:
             await client.send_message(message.channel, "Unauthorized user!")
     elif message.content.startswith('!stat'):
-        req = message.content
         discordAuthor = message.author
         destName = await registerHandler(discordAuthor)
+        req = message.content
         output = statCommand(req, destName)
-        await client.send_message(message.channel, output)
-
+        await client.send_message(message.channel, embed=output)
+        
 def queryDatabase(statement):
     output = []
     con = lite.connect(databasePath)
@@ -97,7 +97,6 @@ async def registerHandler(discordAuthor):
         cur = con.cursor()
         cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)",(discName,))
         result = cur.fetchone()[0]
-        print(result)
         #if cur.fetchone()[0]:
         if result:   
             cur.execute("SELECT destName FROM Discord WHERE discName=?",(discName,))
@@ -106,6 +105,7 @@ async def registerHandler(discordAuthor):
         else:
             destName = await registerUser(discordAuthor)
             return destName
+
 
 with open('botToken.txt','r') as f:
     botToken = f.readline().strip()
