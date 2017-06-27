@@ -1,8 +1,10 @@
-import sqlite3 as lite
-import sys
 from validateRequest import validateRequest
 import re
 import discord
+import sys
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
 
 databasePath = '../Leaderboard/guardians.db'
 
@@ -46,49 +48,63 @@ def statCommand(req, auth):
         return em
 
     def singleStatReq(tableName, stat, author):
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("SELECT Name, " + stat + " FROM " + tableName + " WHERE Name = ?",(author,))
-            row = cur.fetchone()
-            return [row]
-            #output = author+", your " + tableName[3:] + " " + stat + " are: " + str(value)
-            #output = statTitle + " for " + author + ": " + str(value)
-            #return output
+        statRequest = "SELECT Name, " + stat + " FROM " + tableName + " WHERE Name = ?"
+        params = (author,)
+        output = db.select(statRequest, params)
+        return [output]
 
     def getDestUser(user):
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?)",(user,))
-            row = cur.fetchone()
-            if row[0] != 0:
-                cur.execute("SELECT destName FROM Discord WHERE discName = ?",(user,))
-                return cur.fetchone()[0]
+        destRequest = "SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?"
+        params = (user,)
+        output = db.select(destRequest, params)
+        
+        if output[0] != 0:
+            destRequest = "SELECT destName FROM Discord WHERE discName = ?"
+            output = db.select(destRequest, params)
+            return output
+        else:
+            destRequest = "SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?"
+            output = db.select(destRequest, params)
+            if output[0] != 0:
+                return user
             else:
-                cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?)",(user,))
-                row = cur.fetchone()
-                if row[0] != 0:
-                    return user
-                else:
-                    return ""
+                return "" 
+        
+        
+        #con = lite.connect(databasePath)
+        #with con:
+        #    cur = con.cursor()
+        #    cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?)",(user,))
+        #    row = cur.fetchone()
+        #    if row[0] != 0:
+        #        cur.execute("SELECT destName FROM Discord WHERE discName = ?",(user,))
+        #        return cur.fetchone()[0]
+        #    else:
+        #        cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?)",(user,))
+        #        row = cur.fetchone()
+        #        if row[0] != 0:
+        #            return user
+       #         else:
+       #             return ""
 
     def getAllDestUsers():
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("SELECT Name FROM Bungie")
-            names = []
-            while True:
-                row = cur.fetchone()
-                if row == None:
-                    break
-                else:
-                    names.append(row[0])
+        userRequest = "SELECT Name FROM Bungie"
+        names = db.select(userRequest)
         return names
+        #con = lite.connect(databasePath)
+        #with con:
+           # cur = con.cursor()
+           # cur.execute("SELECT Name FROM Bungie")
+           # names = []
+           # while True:
+           #     row = cur.fetchone()
+           #     if row == None:
+           #         break
+           #     else:
+           #         names.append(row[0])
+        #return names
 
     def multiStatReq(tableName, stat, users):
-        con = lite.connect(databasePath)
         sqlString = "SELECT Name, " + stat + " FROM " + tableName + " WHERE"
         whereString = ""
         for user in users:
@@ -99,17 +115,23 @@ def statCommand(req, auth):
                 whereString += " Name = '" + destUser + "' OR"
         sqlString += whereString[:-3]
         sqlString += " ORDER BY " + stat + " DESC LIMIT 18"
-        with con:
-            cur = con.cursor()
-            cur.execute(sqlString)
-            output = []
-            while True:
-                row = cur.fetchone()
-                if row == None:
-                    break
-                else:
-                    output.append(row)
+        
+        output = db.select(sqlString)
         return output
+
+
+       # con = lite.connect(databasePath)
+       # with con:
+       #     cur = con.cursor()
+       #     cur.execute(sqlString)
+       #     output = []
+       #     while True:
+       #         row = cur.fetchone()
+       #         if row == None:
+       #             break
+       #         else:
+       #             output.append(row)
+       # return output
     #Grab request code - 0 is invalid, 1 is pvp, 2 is pve, 3 is pvpVs, 4 is pveVs
     req = " ".join(req.split(" ")[1:])
     reqCode = validateRequest(req)

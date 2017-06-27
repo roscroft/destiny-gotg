@@ -1,6 +1,10 @@
 import re
 import sqlite3 as lite
 import sys
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
+import sys
 
 def validateRequest(request):
     trackedStats = '../Leaderboard/TrackedStats/'
@@ -12,28 +16,18 @@ def validateRequest(request):
     destNames = []
     discNames = []
 
-    with con:
-        cur = con.cursor()
-        cur.execute("SELECT destName FROM Discord")
-        while True:
-            row = cur.fetchone()
-            if row == None:
-                break
-            else:
-                destNames.append(row[0])
-        
-        cur.execute("SELECT discName FROM Discord")
-        while True:
-            row = cur.fetchone()
-            if row == None:
-                break
-            else:
-                discNames.append(row[0])
+    req = "SELECT destName FROM Discord"
+    destNames2 = db.select(req)
+    #This is a list of tuples, so we want to extract the first element from each
+    destNames2 = [i[0] for i in destNames2]
+
+    req = "SELECT discName FROM Discord"
+    discNames2 = db.select(req)
+    discNames2 = [i[0] for i in discNames2]
     
-    discNames = [i for i in discNames if i != None]
-    nameString1 = "|".join(destNames)
-    nameString2 = "|".join(discNames)
-    
+    nameString1 = "|".join(destNames2)
+    nameString2 = "|".join(discNames2)
+
     def getValidStats(statPath):
         with open(statPath,'r') as f:
             return "|".join(f.read().split('\n'))[:-1]

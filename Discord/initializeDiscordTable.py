@@ -1,23 +1,19 @@
 import sqlite3 as lite
 import sys
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
 
 databasePath = '../Leaderboard/guardians.db'
 
-con = lite.connect(databasePath)
-with con:
-    cur = con.cursor()
-    cur.execute("DROP TABLE IF EXISTS Discord")
-    cur.execute("CREATE TABLE Discord(discName TEXT, destName TEXT)")
+table = "Discord"
+fields = "(discName TEXT, destName TEXT)"
+db.initialize(table, fields)
 
-    cur.execute("SELECT Name FROM Bungie")
-    nameList = []
-    while True:
-        row = cur.fetchone()
+request = "SELECT Name FROM Bungie"
+nameList = db.select(request)
 
-        if row == None:
-            break
-
-        else:
-            nameList.append(row[0])
-    for name in nameList:
-        cur.execute("INSERT INTO Discord VALUES(?, ?)", (None, name))
+for name in nameList:
+    request = "INSERT INTO Discord VALUES(?, ?)"
+    toInsert = (None, name)
+    db.insert(request, toInsert)

@@ -4,13 +4,13 @@ import sys
 databasePath = '../Leaderboard/guardians.db'
 
 def select(request, params=()):
-    singleStatement(request, params, True)
+    return singleStatement(request, params, True)
 
 def update(request, params=()):
-    singleStatement(request, params)
+    return singleStatement(request, params)
 
 def insert(request, params=()):
-    singleStatement(request, params)
+    return singleStatement(request, params)
 
 def singleStatement(request, params, outputBool=False):
     def onlyContains(row, value):
@@ -30,6 +30,7 @@ def singleStatement(request, params, outputBool=False):
                     continue
                 else:
                     output.append(row)
+    
     return output
 
 def initializeTable(table, fields):
