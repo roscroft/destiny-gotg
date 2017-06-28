@@ -6,8 +6,6 @@ sys.path.append('../../')
 sys.path.append('../')
 import DatabaseModules.databaseStatements as db
 
-databasePath = '../Leaderboard/guardians.db'
-
 #Manages single user stat requests
 #Request is read in as a list, always in the following order:
 #[pvp|pve], [total|avg], [stat (aliases discussed below)], ([vs], [user1], [user2], ...)
@@ -54,55 +52,26 @@ def statCommand(req, auth):
         return [output]
 
     def getDestUser(user):
-        destRequest = "SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?"
+        destRequest = "SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?)"
         params = (user,)
         output = db.select(destRequest, params)
-        
-        if output[0] != 0:
+        if output[0][0] == 1:
             destRequest = "SELECT destName FROM Discord WHERE discName = ?"
             output = db.select(destRequest, params)
-            return output
+            return output[0][0]
         else:
-            destRequest = "SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?"
+            destRequest = "SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?)"
             output = db.select(destRequest, params)
-            if output[0] != 0:
+            if output[0][0] == 1:
                 return user
             else:
                 return "" 
-        
-        
-        #con = lite.connect(databasePath)
-        #with con:
-        #    cur = con.cursor()
-        #    cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName = ?)",(user,))
-        #    row = cur.fetchone()
-        #    if row[0] != 0:
-        #        cur.execute("SELECT destName FROM Discord WHERE discName = ?",(user,))
-        #        return cur.fetchone()[0]
-        #    else:
-        #        cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE destName = ?)",(user,))
-        #        row = cur.fetchone()
-        #        if row[0] != 0:
-        #            return user
-       #         else:
-       #             return ""
 
     def getAllDestUsers():
         userRequest = "SELECT Name FROM Bungie"
         names = db.select(userRequest)
-        return names
-        #con = lite.connect(databasePath)
-        #with con:
-           # cur = con.cursor()
-           # cur.execute("SELECT Name FROM Bungie")
-           # names = []
-           # while True:
-           #     row = cur.fetchone()
-           #     if row == None:
-           #         break
-           #     else:
-           #         names.append(row[0])
-        #return names
+        nameList = [i[0] for i in names]
+        return nameList
 
     def multiStatReq(tableName, stat, users):
         sqlString = "SELECT Name, " + stat + " FROM " + tableName + " WHERE"
@@ -118,21 +87,7 @@ def statCommand(req, auth):
         
         output = db.select(sqlString)
         return output
-
-
-       # con = lite.connect(databasePath)
-       # with con:
-       #     cur = con.cursor()
-       #     cur.execute(sqlString)
-       #     output = []
-       #     while True:
-       #         row = cur.fetchone()
-       #         if row == None:
-       #             break
-       #         else:
-       #             output.append(row)
-       # return output
-    #Grab request code - 0 is invalid, 1 is pvp, 2 is pve, 3 is pvpVs, 4 is pveVs
+    
     req = " ".join(req.split(" ")[1:])
     reqCode = validateRequest(req)
     
@@ -140,16 +95,14 @@ def statCommand(req, auth):
         embed = statEmbed([], "Request not valid.")
         return embed
     (table, stat, users) = handleRequest(req, reqCode)
-    
     if "pga" in table:
         start = "Average"
     else:
         start = "Total"
     statTitle = start + " " + stat + " "
     if users == []:
-        output = singleStatReq(table, stat, auth)
+        output = singleStatReq(table, stat, auth)[0]
     else:
         output = multiStatReq(table, stat, users)
     embed = statEmbed(output, statTitle) 
     return embed
-
