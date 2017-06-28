@@ -4,7 +4,11 @@ import sqlite3 as lite
 import sys
 from statCommand import statCommand
 from timeLeft import timeLeft
-databasePath = '../Leaderboard/guardians.db'
+import sys
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
+import re
 
 client = discord.Client()
 
@@ -42,17 +46,8 @@ async def on_message(message):
         await client.send_message(message.channel, embed=output)
         
 def queryDatabase(statement):
-    output = []
-    con = lite.connect(databasePath)
-    cur = con.cursor()
-
-    if statement.startswith("DROP"):
-        return "No way pal"
-    else:
-        cur.execute(statement)
-        rows = cur.fetchall()
-        for row in rows:
-            output.append(row)
+    request = statement
+    output = db.select(request)
     if len(output)==1:
         if len(output[0])==1:
             return output[0][0]
@@ -65,14 +60,10 @@ def queryDatabase(statement):
 async def registerUser(discordAuthor):
 
     def checkIfValidUser(msg):
-        con = lite.connect(databasePath)
-        with con:
-            cur = con.cursor()
-            cur.execute("SELECT EXISTS(SELECT Name From Bungie WHERE Name=?)",(msg.content,))
-            if cur.fetchone()[0]:
-                return True
-            else:
-                return False
+        request = "SELECT EXISTS(SELECT Name FROM Bungie WHERE Name=?)"
+        params = (msg.content,)
+        output = db.select(request, params)
+        return output[0][0]
 
     #Need to send a DM requesting the PSN name
     destination = discordAuthor
@@ -81,31 +72,26 @@ async def registerUser(discordAuthor):
     nameMsg = await client.wait_for_message(author=discordAuthor,check=checkIfValidUser)
     destName = nameMsg.content
     print(destName, discName)
-    con = lite.connect(databasePath)
-    with con:
-        cur = con.cursor()
-        cur.execute("UPDATE Discord SET discName=? WHERE destName=?",(discName, destName))
-
+    request = "UPDATE Discord SET discName=? WHERE destName=?"
+    params = (discName, destName)
+    db.update(request, params)
+    
     await client.send_message(destination, discName+", you have been successfully registered!")
     return destName
 
 @client.event
 async def registerHandler(discordAuthor):
     discName = discordAuthor.name
-    con = lite.connect(databasePath)
-    with con:
-        cur = con.cursor()
-        cur.execute("SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)",(discName,))
-        result = cur.fetchone()[0]
-        #if cur.fetchone()[0]:
-        if result:   
-            cur.execute("SELECT destName FROM Discord WHERE discName=?",(discName,))
-            row = cur.fetchone()
-            return row[0]
-        else:
-            destName = await registerUser(discordAuthor)
-            return destName
-
+    request = "SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)"
+    params = (discName,)
+    output = db.select(request, params)
+    if output[0][0]:
+        request = "SELECT destName FROM Discord WHERE discName=?"
+        output = db.select(request, params)
+        return output[0][0]
+    else:
+        destNamea = await registerUser(discordAuthor)
+        return destName
 
 with open('botToken.txt','r') as f:
     botToken = f.readline().strip()
