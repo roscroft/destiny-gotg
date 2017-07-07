@@ -8,12 +8,12 @@ databasePath = '../Leaderboard/guardians.db'
 
 table = "Discord"
 fields = "(discName TEXT, destName TEXT)"
-db.initialize(table, fields)
+db.initializeTable(table, fields)
 
 request = "SELECT Name FROM Bungie"
 nameList = db.select(request)
 
 for name in nameList:
     request = "INSERT INTO Discord VALUES(?, ?)"
-    toInsert = (None, name)
+    toInsert = (None, name[0])
     db.insert(request, toInsert)

@@ -90,7 +90,7 @@ async def registerHandler(discordAuthor):
         output = db.select(request, params)
         return output[0][0]
     else:
-        destNamea = await registerUser(discordAuthor)
+        destName = await registerUser(discordAuthor)
         return destName
 
 with open('botToken.txt','r') as f:
