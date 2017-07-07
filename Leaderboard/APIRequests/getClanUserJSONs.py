@@ -16,9 +16,7 @@ def getClanUserJSONs(path, header, clanId):
             clan_url = "https://bungie.net/Platform/Group/"+clanId+"/Members/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
             print "Connecting to Bungie: " + clan_url
             print "Fetching page " + str(pageCounter) + " of users."
-            print header
             res = requests.get(clan_url, headers=header)
-            print "Gets here"
             data = res.json()
             error_stat = data['ErrorStatus']
             print "Error Stats: " + error_stat

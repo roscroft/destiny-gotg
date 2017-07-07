@@ -5,6 +5,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../../')
 import DatabaseModules.databaseStatements as db
+import APIRequests.jsonRequester as jr
 
 def getIndividualUserJSONs(path, databasePath, header):
     def getUsersFromBungieTable():
@@ -15,17 +16,9 @@ def getIndividualUserJSONs(path, databasePath, header):
 
     def retrieveDestinyUserJSON(bungieID, displayName):
         user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
-        print "Connecting to Bungie: " + user_url
-        print "Fetching user data for " + displayName
-        userRequest = requests.get(user_url, headers=header)
-        userData = userRequest.json()
-        error_stat = userData['ErrorStatus']
-        if error_stat != "Success":
-            print "Can't fetch user data for " + displayName
-            print "Error Status: " + error_stat
-        else:
-            with open(path+displayName+'.json','w') as f:
-                json.dump(userData, f)
+        message = "Fetching user data for: "+displayName
+        dumpFileName = path+displayName+'.json'
+        jr.singleJSONRequest(user_url, header, dumpFileName, message)
     
     getUsersFromBungieTable()
 
