@@ -13,11 +13,11 @@ def jsonRequest(url, header, dumpFileName, multi=False):
     hasMore = True
     while hasMore:
         print "Fetching page " + str(pageCounter)
-        res = requests.get(url, header)
+        res = requests.get(url, headers=header)
         data = res.json()
         error_stat = data['ErrorStatus']
         if error_stat != "Success":
-            prinnt "Can't fetch data for " + url
+            print "Can't fetch data for " + url
             print "Error Status: " + error_stat
         else:
             with open(dumpFileName+str(pageCounter)+'.json','w') as f:

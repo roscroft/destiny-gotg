@@ -5,6 +5,8 @@ import sys
 sys.path.append('../')
 sys.path.append('../..')
 import APIRequests.jsonRequester as jr
+import Tokens.getHeader as h
+import Tokens.getClanId as c
 
 def getClanUserJSONs(path, header, clanId):
     def retrieveClanUserJSON():
@@ -14,7 +16,9 @@ def getClanUserJSONs(path, header, clanId):
             clan_url = "https://bungie.net/Platform/Group/"+clanId+"/Members/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
             print "Connecting to Bungie: " + clan_url
             print "Fetching page " + str(pageCounter) + " of users."
-            res = requests.get(clan_url, header)
+            print header
+            res = requests.get(clan_url, headers=header)
+            print "Gets here"
             data = res.json()
             error_stat = data['ErrorStatus']
             print "Error Stats: " + error_stat
@@ -26,6 +30,3 @@ def getClanUserJSONs(path, header, clanId):
             pageCounter+=1
     
     retrieveClanUserJSON()
-
-if __name__ == "__main__":
-    #getClanUserJSONs()

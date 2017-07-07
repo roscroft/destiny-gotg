@@ -17,7 +17,7 @@ def getIndividualUserJSONs(path, databasePath, header):
         user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
         print "Connecting to Bungie: " + user_url
         print "Fetching user data for " + displayName
-        userRequest = requests.get(user_url, header)
+        userRequest = requests.get(user_url, headers=header)
         userData = userRequest.json()
         error_stat = userData['ErrorStatus']
         if error_stat != "Success":

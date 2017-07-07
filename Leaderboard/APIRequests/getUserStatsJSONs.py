@@ -18,7 +18,7 @@ def getUserStatsJSONs(path, databasePath, header):
         stats_url = "https://bungie.net/platform/Destiny/Stats/Account/"+str(memType)+"/"+str(memId)
         print "Connecting to Bungie: " + stats_url
         print "Fetching aggregate historical stats for " + dispName
-        statsres = requests.get(stats_url, header)
+        statsres = requests.get(stats_url, headers=header)
         statsdata = statsres.json()
         filename = path+dispName+".json" 
         with open(filename,'w') as f:
