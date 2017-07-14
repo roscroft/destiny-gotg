@@ -20,11 +20,11 @@ def validateRequest(request):
     destNames2 = db.select(req)
     #This is a list of tuples, so we want to extract the first element from each
     destNames2 = [i[0] for i in destNames2]
-    print(destNames2)
+    #print(destNames2)
     req = "SELECT discName FROM Discord"
     discNames2 = db.select(req)
     discNames2 = [i[0] for i in discNames2]
-    print(discNames2)    
+    #print(discNames2)    
     nameString1 = "|".join(destNames2)
     nameString2 = "|".join(discNames2)
 

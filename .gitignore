@@ -10,3 +10,6 @@ clanId.txt
 guardians.db
 #Compiled Python files
 *.pyc
+
+testScript.py
+outFile.json
