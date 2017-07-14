@@ -1,12 +1,12 @@
 #!/usr/bin/python
 #Each function from BuildTables is a database function, and reads in .json files from the noted categories, then builds its named database table
 #Each function from APIRequests is an API request function, and pulls the corresponding .json files from Bungie's server.
-from BuildTables.buildBungieTable import buildBungieTable
-from BuildTables.buildDestinyTable import buildDestinyTable
-from BuildTables.buildStatTables import buildStatTables
-from APIRequests.apiRequests import getClanUserJSONs
-from APIRequests.apiRequests import getIndividualUserJSONs
-from APIRequests.apiRequests import getUserStatsJSONs
+from buildTables import buildBungieTable
+from buildTables import buildDestinyTable
+from buildTables import buildStatTables
+from apiRequests import getClanUserJSONs
+from apiRequests import getIndividualUserJSONs
+from apiRequests import getUserStatsJSONs
 from Tokens.getHeader import getHeader
 from Tokens.getClanId import getClanId
 import sys
