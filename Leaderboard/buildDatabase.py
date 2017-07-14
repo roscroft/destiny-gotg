@@ -4,9 +4,9 @@
 from BuildTables.buildBungieTable import buildBungieTable
 from BuildTables.buildDestinyTable import buildDestinyTable
 from BuildTables.buildStatTables import buildStatTables
-from APIRequests.getClanUserJSONs import getClanUserJSONs
-from APIRequests.getIndividualUserJSONs import getIndividualUserJSONs
-from APIRequests.getUserStatsJSONs import getUserStatsJSONs
+from APIRequests.apiRequests import getClanUserJSONs
+from APIRequests.apiRequests import getIndividualUserJSONs
+from APIRequests.apiRequests import getUserStatsJSONs
 from Tokens.getHeader import getHeader
 from Tokens.getClanId import getClanId
 import sys

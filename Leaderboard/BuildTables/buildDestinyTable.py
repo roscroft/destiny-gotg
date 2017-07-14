@@ -14,15 +14,11 @@ def buildDestinyTable(path, databasePath):
             if filename.endswith(".json"):
                 with open(path+filename) as data_file:
                     data = json.load(data_file)
-                    characters = data['Response']['destinyAccounts']
-                    for character in characters:
-                        membershipId = str(character['userInfo']['membershipId'])
-                        membershipType = str(character['userInfo']['membershipType'])
+                    accounts = data['Response']['destinyMemberships']
+                    for account in accounts:
+                        membershipId = str(account['membershipId'])
+                        membershipType = str(account['membershipType'])
                         players.add((membershipId, membershipType))
-                    # Should grab all character Ids. Seems like I don't actually grab anything, and not used currently, so commented out
-                    #characters = data['Response']['destinyAccounts'][0]
-                    #for character in characters:
-                    #    characterIds.append(['characterId'])
         return tuple(players)
 
     def addToDatabase(players):
