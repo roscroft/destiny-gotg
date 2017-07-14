@@ -15,7 +15,8 @@ def getIndividualUserJSONs(path, databasePath, header):
             retrieveDestinyUserJSON(user[0], user[1])
 
     def retrieveDestinyUserJSON(bungieID, displayName):
-        user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
+        #user_url = "https://www.bungie.net/Platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
+        user_url = "https://www.bungie.net/Platform/User/GetBungieAccount/"+str(bungieID)+"/2/"
         message = "Fetching user data for: "+displayName
         dumpFileName = path+displayName+'.json'
         jr.singleJSONRequest(user_url, header, dumpFileName, message)

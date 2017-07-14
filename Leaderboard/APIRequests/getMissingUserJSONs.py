@@ -12,7 +12,7 @@ def getMissingUserJSONs(path, header):
     def getMissingUsers():
         request = "SELECT Bungie.Id, Bungie.Name FROM Bungie LEFT JOIN Destiny ON Bungie.Id = Destiny.Id WHERE Destiny.Id IS NULL"
         users = db.select(request)
-        print users
+        print "Missing users: ",users
         return users
 
     def retrieveDestinyUserJSON(bungieID, displayName):
@@ -20,7 +20,8 @@ def getMissingUserJSONs(path, header):
         dumpFileName = path+displayName+'.json'
         obj = displayName
         jr.singleJSONRequest(user_url, header, dumpFileName, obj)
-    
+        return obj
+
     missing = getMissingUsers()
     if missing == []:
         return False, []
@@ -28,9 +29,8 @@ def getMissingUserJSONs(path, header):
         updatedUsers = []
         for missed in missing:
             bid, name = missed
-            exitCode = retrieveDestinyUserJSON(bid, name)
-            if exitCode:
-                updatedUsers += missed
+            missedName = retrieveDestinyUserJSON(bid, name)
+            updatedUsers.append(missedName)
         return True, updatedUsers
 
 if __name__ == "__main__":

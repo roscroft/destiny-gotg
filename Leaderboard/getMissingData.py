@@ -27,8 +27,10 @@ def getMissing():
         #Are any users missing? Function returns true if yes and attempts to get their JSONs
         missingUsers, updatedUsers = getMissingUserJSONs(users, header)
         #If this successfully updates a user, update the database
+        
         if updatedUsers != []:
-            updateDestinyTable(users, db)
+            for username in updatedUsers:
+                updateDestinyTable(users, username, db)
         #Otherwise, we loop and keep trying
 
     #Now, we want to know who is in Destiny but does not have attached stats.

@@ -18,13 +18,14 @@ def jSONRequest(url, header, dumpFileName, message, multi=False):
         res = requests.get(url, headers=header)
         data = res.json()
         error_stat = data['ErrorStatus']
+        print "Error Status: " + error_stat
         if error_stat != "Success":
             print "Error fetching data"
-            print "Error Status: " + error_stat
+            with open("errorExample.json",'w') as f:
+                json.dump(data,f)
             exitCodes.append(0)
         else:
-            print "Error Status: " + error_stat
-            with open(dumpFileName+str(pageCounter)+'.json','w') as f:
+            with open(dumpFileName,'w') as f:
                 json.dump(data, f)
             exitCodes.append(1)
         if multi:
@@ -33,7 +34,6 @@ def jSONRequest(url, header, dumpFileName, message, multi=False):
             pageCounter+=1
         else:
             hasMore = False
-        print "\n"
     if len(exitCodes) == 1:
         return exitCodes[0]
     return exitCodes
