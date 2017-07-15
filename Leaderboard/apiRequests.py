@@ -44,12 +44,12 @@ def getClanUserJSONs(path, header, clanId):
         pageCounter = 1
         while morePages:
             clan_url = "https://bungie.net/Platform/Group/"+clanId+"/Membersv3/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
-            print "Connecting to Bungie: " + clan_url
-            print "Fetching page " + str(pageCounter) + " of users."
+            print("Connecting to Bungie: " + clan_url)
+            print("Fetching page " + str(pageCounter) + " of users.")
             res = requests.get(clan_url, headers=header)
             data = res.json()
             error_stat = data['ErrorStatus']
-            print "Error Stats: " + error_stat
+            print("Error Stats: " + error_stat)
             #Stores each page of clan user responses as a different .json
             with open(path+'clanUsersPage'+str(pageCounter)+'.json','w') as f:
                 json.dump(data,f)
@@ -63,7 +63,7 @@ def getMissingUserJSONs(path, header):
     def getMissingUsers():
         request = "SELECT Bungie.Id, Bungie.Name FROM Bungie LEFT JOIN Destiny ON Bungie.Id = Destiny.Id WHERE Destiny.Id IS NULL"
         users = db.select(request)
-        print "Missing users: ",users
+        print("Missing users: ",users)
         return users
 
     def retrieveDestinyUserJSON(bungieID, displayName):
@@ -91,19 +91,19 @@ def multiJSONRequest(url, header, dumpFileName, message=""):
     return jSONRequest(url, header, dumpFileName, message, True)
 
 def jSONRequest(url, header, dumpFileName, message, multi=False):
-    print "Connecting to Bungie: " + url
-    print message
+    print("Connecting to Bungie: " + url)
+    print(message)
     pageCounter = 1
     hasMore = True
     exitCodes = []
     while hasMore:
-        #print "Fetching page " + str(pageCounter)
+        #print("Fetching page " + str(pageCounter))
         res = requests.get(url, headers=header)
         data = res.json()
         error_stat = data['ErrorStatus']
-        print "Error Status: " + error_stat
+        print("Error Status: " + error_stat)
         if error_stat != "Success":
-            print "Error fetching data"
+            print("Error fetching data")
             with open("errorExample.json",'w') as f:
                 json.dump(data,f)
             exitCodes.append(0)
