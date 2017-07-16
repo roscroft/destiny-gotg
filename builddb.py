@@ -15,10 +15,11 @@ def loadConfig():
 
 def buildDB():
     """Main function to build the full database"""
+    #First, initialize all the tables
     getClanUserJSONs()
 
 def getClanUserJSONs():
-    """Gather a list of the clan members through the Bungie API"""
+    """Gather a list of the clan members through the Bungie API, and """
     pageCount = 1
     while pageCount:
         clan_url = f"https://bungie.net/Platform/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage={pageCount}&platformType=2"
