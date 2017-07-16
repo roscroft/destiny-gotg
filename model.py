@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import builddb
 
 def checkDB():
     """Check to see if a database exists"""
@@ -7,4 +8,4 @@ def checkDB():
 
 def buildDB():
     """Main function to build the full database"""
-    print("CHECK")
+    builddb.buildDB()

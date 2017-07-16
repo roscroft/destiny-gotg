@@ -4,6 +4,35 @@ import json
 import requests
 import sys
 
+def buildDB():
+    """Main function to build the full database"""
+    getClanUserJSONs()
+
+def getClanUserJSONs():
+    """Gather a list of the clan members through the Bungie API"""
+    pageCount = 1
+    while pageCount:
+        clan_url = f"https://bungie.net/Platform/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage={pageCount}&platformType=2"
+        #print("Connecting to Bungie: " + clan_url)
+        #print("Fetching page " + str(pageCounter) + " of users.")
+        res = requests.get(clan_url, headers={"X-API-KEY":os.environ['BUNGIE_APIKEY']})
+        data = res.json()
+        err = data['ErrorStatus']
+        if not err.lower() == "success":
+            print(f"Error Stats: {err}")
+        #Stores each page of clan user responses as a different .json
+        f = open(f"clanUser_p{pageCount}.json", "w+")
+        json.dump(data,f)
+        f.close()
+        if res.json()['Response']['hasMore']:
+            pageCount += 1
+        else:
+            pageCount = 0
+
+
+
+
+
 def getIndividualUserJSONs(path, databasePath, header):
     def getUsersFromBungieTable():
         request = "SELECT * FROM Bungie"
@@ -33,27 +62,6 @@ def getUserStatsJSONs(path, databasePath, header):
         singleJSONRequest(stats_url, header, dumpFileName, message)
     
     getUsersFromDestinyTable()
-
-def getClanUserJSONs(path, header, clanId):
-    def retrieveClanUserJSON():
-        morePages = True
-        pageCounter = 1
-        while morePages:
-            clan_url = "https://bungie.net/Platform/Group/"+clanId+"/Membersv3/?lc=en&fmt=true&currentPage="+str(pageCounter)+"&platformType=2"
-            print("Connecting to Bungie: " + clan_url)
-            print("Fetching page " + str(pageCounter) + " of users.")
-            res = requests.get(clan_url, headers=header)
-            data = res.json()
-            error_stat = data['ErrorStatus']
-            print("Error Stats: " + error_stat)
-            #Stores each page of clan user responses as a different .json
-            with open(path+'clanUsersPage'+str(pageCounter)+'.json','w') as f:
-                json.dump(data,f)
-            hasMore = res.json()['Response']['hasMore']
-            morePages = hasMore
-            pageCounter+=1
-    
-    retrieveClanUserJSON()
 
 def getMissingUserJSONs(path, header):
     def getMissingUsers():

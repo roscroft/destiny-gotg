@@ -17,6 +17,8 @@ def main():
         generateConfig()
     # Load the config values into environment vars
     loadConfig()
+    if not model.checkDB():
+        model.buildDB()
 
 def setAppPath():
     """Ensures the APP_PATH dir exists"""
