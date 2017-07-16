@@ -7,15 +7,20 @@ APP_PATH = "/etc/destinygotg"
 
 def main():
     """Run the application"""
+    # Ensure that the program is running on python 3.6+
     if not verifyPythonVersion():
         print("This app requires python 3.6 or greater!")
         return
+    # Make sure the APP_PATH directory exists
     setAppPath()
+    # Ensure a config file exists
     if not os.path.exists(f"{APP_PATH}/config"):
         generateConfig()
+    # Load the config values into environment vars
     loadConfig()
 
 def setAppPath():
+    """Ensures the APP_PATH dir exists"""
     if not os.path.isdir(APP_PATH):
         os.mkdir(APP_PATH)
 
