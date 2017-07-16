@@ -1,15 +1,3 @@
-#Contains Bungie API token
-header.txt
-#Contains Discord bot token
-botToken.txt
-#Entire Leaderboard token folder
-./Leaderboard/Tokens
-#Contains Clan ID
-clanId.txt
-#Databse
-guardians.db
-#Compiled Python files
+__pycache__/
 *.pyc
-
-testScript.py
-outFile.json
+*.json
