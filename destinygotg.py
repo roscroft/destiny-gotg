@@ -19,6 +19,7 @@ def main():
     loadConfig()
     if not model.checkDB():
         model.buildDB()
+    #runFlask()
 
 def setAppPath():
     """Ensures the APP_PATH dir exists"""
@@ -52,6 +53,10 @@ def loadConfig():
     for value in config:
         value = value.strip().split(":")
         os.environ[value[0]] = value[1]
+
+def runFlask():
+    os.environ['FLASK_APP'] = "views/flask/app.py"
+    os.system("flask run --host=0.0.0.0")
 
 if __name__ == "__main__":
     main()
