@@ -14,8 +14,6 @@ def main():
     if not os.path.exists(f"{APP_PATH}/config"):
         generateConfig()
     loadConfig()
-    if not model.checkDB():
-        model.buildDB()
 
 def setAppPath():
     if not os.path.isdir(APP_PATH):
