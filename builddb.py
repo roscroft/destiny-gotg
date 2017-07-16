@@ -1,12 +1,8 @@
 #!/usr/bin/python
+import os
 import json
 import requests
 import sys
-sys.path.append('../')
-sys.path.append('../../')
-import DatabaseModules.databaseStatements as db
-import Tokens.getHeader as h
-import Tokens.getClanId as c
 
 def getIndividualUserJSONs(path, databasePath, header):
     def getUsersFromBungieTable():
@@ -120,15 +116,6 @@ def jSONRequest(url, header, dumpFileName, message, multi=False):
     if len(exitCodes) == 1:
         return exitCodes[0]
     return exitCodes
-
-
-#!/usr/bin/python
-import os
-import json
-import sys
-sys.path.append('../../')
-sys.path.append('../')
-import DatabaseModules.databaseStatements as db
 
 def buildBungieTable(path, databasePath):
     def parseClanUserJSON():
