@@ -29,10 +29,6 @@ def getClanUserJSONs():
         else:
             pageCount = 0
 
-
-
-
-
 def getIndividualUserJSONs(path, databasePath, header):
     def getUsersFromBungieTable():
         request = "SELECT * FROM Bungie"
