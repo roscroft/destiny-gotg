@@ -13,28 +13,40 @@ class Bungie(Base):
     id = Column(Integer, primary_key=True)
     bungieName = Column(String(50), nullable=False)
 
-class PSN(Base):
-    __tablename__ = 'psn'
+class Account(Base):
+    __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
-    psnName = Column(String(50), nullable=False)
+    displayName = Column(String(50), nullable=False)
     bungie_id = Column(Integer, ForeignKey('bungie.id'))
     bungie = relationship(Bungie)
-
-class Xbox(Base):
-    __tablename__ = 'xbox'
-    id = Column(Integer, primary_key=True)
-    xboxName = Column(String(50), nullable = False)
-    bungie_id = Column(Integer, ForeignKey('bungie.id'))
-    bungie = relationship(Bungie)
+    discord_id = Column(Integer, ForeignKey('discord.id'))
+    discord = relationship(Discord)
 
 class Discord(Base):
     __tablename__ = 'discord'
     id = Column(Integer, primary_key=True)
     discordName = Column(String(50))
-    psn_id = Column(Integer, ForeignKey('psn.id'))
-    psn = relationship(PSN)
-    xbox_id = Column(Integer, ForeignKey('xbox.id'))
-    xbox = relationship(Xbox)
+
+class Character(Base):
+    __tablename__ = 'character'
+    id = Column(Integer, primary_key=True)
+    #class = Column(Integer) I don't really care about this one yet
+    membership_id = Column(Integer, ForeignKey('account.id'))
+    account = relationship(Account)
+
+class PvEAccountStats(Base):
+    __tablename__ = 'pveAccountStats'
+    membership_id = Column(Integer, primary_key=True, ForeignKey('account.id'))
+    account = relationship(Account)
+    #add in the shit ton of other stat fields fml
+
+class PvPAccountStats(Base):
+    __tablename__ = 'pvpAccountStats'
+    membership_id = Column(Integer, primary_key=True, ForeignKey('account.id'))
+    account = relationship(Account)
+    #literally over a hundred other fields fuck
+
+class Ch
 
 engine = create_engine('sqlite:///')
 
