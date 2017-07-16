@@ -4,6 +4,15 @@ import json
 import requests
 import sys
 
+#load env vars for testing purposes
+APP_PATH = "/etc/destinygotg"
+def loadConfig(): 
+    """Load configs from the config file""" 
+    config = open(f"{APP_PATH}/config", "r").readlines() 
+    for value in config: 
+        value = value.strip().split(":") 
+        os.environ[value[0]] = value[1]
+
 def buildDB():
     """Main function to build the full database"""
     getClanUserJSONs()
@@ -280,3 +289,6 @@ def updateDestinyTable(path, filename, databasePath):
     players = parseUserJSON()
     addToDatabase(players)
 
+if __name__ == "__main__":
+    loadConfig()
+    buildDB()
