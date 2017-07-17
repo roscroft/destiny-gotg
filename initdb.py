@@ -21,19 +21,21 @@ Base = declarative_base()
 
 class Bungie(Base):
     __tablename__ = 'bungie'
-    id = Column(Integer, primary_key=True)
-    bungieName = Column(String(50), nullable=False)
+    id = Column(String(50), primary_key=True)
+    bungie_name = Column(String(50), nullable=False)
+    membership_type = Column(Integer, nullable=False)
 
 class Discord(Base):
     __tablename__ = 'discord'
     id = Column(Integer, primary_key=True)
-    discordName = Column(String(50))
+    discord_name = Column(String(50))
 
 class Account(Base):
     __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
-    displayName = Column(String(50), nullable=False)
-    bungie_id = Column(Integer, ForeignKey('bungie.id'))
+    display_name = Column(String(50), nullable=False)
+    membership_type = Column(Integer, nullable=False)
+    bungie_id = Column(String(50), ForeignKey('bungie.id'))
     bungie = relationship(Bungie)
     discord_id = Column(Integer, ForeignKey('discord.id'))
     discord = relationship(Discord)
@@ -42,7 +44,6 @@ class PvEAccountStats(Base):
     __tablename__ = 'pveAccountStats'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
-    #add in the shit ton of other stat fields fml
 
 class PvPAccountStats(Base):
     __tablename__ = 'pvpAccountStats'
@@ -80,4 +81,5 @@ class CharacterPlaysActivity(Base):
 
 #print(f"sqlite:///{os.environ['DBPATH']}")
 engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
+Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)

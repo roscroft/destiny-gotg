@@ -5,7 +5,7 @@ import requests
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy_declarative import Bungie
+from initdb import Base, Bungie, Account
 
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
@@ -18,100 +18,67 @@ def loadConfig():
         value = value.strip().split(":") 
         os.environ[value[0]] = value[1]
 
-engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
-Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+def makeHeader():
+    return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
 
 def buildDB():
     """Main function to build the full database"""
-    #First, initialize all the tables
+    engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
+    Base.metadata.bind = engine
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
+    handleBungieUsers(session)
+    handleDestinyUsers(session)
     
-    
-    getClanUserJSONs()
 
-def jSONRequest(url, outFile, message=""):
-    print(f"Connecting to Bungie: {url}")
-    print(message)
-    res = requests.get(url, headers=os.environ['BUNGIE_HEADER'])
-    data = res.json()
-    error_stat = data['ErrorStatus']
-    print("Error Status: " + error_stat)
-    if error_stat == "Success":
-    #    with open(outFile,"w+") as f:
-    #        json.dump(data, f)
-        return data
-    else:
-        return None
-
-def handleClanUsers():
+def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
-    clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage={pageCount}&platformType=2"
+    clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage=1&platformType=2"
     outFile = "clanUser_p1.json"
     message = "Fetching page 1 of clan users."
     data = jsonRequest(clan_url, outFile, message)
     if data is None:
         #TODO: Throw some error or something
-    
-    players = []
+        print("We fucked up")
+
+    #This section stores all clan users in the Bungie table 
     for result in data['Response']['results']:
-        name = str(result['user']['displayName']
-    
-        pageCount = 0
+        membershipType = 254
+        bungieId = result['user']['membershipId']
+        #Some people have improperly linked accounts, this will handle those by setting bungieId
+        #To be their PSN id
+        if bungieId == '0':
+            bungieId = result['membershipId']
+            membershipType = result['membershipType']
+        bungieName = str(result['user']['displayName'])
+        new_bungie_user = Bungie(id=bungieId, bungie_name=bungieName, membership_type=membershipType)
+        session.add(new_bungie_user)
+        session.commit()
 
-def buildBungieTable(path, databasePath):
-    def parseClanUserJSON():
-        players = []
-        for filename in os.listdir(path):
-            if filename.endswith(".json"):
-                with open(path+filename) as data_file:
-                    data = json.load(data_file)
-                    for result in data['Response']['results']:
-                        name = str(result['user']['displayName'])
-                        players.append((result['membershipId'],name))
-        return tuple(players)
-
-    def addToDatabase(players):
-        table = "Bungie"
-        fields = "(Id INT, Name TEXT)"
-        db.initializeTable(table, fields)
-        for player in players:
-            request = "INSERT INTO Bungie VALUES(?,?)"
-            db.insert(request, player)
-
-    players = parseClanUserJSON()
-    addToDatabase(players)
-
-
-def getIndividualUserJSONs(path, databasePath, header):
-    def getUsersFromBungieTable():
-        request = "SELECT * FROM Bungie"
-        users = db.select(request)
-        for user in users:
-            retrieveDestinyUserJSON(user[0], user[1])
-
-    def retrieveDestinyUserJSON(bungieID, displayName):
-        user_url = "https://www.bungie.net/Platform/User/GetMembershipsById/"+str(bungieID)+"/2/"
-        message = "Fetching membership data for: "+displayName
-        dumpFileName = path+displayName+'.json'
-        singleJSONRequest(user_url, header, dumpFileName, message)
-    
-    getUsersFromBungieTable()
-
-def getUserStatsJSONs(path, databasePath, header):
-    def getUsersFromDestinyTable():
-        request = "SELECT Destiny.Type, Destiny.Id, Bungie.Name FROM Destiny INNER JOIN Bungie ON Destiny.Id = Bungie.Id"
-        users = db.select(request)
-        for user in users:
-            retrieveUserStatsJSON(user[0], user[1], user[2])
-
-    def retrieveUserStatsJSON(memType, memId, dispName):
-        stats_url = "https://bungie.net/platform/Destiny/Stats/Account/"+str(memType)+"/"+str(memId)
-        message = "Fetching aggregate historical stats for: " + dispName
-        dumpFileName = path+dispName+".json"
-        singleJSONRequest(stats_url, header, dumpFileName, message)
-    
-    getUsersFromDestinyTable()
+def handleDestinyUsers(session):
+    """Retrieve JSONs for users, listing their Destiny accounts. Builds account table."""
+    users = session.query(Bungie).all()
+    for user in users:
+        bungieId = user.id
+        bungieName = user.bungie_name
+        membershipType = user.membership_type
+        user_url = f"{URL_START}/User/GetMembershipsById/{bungieId}/{membershipType}/"
+        message = f"Fetching membership data for: {bungieName}"
+        outFile = f"{bungieName}.json"
+        data = jsonRequest(user_url, outFile, message)
+        if data is None:
+            #TODO: Throw an error
+            print("We fucked up")
+        
+        #Grab all of the individual accounts and put them in the Account table
+        accounts = data['Response']['destinyMemberships']
+        for account in accounts:
+            membershipId = str(account['membershipId'])
+            membershipType = str(account['membershipType'])
+            displayName = str(account['displayName'])
+            new_account = Account(id = membershipId, display_name=displayName, membership_type=membershipType, bungie_id=bungieId)
+            session.add(new_account)
+            session.commit()
 
 def getMissingUserJSONs(path, header):
     def getMissingUsers():
@@ -154,32 +121,6 @@ def buildCharactersTable(path, databasePath):
                     #characters = data['Response']['destinyAccounts'][0]
                     #for character in characters:
                     #    characterIds.append(['characterId'])
-        return tuple(players)
-
-    def addToDatabase(players):
-        table = "Destiny"
-        fields = "(Id INT, Type INT)"
-        db.initializeTable(table, fields)
-        for player in players:
-            request = "INSERT INTO Destiny VALUES(?,?)"
-            db.insert(request,player)
-
-    players = parseUserJSON()
-    addToDatabase(players)
-
-def buildDestinyTable(path, databasePath):
-    def parseUserJSON():
-        players = set()
-        characters = []
-        for filename in os.listdir(path):
-            if filename.endswith(".json"):
-                with open(path+filename) as data_file:
-                    data = json.load(data_file)
-                    accounts = data['Response']['destinyMemberships']
-                    for account in accounts:
-                        membershipId = str(account['membershipId'])
-                        membershipType = str(account['membershipType'])
-                        players.add((membershipId, membershipType))
         return tuple(players)
 
     def addToDatabase(players):
@@ -273,6 +214,20 @@ def updateDestinyTable(path, filename, databasePath):
 
     players = parseUserJSON()
     addToDatabase(players)
+
+def jsonRequest(url, outFile, message=""):
+    print(f"Connecting to Bungie: {url}")
+    print(message)
+    res = requests.get(url, headers=makeHeader())
+    data = res.json()
+    error_stat = data['ErrorStatus']
+    print("Error Status: " + error_stat)
+    if error_stat == "Success":
+    #    with open(outFile,"w+") as f:
+    #        json.dump(data, f)
+        return data
+    else:
+        return None
 
 if __name__ == "__main__":
     loadConfig()
