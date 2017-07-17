@@ -29,7 +29,7 @@ def buildDB():
     session = DBSession()
     handleBungieUsers(session)
     handleDestinyUsers(session)
-    
+    handleAggregateStats(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -80,59 +80,11 @@ def handleDestinyUsers(session):
             session.add(new_account)
             session.commit()
 
-def getMissingUserJSONs(path, header):
-    def getMissingUsers():
-        request = "SELECT Bungie.Id, Bungie.Name FROM Bungie LEFT JOIN Destiny ON Bungie.Id = Destiny.Id WHERE Destiny.Id IS NULL"
-        users = db.select(request)
-        print("Missing users: ",users)
-        return users
+def handleAggregateStats(session):
+    """Retrieve aggregate stats for users. Builds PvP and PvE average and total tables."""
+    accounts = session.query(Accounts).all()
+    for account in accounts:
 
-    def retrieveDestinyUserJSON(bungieID, displayName):
-        user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
-        dumpFileName = path+displayName+'.json'
-        obj = displayName
-        singleJSONRequest(user_url, header, dumpFileName, obj)
-        return obj
-
-    missing = getMissingUsers()
-    if missing == []:
-        return False, []
-    else:
-        updatedUsers = []
-        for missed in missing:
-            bid, name = missed
-            missedName = retrieveDestinyUserJSON(bid, name)
-            updatedUsers.append(missedName)
-        return True, updatedUsers
-
-def buildCharactersTable(path, databasePath):
-    def parseUserJSON():
-        players = set()
-        characterIds = []
-        for filename in os.listdir(path):
-            if filename.endswith(".json"):
-                with open(path+filename) as data_file:
-                    data = json.load(data_file)
-                    characters = data['Response']['destinyAccounts']
-                    for character in characters:
-                        characterId = str(character['userInfo']['characterId'])
-                        players.add((membershipId, membershipType))
-                    # Should grab all character Ids. Seems like I don't actually grab anything, and not used currently, so commented out
-                    #characters = data['Response']['destinyAccounts'][0]
-                    #for character in characters:
-                    #    characterIds.append(['characterId'])
-        return tuple(players)
-
-    def addToDatabase(players):
-        table = "Destiny"
-        fields = "(Id INT, Type INT)"
-        db.initializeTable(table, fields)
-        for player in players:
-            request = "INSERT INTO Destiny VALUES(?,?)"
-            db.insert(request,player)
-
-    players = parseUserJSON()
-    addToDatabase(players)
 
 def buildStatTables(path, databasePath):
     
@@ -208,6 +160,60 @@ def updateDestinyTable(path, filename, databasePath):
         return tuple(players)
 
     def addToDatabase(players):
+        for player in players:
+            request = "INSERT INTO Destiny VALUES(?,?)"
+            db.insert(request,player)
+
+    players = parseUserJSON()
+    addToDatabase(players)
+
+def getMissingUserJSONs(path, header):
+    def getMissingUsers():
+        request = "SELECT Bungie.Id, Bungie.Name FROM Bungie LEFT JOIN Destiny ON Bungie.Id = Destiny.Id WHERE Destiny.Id IS NULL"
+        users = db.select(request)
+        print("Missing users: ",users)
+        return users
+
+    def retrieveDestinyUserJSON(bungieID, displayName):
+        user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
+        dumpFileName = path+displayName+'.json'
+        obj = displayName
+        singleJSONRequest(user_url, header, dumpFileName, obj)
+        return obj
+
+    missing = getMissingUsers()
+    if missing == []:
+        return False, []
+    else:
+        updatedUsers = []
+        for missed in missing:
+            bid, name = missed
+            missedName = retrieveDestinyUserJSON(bid, name)
+            updatedUsers.append(missedName)
+        return True, updatedUsers
+
+def buildCharactersTable(path, databasePath):
+    def parseUserJSON():
+        players = set()
+        characterIds = []
+        for filename in os.listdir(path):
+            if filename.endswith(".json"):
+                with open(path+filename) as data_file:
+                    data = json.load(data_file)
+                    characters = data['Response']['destinyAccounts']
+                    for character in characters:
+                        characterId = str(character['userInfo']['characterId'])
+                        players.add((membershipId, membershipType))
+                    # Should grab all character Ids. Seems like I don't actually grab anything, and not used currently, so commented out
+                    #characters = data['Response']['destinyAccounts'][0]
+                    #for character in characters:
+                    #    characterIds.append(['characterId'])
+        return tuple(players)
+
+    def addToDatabase(players):
+        table = "Destiny"
+        fields = "(Id INT, Type INT)"
+        db.initializeTable(table, fields)
         for player in players:
             request = "INSERT INTO Destiny VALUES(?,?)"
             db.insert(request,player)
