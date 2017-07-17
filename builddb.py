@@ -3,9 +3,14 @@ import os
 import json
 import requests
 import sys
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_declarative import Bungie
 
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
+URL_START = "https://bungie.net/Platform"
+
 def loadConfig(): 
     """Load configs from the config file""" 
     config = open(f"{APP_PATH}/config", "r").readlines() 
@@ -13,31 +18,70 @@ def loadConfig():
         value = value.strip().split(":") 
         os.environ[value[0]] = value[1]
 
+engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
+
 def buildDB():
     """Main function to build the full database"""
     #First, initialize all the tables
+    
+    
     getClanUserJSONs()
 
-def getClanUserJSONs():
-    """Gather a list of the clan members through the Bungie API, and """
-    pageCount = 1
-    while pageCount:
-        clan_url = f"https://bungie.net/Platform/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage={pageCount}&platformType=2"
-        #print("Connecting to Bungie: " + clan_url)
-        #print("Fetching page " + str(pageCounter) + " of users.")
-        res = requests.get(clan_url, headers={"X-API-KEY":os.environ['BUNGIE_APIKEY']})
-        data = res.json()
-        err = data['ErrorStatus']
-        if not err.lower() == "success":
-            print(f"Error Stats: {err}")
-        #Stores each page of clan user responses as a different .json
-        f = open(f"clanUser_p{pageCount}.json", "w+")
-        json.dump(data,f)
-        f.close()
-        if res.json()['Response']['hasMore']:
-            pageCount += 1
-        else:
-            pageCount = 0
+def jSONRequest(url, outFile, message=""):
+    print(f"Connecting to Bungie: {url}")
+    print(message)
+    res = requests.get(url, headers=os.environ['BUNGIE_HEADER'])
+    data = res.json()
+    error_stat = data['ErrorStatus']
+    print("Error Status: " + error_stat)
+    if error_stat == "Success":
+    #    with open(outFile,"w+") as f:
+    #        json.dump(data, f)
+        return data
+    else:
+        return None
+
+def handleClanUsers():
+    """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
+    clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage={pageCount}&platformType=2"
+    outFile = "clanUser_p1.json"
+    message = "Fetching page 1 of clan users."
+    data = jsonRequest(clan_url, outFile, message)
+    if data is None:
+        #TODO: Throw some error or something
+    
+    players = []
+    for result in data['Response']['results']:
+        name = str(result['user']['displayName']
+    
+        pageCount = 0
+
+def buildBungieTable(path, databasePath):
+    def parseClanUserJSON():
+        players = []
+        for filename in os.listdir(path):
+            if filename.endswith(".json"):
+                with open(path+filename) as data_file:
+                    data = json.load(data_file)
+                    for result in data['Response']['results']:
+                        name = str(result['user']['displayName'])
+                        players.append((result['membershipId'],name))
+        return tuple(players)
+
+    def addToDatabase(players):
+        table = "Bungie"
+        fields = "(Id INT, Name TEXT)"
+        db.initializeTable(table, fields)
+        for player in players:
+            request = "INSERT INTO Bungie VALUES(?,?)"
+            db.insert(request, player)
+
+    players = parseClanUserJSON()
+    addToDatabase(players)
+
 
 def getIndividualUserJSONs(path, databasePath, header):
     def getUsersFromBungieTable():
@@ -93,66 +137,6 @@ def getMissingUserJSONs(path, header):
             missedName = retrieveDestinyUserJSON(bid, name)
             updatedUsers.append(missedName)
         return True, updatedUsers
-
-def singleJSONRequest(url, header, dumpFileName, message=""):
-    return jSONRequest(url, header, dumpFileName, message)
-
-def multiJSONRequest(url, header, dumpFileName, message=""):
-    return jSONRequest(url, header, dumpFileName, message, True)
-
-def jSONRequest(url, header, dumpFileName, message, multi=False):
-    print("Connecting to Bungie: " + url)
-    print(message)
-    pageCounter = 1
-    hasMore = True
-    exitCodes = []
-    while hasMore:
-        #print("Fetching page " + str(pageCounter))
-        res = requests.get(url, headers=header)
-        data = res.json()
-        error_stat = data['ErrorStatus']
-        print("Error Status: " + error_stat)
-        if error_stat != "Success":
-            print("Error fetching data")
-            with open("errorExample.json",'w') as f:
-                json.dump(data,f)
-            exitCodes.append(0)
-        else:
-            with open(dumpFileName,'w') as f:
-                json.dump(data, f)
-            exitCodes.append(1)
-        if multi:
-            hasMore = res.json()['Response']['hasMore']
-            morePages = hasMore
-            pageCounter+=1
-        else:
-            hasMore = False
-    if len(exitCodes) == 1:
-        return exitCodes[0]
-    return exitCodes
-
-def buildBungieTable(path, databasePath):
-    def parseClanUserJSON():
-        players = []
-        for filename in os.listdir(path):
-            if filename.endswith(".json"):
-                with open(path+filename) as data_file:
-                    data = json.load(data_file)
-                    for result in data['Response']['results']:
-                        name = str(result['user']['displayName'])
-                        players.append((result['membershipId'],name))
-        return tuple(players)
-
-    def addToDatabase(players):
-        table = "Bungie"
-        fields = "(Id INT, Name TEXT)"
-        db.initializeTable(table, fields)
-        for player in players:
-            request = "INSERT INTO Bungie VALUES(?,?)"
-            db.insert(request, player)
-
-    players = parseClanUserJSON()
-    addToDatabase(players)
 
 def buildCharactersTable(path, databasePath):
     def parseUserJSON():

@@ -18,7 +18,7 @@ def main():
     # Load the config values into environment vars
     loadConfig()
     if not model.checkDB():
-        model.buildDB()
+       model.buildDB()
     #runFlask()
 
 def setAppPath():
@@ -42,7 +42,7 @@ def generateConfig():
     config = open(f"{APP_PATH}/config", "w+")
     apikey = input("Please enter your Bungie API Key: ")
     clanid = input("Please enter your Clan ID: ")
-    config.write(f"BUNGIE_APIKEY:{apikey}\n")
+    config.write(f"BUNGIE_HEADER:{'X-API-KEY':{apikey}}\n")
     config.write(f"BUNGIE_CLANID:{clanid}\n")
     config.write(f"DBPATH:{APP_PATH}/guardians.db\n")
     config.close()
