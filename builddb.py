@@ -43,15 +43,15 @@ def handleBungieUsers(session):
 
     #This section stores all clan users in the Bungie table 
     for result in data['Response']['results']:
-        membershipType = 254
-        bungieId = result['user']['membershipId']
-        #Some people have improperly linked accounts, this will handle those by setting bungieId
-        #To be their PSN id
-        if bungieId == '0':
-            bungieId = result['membershipId']
-            membershipType = result['membershipType']
-        bungieName = str(result['user']['displayName'])
-        new_bungie_user = Bungie(id=bungieId, bungie_name=bungieName, membership_type=membershipType)
+        bungieDict = {}
+        bungieDict['membership_type']=254
+        bungieDict['id'] = result['user']['membershipId']
+        #Some people have improperly linked accounts, this will handle those by setting bungieId as their PSN id
+        if bungieDict['id'] == '0':
+            bungieDict['id'] = result['membershipId']
+            bungieDict['membership_type'] = result['membershipType']
+        bungieDict['bungie_name'] = result['user']['displayName']
+        new_bungie_user = Bungie(**bungieDict)
         session.add(new_bungie_user)
         session.commit()
 
@@ -73,10 +73,12 @@ def handleDestinyUsers(session):
         #Grab all of the individual accounts and put them in the Account table
         accounts = data['Response']['destinyMemberships']
         for account in accounts:
-            membershipId = str(account['membershipId'])
-            membershipType = str(account['membershipType'])
-            displayName = str(account['displayName'])
-            new_account = Account(id = membershipId, display_name=displayName, membership_type=membershipType, bungie_id=bungieId)
+            accountDict = {}
+            accountDict['id'] = account['membershipId']
+            accountDict['membership_type'] = account['membershipType']
+            accountDict['display_name'] = account['displayName']
+            accountDict['bungie_id'] = bungieId
+            new_account = Account(**accountDict)
             session.add(new_account)
             session.commit()
 
