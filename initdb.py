@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -41,7 +41,7 @@ class Account(Base):
     discord = relationship(Discord)
 
 class PvEAccountStatsTotal(Base):
-    __tablename__ = 'pveAccountStats'
+    __tablename__ = 'pveAccountStatsTotal'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Integer)
@@ -106,7 +106,7 @@ class PvEAccountStatsTotal(Base):
     zonesNeutralized = Column(Integer)
 
 class PvEAccountStatsAverage(Base):
-    __tablename__ = 'pvpAccountStatsAverage'
+    __tablename__ = 'pveAccountStatsAverage'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Float)
@@ -145,7 +145,7 @@ class PvEAccountStatsAverage(Base):
     zonesNeutralized = Column(Float)
 
 class PvPAccountStatsTotal(Base):
-    __tablename__ = 'pvpAccountStats'
+    __tablename__ = 'pvpAccountStatsTotal'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Integer)
@@ -200,6 +200,7 @@ class PvPAccountStatsTotal(Base):
     weaponKillsMachinegun = Column(Integer)
     weaponKillsMelee = Column(Integer)
     weaponKillsPulseRifle = Column(Integer)
+    weaponKillsRelic = Column(Integer)
     weaponKillsRocketLauncher = Column(Integer)
     weaponKillsScoutRifle = Column(Integer)
     weaponKillsShotgun = Column(Integer)
@@ -243,6 +244,7 @@ class PvPAccountStatsAverage(Base):
     weaponKillsMachinegun = Column(Float)
     weaponKillsMelee = Column(Float)
     weaponKillsPulseRifle = Column(Float)
+    weaponKillsRelic = Column(Float)
     weaponKillsRocketLauncher = Column(Float)
     weaponKillsScoutRifle = Column(Float)
     weaponKillsShotgun = Column(Float)

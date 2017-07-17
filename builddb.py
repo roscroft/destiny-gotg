@@ -5,7 +5,7 @@ import requests
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from initdb import Base, Bungie, Account
+from initdb import Base, Bungie, Account, PvPAccountStatsTotal, PvPAccountStatsAverage, PvEAccountStatsTotal, PvEAccountStatsAverage
 
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
@@ -82,66 +82,55 @@ def handleDestinyUsers(session):
 
 def handleAggregateStats(session):
     """Retrieve aggregate stats for users. Builds PvP and PvE average and total tables."""
-    accounts = session.query(Accounts).all()
+    accounts = session.query(Account).all()
     for account in accounts:
-
-
-def buildStatTables(path, databasePath):
-    
-    def initializeTables():
-        pvpTotal = "PvPTotal"
-        pvpPGA = "PvPPGA"
-        pveTotal = "PvETotal"
-        pvePGA = "PvEPGA"
-
-        pvefields = "(Name TEXT, abilityKills REAL, activitiesCleared REAL, activitiesEntered REAL, allParticipantsCount REAL, allParticipantsTimePlayed REAL, assists REAL, averageDeathDistance REAL, averageKillDistance REAL, averageLifespan REAL, bestSingleGameKills REAL, courtOfOryxAttempts REAL, courtOfOryxCompletions REAL, courtOfOryxWinsTier1 REAL, courtOfOryxWinsTier2 REAL, courtOfOryxWinsTier3 REAL, deaths REAL, fastestCompletion REAL, highestCharacterLevel REAL, highestLightLevel REAL, kills REAL, killsDeathAssists REAL, killsDeathsRatio REAL, longestKillDistance REAL, longestKillSpree REAL, longestSingleLife REAL, mostPrecisionKills REAL, objectivesCompleted REAL, orbsDropped REAL, orbsGathered REAL, precisionKills REAL, publicEventsCompleted REAL, publicEventsJoined REAL, remainingTimeAfterQuitSeconds REAL, resurrectionsPerformed REAL, resurrectionsReceived REAL, secondsPlayed REAL, suicides REAL, totalActivityDurationSeconds REAL, totalDeathDistance REAL, totalKillDistance REAL, weaponBestType TEXT, weaponKillsAutoRifle REAL, weaponKillsFusionRifle REAL, weaponKillsGrenade REAL, weaponKillsHandCannon REAL, weaponKillsMachinegun REAL, weaponKillsMelee REAL, weaponKillsPulseRifle REAL, weaponKillsRelic REAL, weaponKillsRocketLauncher REAL, weaponKillsScoutRifle REAL, weaponKillsShotgun REAL, weaponKillsSideArm REAL, weaponKillsSniper REAL, weaponKillsSubmachinegun REAL, weaponKillsSuper REAL, weaponKillsSword REAL)"
+        membershipType = account.membership_type
+        membershipId = account.id
+        displayName = account.display_name
+        stat_url = f"{URL_START}/Destiny/Stats/Account/{membershipType}/{membershipId}"
+        message = f"Fetching aggregate historical stats for: {displayName}"
+        outFile =f"{displayName}_stats.json"
+        data = jsonRequest(stat_url, outFile, message)
+        if data is None:
+            #TODO: Throw an error
+            print("Not good hombre")
         
-        pvpfields = "(Name TEXT, abilityKills REAL, activitiesEntered REAL, activitiesWon REAL, allParticipantsCount REAL, allParticipantsScore REAL, allParticipantsTimePlayed REAL, assists REAL, averageDeathDistance REAL, averageKillDistance REAL, averageLifespan REAL, averageScorePerKill REAL, averageScorePerLife REAL, bestSingleGameKills REAL, bestSingleGameScore REAL, closeCalls REAL, combatRating REAL, deaths REAL, defensiveKills REAL, dominationKills REAL, highestCharacterLevel REAL, highestLightLevel REAL, kills REAL, killsDeathAssists REAL, killsDeathsRatio REAL, longestKillDistance REAL, longestKillSpree REAL, longestSingleLife REAL, mostPrecisionKills REAL, objectivesCompleted REAL, offensiveKills REAL, orbsDropped REAL, orbsGathered REAL, precisionKills REAL, relicsCaptured REAL, remainingTimeAfterQuitSeconds REAL, resurrectionsPerformed REAL, resurrectionsReceived REAL, score REAL, secondsPlayed REAL, suicides REAL, teamScore REAL, totalActivityDurationSeconds REAL, totalDeathDistance REAL, totalKillDistance REAL, weaponBestType TEXT, weaponKillsAutoRifle REAL, weaponKillsFusionRifle REAL, weaponKillsGrenade REAL, weaponKillsHandCannon REAL, weaponKillsMachinegun REAL, weaponKillsMelee REAL, weaponKillsPulseRifle REAL, weaponKillsRelic REAL, weaponKillsRocketLauncher REAL, weaponKillsScoutRifle REAL, weaponKillsShotgun REAL, weaponKillsSideArm REAL, weaponKillsSniper REAL, weaponKillsSubmachinegun REAL, weaponKillsSuper REAL, weaponKillsSword REAL, winLossRatio REAL, zonesCaptured REAL, zonesNeutralized REAL)"
+        #This part does the heavy lifting of table building
+        #PvP first
+        pvpTotalDict = {}
+        pvpAvgDict = {}
+        pveTotalDict = {}
+        pveAvgDict = {}
+        
+        def fillDict(avgDict, totalDict, pvpOrPve):
+            #We need to check if stats exist (if mode hasn't been played, there will be no stats
+            allTime = data['Response']['mergedAllCharacters']['results'][pvpOrPve]
+            if not 'allTime' in allTime:
+                return None
+            stats = allTime['allTime']
+            for stat in stats:
+                if 'pga' in stats[stat]:
+                    avgDict[stat] = stats[stat]['pga']['value']
+                totalDict[stat] = stats[stat]['basic']['value']
+        
+        fillDict(pvpAvgDict, pvpTotalDict, 'allPvP')
+        fillDict(pveAvgDict, pveTotalDict, 'allPvE')
 
-        db.initializeTable(pveTotal, pvefields)
-        db.initializeTable(pvePGA, pvefields)
-        db.initializeTable(pvpTotal, pvpfields)
-        db.initializeTable(pvpPGA, pvpfields)
-
-    def parseStatsJSON(versus):
-        totalTable = versus + "Total"
-        pgaTable = versus + "PGA"
-        for filename in os.listdir(path):
-            if filename.endswith(".json"):
-                with open(path+filename) as data_file:
-                    data = json.load(data_file)
-                    dispName = filename[:-5]
-                    totalStatTuple = parseData(data,'basic', dispName, versus)
-                    pgaStatTuple = parseData(data, 'pga', dispName, versus)
-                    addToDatabase(totalStatTuple, totalTable, versus)
-                    addToDatabase(pgaStatTuple, pgaTable, versus)
-
-    def parseData(data, mode, dispName, versus):
-        allVersus = "all"+versus
-        path = data['Response']['mergedAllCharacters']['results'][allVersus]['allTime']
-        stats = []
-        for stat in path:
-            if mode not in path[stat]:
-                stats.append((stat, None))
-            else:
-                stats.append((stat, path[stat][mode]['value']))
-        #Sorts on first item (alphabetical list of stats)
-        stats.sort(key=lambda x: x[0])
-        values = [x[1] for x in stats]
-        return (dispName,)+tuple(values)
-
-    def addToDatabase(stats, table, versus):
-        if versus == "PvP":
-            request = "INSERT INTO "+table+" VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        elif versus == "PvE":
-            request = "INSERT INTO "+table+" VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        db.insert(request, stats)
-
-    initializeTables()
-    pvp = "PvP"
-    pve = "PvE"
-    parseStatsJSON(pvp)
-    parseStatsJSON(pve)
+        #Now we just need to tack on the membershipId
+        pvpTotalDict['membership_id'] = membershipId
+        pvpAvgDict['membership_id'] = membershipId
+        pveTotalDict['membership_id'] = membershipId
+        pveAvgDict['membership_id'] = membershipId
+        #And put these in the database. Double **s unpack a dictionary into the row.
+        new_pvp_total = PvPAccountStatsTotal(**pvpTotalDict)
+        new_pvp_avg = PvPAccountStatsAverage(**pvpAvgDict)
+        new_pve_total = PvEAccountStatsTotal(**pveTotalDict)
+        new_pve_avg = PvEAccountStatsAverage(**pveAvgDict)
+        session.add(new_pvp_total)
+        session.add(new_pvp_avg)
+        session.add(new_pve_total)
+        session.add(new_pve_avg)
+        session.commit()
 
 def updateDestinyTable(path, filename, databasePath):
     def parseUserJSON():
@@ -227,12 +216,12 @@ def jsonRequest(url, outFile, message=""):
     res = requests.get(url, headers=makeHeader())
     data = res.json()
     error_stat = data['ErrorStatus']
-    print("Error Status: " + error_stat)
     if error_stat == "Success":
     #    with open(outFile,"w+") as f:
     #        json.dump(data, f)
         return data
     else:
+        print("Error Status: " + error_stat)
         return None
 
 if __name__ == "__main__":
