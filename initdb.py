@@ -260,8 +260,16 @@ class Character(Base):
     __tablename__ = 'character'
     id = Column(Integer, primary_key=True)
     #class = Column(Integer) I don't really care about this one yet
+    minutes_played = Column(Integer)
+    light_level = Column(Integer)    
     membership_id = Column(Integer, ForeignKey('account.id'))
+    class_hash = Column(Integer)
     account = relationship(Account)
+
+class CharacterReference(Base):
+    __tablename__ = 'characterReference'
+    class_hash = Column(Integer, primary_key=True)
+    class_name = Column(String(50))
 
 class ActivityReference(Base):
     __tablename__ = 'activityReference'

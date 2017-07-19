@@ -1,11 +1,13 @@
 #!/usr/bin/python
+#This file (with update option set) is run daily; it pulls new clan members and new accounts. For existing members, it adds newly created characters, and updates all existing stats.
+#Perhaps most importantly, it pulls in new activities completed by all members.
 import os
 import json
 import requests
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from initdb import Base, Bungie, Account, PvPAccountStatsTotal, PvPAccountStatsAverage, PvEAccountStatsTotal, PvEAccountStatsAverage
+from initdb import Base, Bungie, Account, PvPAccountStatsTotal, PvPAccountStatsAverage, PvEAccountStatsTotal, PvEAccountStatsAverage, Character
 
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
@@ -30,6 +32,9 @@ def buildDB():
     handleBungieUsers(session)
     handleDestinyUsers(session)
     handleAggregateStats(session)
+    handleCharacters(session)
+
+
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -134,6 +139,34 @@ def handleAggregateStats(session):
         session.add(new_pve_avg)
         session.commit()
 
+def handleCharacters(session):
+    """Retrieve JSONs for accounts, listing their Destiny characters. Builds characters table."""
+    accounts = session.query(Account).all()
+    for account in accounts:
+        membershipId = account.id
+        displayName = account.display_name
+        membershipType = account.membership_type
+        account_url = f"{URL_START}/Destiny/{membershipType}/Account/{membershipId}"
+        message = f"Fetching character data for: {displayName}"
+        outFile = f"{displayName}_characters.json"
+        data = jsonRequest(account_url, outFile, message)
+        if data is None:
+            #TODO: Throw an error
+            print("We fucked up")
+        
+        #Grab all of the individual accounts and put them in the Account table
+        characters = data['Response']['data']['characters']
+        for character in characters:
+            characterDict = {}
+            characterDict['id'] = character['characterBase']['characterId']
+            characterDict['minutes_played'] = character['characterBase']['minutesPlayedTotal']
+            characterDict['light_level'] = character['characterBase']['powerLevel']
+            characterDict['membership_id'] = membershipId
+            characterDict['class_hash'] = character['characterBase']['classHash']
+            new_character = Character(**characterDict)
+            session.add(new_character)
+            session.commit()
+
 def updateDestinyTable(path, filename, databasePath):
     def parseUserJSON():
         players = set()
@@ -182,35 +215,6 @@ def getMissingUserJSONs(path, header):
             missedName = retrieveDestinyUserJSON(bid, name)
             updatedUsers.append(missedName)
         return True, updatedUsers
-
-def buildCharactersTable(path, databasePath):
-    def parseUserJSON():
-        players = set()
-        characterIds = []
-        for filename in os.listdir(path):
-            if filename.endswith(".json"):
-                with open(path+filename) as data_file:
-                    data = json.load(data_file)
-                    characters = data['Response']['destinyAccounts']
-                    for character in characters:
-                        characterId = str(character['userInfo']['characterId'])
-                        players.add((membershipId, membershipType))
-                    # Should grab all character Ids. Seems like I don't actually grab anything, and not used currently, so commented out
-                    #characters = data['Response']['destinyAccounts'][0]
-                    #for character in characters:
-                    #    characterIds.append(['characterId'])
-        return tuple(players)
-
-    def addToDatabase(players):
-        table = "Destiny"
-        fields = "(Id INT, Type INT)"
-        db.initializeTable(table, fields)
-        for player in players:
-            request = "INSERT INTO Destiny VALUES(?,?)"
-            db.insert(request,player)
-
-    players = parseUserJSON()
-    addToDatabase(players)
 
 def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
