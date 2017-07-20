@@ -7,7 +7,7 @@ import requests
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from initdb import Base, Bungie, Account, PvPAccountStatsTotal, PvPAccountStatsAverage, PvEAccountStatsTotal, PvEAccountStatsAverage, Character
+from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference
 
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
@@ -33,8 +33,8 @@ def buildDB():
     handleDestinyUsers(session)
     handleAggregateStats(session)
     handleCharacters(session)
-
-
+    handleAggregateActivities(session)
+    handleWeaponUsage(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -129,10 +129,10 @@ def handleAggregateStats(session):
         pveTotalDict['membership_id'] = membershipId
         pveAvgDict['membership_id'] = membershipId
         #And put these in the database. Double **s unpack a dictionary into the row.
-        new_pvp_total = PvPAccountStatsTotal(**pvpTotalDict)
-        new_pvp_avg = PvPAccountStatsAverage(**pvpAvgDict)
-        new_pve_total = PvEAccountStatsTotal(**pveTotalDict)
-        new_pve_avg = PvEAccountStatsAverage(**pveAvgDict)
+        new_pvp_total = PvPTotal(**pvpTotalDict)
+        new_pvp_avg = PvPAverage(**pvpAvgDict)
+        new_pve_total = PvETotal(**pveTotalDict)
+        new_pve_avg = PvEAverage(**pveAvgDict)
         session.add(new_pvp_total)
         session.add(new_pvp_avg)
         session.add(new_pve_total)
@@ -166,55 +166,66 @@ def handleCharacters(session):
             new_character = Character(**characterDict)
             session.add(new_character)
             session.commit()
+#TODO: Next 2 functions are basically identical (and can be written identically). Abstract out.
+def handleAggregateActivities(session):
+    """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
+    characters = session.query(Character).all()
+    for character in characters:
+        membershipId = character.membership_id
+        characterId = character.id
+        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
+        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
+        stat_url = f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{characterId}"
+        message = f"Fetching aggregate activity stats for: {displayName}"
+        outFile =f"{displayName}_activities.json"
+        data = jsonRequest(stat_url, outFile, message)
+        if data is None:
+            #TODO: Throw an error
+            print("Not good hombre")
+        
+        #This part does the heavy lifting of table building
+        aggStatDict = {}
+        aggStatDict['character_id'] = characterId
+        activities = data['Response']['data']['activities']
+        for activity in activities:
+            aggStatDict['activity_hash'] = activity['activityHash']
+            for value in activity['values']:
+                aggStatDict[value] = activity['values'][value]['basic']['value']
+        new_aggregate_statistics = AggregateStatsCharacter(**aggStatDict)
+        session.add(new_aggregate_statistics)
+        session.commit()
 
-def updateDestinyTable(path, filename, databasePath):
-    def parseUserJSON():
-        players = set()
-        with open(path+filename+'.json') as data_file:
-            data = json.load(data_file)
-            characters = data['Response']['destinyAccounts']
-            for character in characters:
-                membershipId = str(character['userInfo']['membershipId'])
-                membershipType = str(character['userInfo']['membershipType'])
-                players.add((membershipId, membershipType))
-                    # Should grab all character Ids. Seems like I don't actually grab anything, and not used currently, so commented out
-                    #characters = data['Response']['destinyAccounts'][0]
-                    #for character in characters:
-                    #    characterIds.append(['characterId'])
-        return tuple(players)
+def handleWeaponUsage(session):
+    """Retrieve weapon usage for characters. Builds characterUsesWeapon table."""
+    characters = session.query(Character).all()
+    for character in characters:
+        membershipId = character.membership_id
+        characterId = character.id
+        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
+        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
+        stat_url = f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{membershipId}/{characterId}"
+        message = f"Fetching weapon usage stats for: {displayName}"
+        outFile =f"{displayName}_weapons.json"
+        data = jsonRequest(stat_url, outFile, message)
+        if data is None:
+            #TODO: Throw an error
+            print("Not good hombre")
+        elif data['Response']['data'] == {}:
+            continue
 
-    def addToDatabase(players):
-        for player in players:
-            request = "INSERT INTO Destiny VALUES(?,?)"
-            db.insert(request,player)
-
-    players = parseUserJSON()
-    addToDatabase(players)
-
-def getMissingUserJSONs(path, header):
-    def getMissingUsers():
-        request = "SELECT Bungie.Id, Bungie.Name FROM Bungie LEFT JOIN Destiny ON Bungie.Id = Destiny.Id WHERE Destiny.Id IS NULL"
-        users = db.select(request)
-        print("Missing users: ",users)
-        return users
-
-    def retrieveDestinyUserJSON(bungieID, displayName):
-        user_url = "https://bungie.net/platform/User/GetBungieAccount/"+str(bungieID)+"/254/"
-        dumpFileName = path+displayName+'.json'
-        obj = displayName
-        singleJSONRequest(user_url, header, dumpFileName, obj)
-        return obj
-
-    missing = getMissingUsers()
-    if missing == []:
-        return False, []
-    else:
-        updatedUsers = []
-        for missed in missing:
-            bid, name = missed
-            missedName = retrieveDestinyUserJSON(bid, name)
-            updatedUsers.append(missedName)
-        return True, updatedUsers
+        #This part does the heavy lifting of table building
+        weaponDict = {}
+        weaponDict['character_id'] = characterId
+        weapons = data['Response']['data']['weapons']
+        for weapon in weapons:
+            weaponDict['weapon_hash'] = weapon['referenceId']
+            weaponValues = weapon['values']
+            weaponDict['kills'] = weaponValues['uniqueWeaponKills']['basic']['value']
+            weaponDict['precision_kills'] = weaponValues['uniqueWeaponPrecisionKills']['basic']['value']
+            weaponDict['precision_kill_percentage'] = weaponValues['uniqueWeaponKillsPrecisionKills']['basic']['value']
+        new_weapon_stats = CharacterUsesWeapon(**weaponDict)
+        session.add(new_weapon_stats)
+        session.commit()
 
 def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")

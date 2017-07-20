@@ -40,8 +40,8 @@ class Account(Base):
     discord_id = Column(Integer, ForeignKey('discord.id'))
     discord = relationship(Discord)
 
-class PvEAccountStatsTotal(Base):
-    __tablename__ = 'pveAccountStatsTotal'
+class PvETotal(Base):
+    __tablename__ = 'pveTotal'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Integer)
@@ -105,8 +105,8 @@ class PvEAccountStatsTotal(Base):
     zonesCaptured = Column(Integer)
     zonesNeutralized = Column(Integer)
 
-class PvEAccountStatsAverage(Base):
-    __tablename__ = 'pveAccountStatsAverage'
+class PvEAverage(Base):
+    __tablename__ = 'pveAverage'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Float)
@@ -144,8 +144,8 @@ class PvEAccountStatsAverage(Base):
     zonesCaptured = Column(Float)
     zonesNeutralized = Column(Float)
 
-class PvPAccountStatsTotal(Base):
-    __tablename__ = 'pvpAccountStatsTotal'
+class PvPTotal(Base):
+    __tablename__ = 'pvpTotal'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Integer)
@@ -213,8 +213,8 @@ class PvPAccountStatsTotal(Base):
     zonesCaptured = Column(Integer)
     zonesNeutralized = Column(Integer)
 
-class PvPAccountStatsAverage(Base):
-    __tablename__ = 'pvpAccountStatsAverage'
+class PvPAverage(Base):
+    __tablename__ = 'pvpAverage'
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     abilityKills = Column(Float)
@@ -259,38 +259,69 @@ class PvPAccountStatsAverage(Base):
 class Character(Base):
     __tablename__ = 'character'
     id = Column(Integer, primary_key=True)
-    #class = Column(Integer) I don't really care about this one yet
     minutes_played = Column(Integer)
     light_level = Column(Integer)    
     membership_id = Column(Integer, ForeignKey('account.id'))
     class_hash = Column(Integer)
     account = relationship(Account)
 
-class CharacterReference(Base):
+class CharacterUsesWeapon(Base):
+    __tablename__ = 'characterUsesWeapon'
+    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    character = relationship(Character)
+    weapon_hash = Column(Integer)
+    kills = Column(Integer)
+    precision_kills = Column(Integer)
+    precision_kill_percentage = Column(Float)
+
+class AggregateStatsCharacter(Base):
+    __tablename__ = 'aggregateStatsCharacter'
+    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    character = relationship(Character)
+    activity_hash = Column(Integer)
+    activityAssists = Column(Integer)
+    activityCompletions = Column(Integer)
+    activityDeaths = Column(Integer)
+    activityGatesHit = Column(Integer)
+    activityKills = Column(Integer)
+    activityKillsDeathsAssists = Column(Float)
+    activityKillsDeathsRatio = Column(Float)
+    activityPrecisionKills = Column(Integer)
+    activitySecondsPlayed = Column(Integer)
+    activityWins = Column(Integer)
+    fastestCompletionSecondsForActivity = Column(Integer)
+
+class ActivityReference(Base):
+    __tablename__ = 'activityReference'
+    activity_hash = Column(Integer, primary_key=True)
+    activity_name = Column(String(50))
+
+class ClassReference(Base):
     __tablename__ = 'characterReference'
     class_hash = Column(Integer, primary_key=True)
     class_name = Column(String(50))
 
-class ActivityReference(Base):
-    __tablename__ = 'activityReference'
-    activity_id = Column(Integer, primary_key=True)
-    activity_name = Column(String(50))
+class WeaponReference(Base):
+    __tablename__ = 'weaponReference'
+    weapon_hash = Column(Integer, primary_key=True)
+    weapon_name = Column(String(50))
 
-class Activity(Base):
-    __tablename__ = 'activity'
-    instance_id = Column(Integer, primary_key=True)
-    activity_id = Column(Integer, ForeignKey('activityReference.activity_id'))
-    activityReference = relationship(ActivityReference)
-    reference_id = Column(Integer)
-    #Other activity-specific fields
+# I will not be including single game tracking for a while, probably. Maybe when D2 gets started I'll ramp it up, but we're going to need some more storage space.
+#class Activity(Base):
+#    __tablename__ = 'activity'
+#    instance_id = Column(Integer, primary_key=True)
+#    activity_id = Column(Integer, ForeignKey('activityReference.activity_id'))
+#    activityReference = relationship(ActivityReference)
+#    reference_id = Column(Integer)
+#    #Other activity-specific fields
 
-class CharacterPlaysActivity(Base):
-    __tablename__ = 'characterPlaysActivity'
-    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
-    character = relationship(Character)
-    instance_id = Column(Integer, ForeignKey('activity.instance_id'), primary_key=True)
-    activity = relationship(Activity)
-    #Other character-specific activity related fields
+#class CharacterPlaysActivity(Base):
+#    __tablename__ = 'characterPlaysActivity'
+#    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+#    character = relationship(Character)
+#    instance_id = Column(Integer, ForeignKey('activity.instance_id'), primary_key=True)
+#    activity = relationship(Activity)
+#    #Other character-specific activity related fields
 
 #print(f"sqlite:///{os.environ['DBPATH']}")
 engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
