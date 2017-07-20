@@ -45,7 +45,7 @@ def handleBungieUsers(session):
     if data is None:
         #TODO: Throw some error or something
         print("We fucked up")
-
+    
     #This section stores all clan users in the Bungie table 
     for result in data['Response']['results']:
         bungieDict = {}
@@ -74,7 +74,8 @@ def handleDestinyUsers(session):
         if data is None:
             #TODO: Throw an error
             print("We fucked up")
-        
+            continue
+
         #Grab all of the individual accounts and put them in the Account table
         accounts = data['Response']['destinyMemberships']
         for account in accounts:
@@ -101,7 +102,8 @@ def handleAggregateStats(session):
         if data is None:
             #TODO: Throw an error
             print("Not good hombre")
-        
+            continue
+
         #This part does the heavy lifting of table building
         #PvP first
         pvpTotalDict = {}
@@ -153,7 +155,8 @@ def handleCharacters(session):
         if data is None:
             #TODO: Throw an error
             print("We fucked up")
-        
+            continue
+
         #Grab all of the individual accounts and put them in the Account table
         characters = data['Response']['data']['characters']
         for character in characters:
