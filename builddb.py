@@ -294,7 +294,7 @@ def needsUpdate(table, kwargs, session):
 
 if __name__ == "__main__":
     loadConfig()
-    import time
-    start_time = time.time()
+    #import time
+    #start_time = time.time()
     buildDB()
-    print("--- %s seconds ---" % (time.time() - start_time))
+    #print("--- %s seconds ---" % (time.time() - start_time))
