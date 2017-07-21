@@ -7,11 +7,14 @@ import requests
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import exists
 from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference
-
+from datetime import datetime
+from sqlalchemy.sql.expression import literal_column
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
 URL_START = "https://bungie.net/Platform"
+UPDATE_DIFF = 1 # Number of days between updates
 
 def loadConfig(): 
     """Load configs from the config file""" 
@@ -25,7 +28,8 @@ def makeHeader():
 
 def buildDB():
     """Main function to build the full database"""
-    engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
+    # Add echo=True to below line for SQL logging
+    engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")#, echo=True)
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
@@ -44,21 +48,21 @@ def handleBungieUsers(session):
     data = jsonRequest(clan_url, outFile, message)
     if data is None:
         #TODO: Throw some error or something
-        print("We fucked up")
+        print("")
     
     #This section stores all clan users in the Bungie table 
-    for result in data['Response']['results']:
+    for user in data['Response']['results']:
         bungieDict = {}
+        bungieDict['last_updated'] = datetime.now()
         bungieDict['membership_type']=254
-        bungieDict['id'] = result['user']['membershipId']
+        bungieDict['id'] = user['user']['membershipId']
         #Some people have improperly linked accounts, this will handle those by setting bungieId as their PSN id
         if bungieDict['id'] == '0':
-            bungieDict['id'] = result['membershipId']
-            bungieDict['membership_type'] = result['membershipType']
-        bungieDict['bungie_name'] = result['user']['displayName']
-        new_bungie_user = Bungie(**bungieDict)
-        session.add(new_bungie_user)
-        session.commit()
+            bungieDict['id'] = user['membershipId']
+            bungieDict['membership_type'] = user['membershipType']
+        bungieDict['bungie_name'] = user['user']['displayName']
+        bungie_user = Bungie(**bungieDict)
+        insertOrUpdate(Bungie, bungie_user, session)
 
 def handleDestinyUsers(session):
     """Retrieve JSONs for users, listing their Destiny accounts. Builds account table."""
@@ -66,6 +70,10 @@ def handleDestinyUsers(session):
     for user in users:
         bungieId = user.id
         bungieName = user.bungie_name
+        kwargs = {"bungie_id" : bungieId}
+        if not needsUpdate(Account, kwargs, session):
+            print(f"Not updating account table for user: {bungieName}")
+            continue
         membershipType = user.membership_type
         user_url = f"{URL_START}/User/GetMembershipsById/{bungieId}/{membershipType}/"
         message = f"Fetching membership data for: {bungieName}"
@@ -73,35 +81,39 @@ def handleDestinyUsers(session):
         data = jsonRequest(user_url, outFile, message)
         if data is None:
             #TODO: Throw an error
-            print("We fucked up")
+            print("")
             continue
 
         #Grab all of the individual accounts and put them in the Account table
         accounts = data['Response']['destinyMemberships']
         for account in accounts:
             accountDict = {}
+            accountDict['last_updated'] = datetime.now()
             accountDict['id'] = account['membershipId']
             accountDict['membership_type'] = account['membershipType']
             accountDict['display_name'] = account['displayName']
             accountDict['bungie_id'] = bungieId
             new_account = Account(**accountDict)
-            session.add(new_account)
-            session.commit()
+            insertOrUpdate(Account, new_account, session)
 
 def handleAggregateStats(session):
     """Retrieve aggregate stats for users. Builds PvP and PvE average and total tables."""
     accounts = session.query(Account).all()
     for account in accounts:
-        membershipType = account.membership_type
         membershipId = account.id
         displayName = account.display_name
+        kwargs = {"id" : membershipId}
+        if not needsUpdate(PvPTotal, kwargs, session):
+            print(f"Not updating PvP and PvE tables for user: {displayName}")
+            continue
+        membershipType = account.membership_type
         stat_url = f"{URL_START}/Destiny/Stats/Account/{membershipType}/{membershipId}"
         message = f"Fetching aggregate historical stats for: {displayName}"
-        outFile =f"{displayName}_stats.json"
+        outFile = f"{displayName}_stats.json"
         data = jsonRequest(stat_url, outFile, message)
         if data is None:
             #TODO: Throw an error
-            print("Not good hombre")
+            print("")
             continue
 
         #This part does the heavy lifting of table building
@@ -121,25 +133,28 @@ def handleAggregateStats(session):
                 if 'pga' in stats[stat]:
                     avgDict[stat] = stats[stat]['pga']['value']
                 totalDict[stat] = stats[stat]['basic']['value']
-        
+
         fillDict(pvpAvgDict, pvpTotalDict, 'allPvP')
         fillDict(pveAvgDict, pveTotalDict, 'allPvE')
-
+        
         #Now we just need to tack on the membershipId
-        pvpTotalDict['membership_id'] = membershipId
-        pvpAvgDict['membership_id'] = membershipId
-        pveTotalDict['membership_id'] = membershipId
-        pveAvgDict['membership_id'] = membershipId
+        pvpTotalDict['id'] = membershipId
+        pvpAvgDict['id'] = membershipId
+        pveTotalDict['id'] = membershipId
+        pveAvgDict['id'] = membershipId
+        pvpTotalDict['last_updated'] = datetime.now()
+        pvpAvgDict['last_updated'] = datetime.now()
+        pveTotalDict['last_updated'] = datetime.now()
+        pveAvgDict['last_updated'] = datetime.now()
         #And put these in the database. Double **s unpack a dictionary into the row.
         new_pvp_total = PvPTotal(**pvpTotalDict)
         new_pvp_avg = PvPAverage(**pvpAvgDict)
         new_pve_total = PvETotal(**pveTotalDict)
         new_pve_avg = PvEAverage(**pveAvgDict)
-        session.add(new_pvp_total)
-        session.add(new_pvp_avg)
-        session.add(new_pve_total)
-        session.add(new_pve_avg)
-        session.commit()
+        insertOrUpdate(PvPTotal, new_pvp_total, session)
+        insertOrUpdate(PvPAverage, new_pvp_avg, session)
+        insertOrUpdate(PvETotal, new_pve_total, session)
+        insertOrUpdate(PvEAverage, new_pve_avg, session)
 
 def handleCharacters(session):
     """Retrieve JSONs for accounts, listing their Destiny characters. Builds characters table."""
@@ -147,6 +162,10 @@ def handleCharacters(session):
     for account in accounts:
         membershipId = account.id
         displayName = account.display_name
+        kwargs = {"membership_id" : membershipId}
+        if not needsUpdate(Character, kwargs, session):
+            print(f"Not updating character table for user: {displayName}")
+            continue
         membershipType = account.membership_type
         account_url = f"{URL_START}/Destiny/{membershipType}/Account/{membershipId}"
         message = f"Fetching character data for: {displayName}"
@@ -161,22 +180,27 @@ def handleCharacters(session):
         characters = data['Response']['data']['characters']
         for character in characters:
             characterDict = {}
+            characterDict['last_updated'] = datetime.now()
             characterDict['id'] = character['characterBase']['characterId']
             characterDict['minutes_played'] = character['characterBase']['minutesPlayedTotal']
             characterDict['light_level'] = character['characterBase']['powerLevel']
             characterDict['membership_id'] = membershipId
             characterDict['class_hash'] = character['characterBase']['classHash']
             new_character = Character(**characterDict)
-            session.add(new_character)
-            session.commit()
+            insertOrUpdate(Character, new_character, session)
+
 #TODO: Next 2 functions are basically identical (and can be written identically). Abstract out.
 def handleAggregateActivities(session):
     """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
     characters = session.query(Character).all()
     for character in characters:
-        membershipId = character.membership_id
         characterId = character.id
+        membershipId = character.membership_id
         displayName = session.query(Account).filter_by(id=membershipId).first().display_name
+        kwargs = {"id" : characterId}
+        if not needsUpdate(AggregateStatsCharacter, kwargs, session):
+            print(f"Not updating AggregateStatsCharacter table for user: {displayName}")
+            continue
         membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
         stat_url = f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{characterId}"
         message = f"Fetching aggregate activity stats for: {displayName}"
@@ -184,27 +208,31 @@ def handleAggregateActivities(session):
         data = jsonRequest(stat_url, outFile, message)
         if data is None:
             #TODO: Throw an error
-            print("Not good hombre")
+            print("")
         
         #This part does the heavy lifting of table building
         aggStatDict = {}
-        aggStatDict['character_id'] = characterId
+        aggStatDict['last_updated'] = datetime.now()
+        aggStatDict['id'] = characterId
         activities = data['Response']['data']['activities']
         for activity in activities:
             aggStatDict['activity_hash'] = activity['activityHash']
             for value in activity['values']:
                 aggStatDict[value] = activity['values'][value]['basic']['value']
         new_aggregate_statistics = AggregateStatsCharacter(**aggStatDict)
-        session.add(new_aggregate_statistics)
-        session.commit()
+        insertOrUpdate(AggregateStatsCharacter, new_aggregate_statistics, session)
 
 def handleWeaponUsage(session):
     """Retrieve weapon usage for characters. Builds characterUsesWeapon table."""
     characters = session.query(Character).all()
     for character in characters:
-        membershipId = character.membership_id
         characterId = character.id
+        membershipId = character.membership_id
         displayName = session.query(Account).filter_by(id=membershipId).first().display_name
+        kwargs = {"id" : characterId}
+        if not needsUpdate(CharacterUsesWeapon, kwargs, session):
+            print(f"Not updating CharacterUsesWeapon table for user: {displayName}")
+            continue
         membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
         stat_url = f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{membershipId}/{characterId}"
         message = f"Fetching weapon usage stats for: {displayName}"
@@ -212,13 +240,14 @@ def handleWeaponUsage(session):
         data = jsonRequest(stat_url, outFile, message)
         if data is None:
             #TODO: Throw an error
-            print("Not good hombre")
+            print("")
         elif data['Response']['data'] == {}:
             continue
 
         #This part does the heavy lifting of table building
         weaponDict = {}
-        weaponDict['character_id'] = characterId
+        weaponDict['last_updated'] = datetime.now()
+        weaponDict['id'] = characterId
         weapons = data['Response']['data']['weapons']
         for weapon in weapons:
             weaponDict['weapon_hash'] = weapon['referenceId']
@@ -227,8 +256,7 @@ def handleWeaponUsage(session):
             weaponDict['precision_kills'] = weaponValues['uniqueWeaponPrecisionKills']['basic']['value']
             weaponDict['precision_kill_percentage'] = weaponValues['uniqueWeaponKillsPrecisionKills']['basic']['value']
         new_weapon_stats = CharacterUsesWeapon(**weaponDict)
-        session.add(new_weapon_stats)
-        session.commit()
+        insertOrUpdate(CharacterUsesWeapon, new_weapon_stats, session)
 
 def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
@@ -244,6 +272,29 @@ def jsonRequest(url, outFile, message=""):
         print("Error Status: " + error_stat)
         return None
 
+def insertOrUpdate(table, obj, session):
+    matches = session.query(exists().where(table.id == obj.id)).scalar()
+    if matches:
+        # We have to do some strange things to pass update statements. This create a dynamic dictionary to update all fields.
+        session.query(table).filter_by(id=obj.id).update({column: getattr(obj, column) for column in table.__table__.columns.keys()})
+    else:
+        session.add(obj)
+    session.commit()
+
+def needsUpdate(table, kwargs, session):
+    now = datetime.now()
+    try:
+        lastUpdate = session.query(table).filter_by(**kwargs).first().last_updated
+        print("Fetching last update...")
+        daysSince = (now - lastUpdate).days
+        #print (f"Days since update: {daysSince}")
+        return daysSince >= UPDATE_DIFF
+    except (AttributeError, TypeError):
+        return True
+
 if __name__ == "__main__":
     loadConfig()
+    import time
+    start_time = time.time()
     buildDB()
+    print("--- %s seconds ---" % (time.time() - start_time))

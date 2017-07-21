@@ -1,0 +1,535 @@
+Connecting to Bungie: https://bungie.net/Platform/Group/1407546/Membersv3/?lc=en&fmt=true&currentPage=1&platformType=2
+Fetching page 1 of clan users.
+2017-07-21 13:07:12,738 INFO sqlalchemy.engine.base.Engine SELECT CAST('test plain returns' AS VARCHAR(60)) AS anon_1
+2017-07-21 13:07:12,739 INFO sqlalchemy.engine.base.Engine ()
+2017-07-21 13:07:12,739 INFO sqlalchemy.engine.base.Engine SELECT CAST('test unicode returns' AS VARCHAR(60)) AS anon_1
+2017-07-21 13:07:12,739 INFO sqlalchemy.engine.base.Engine ()
+2017-07-21 13:07:12,739 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,740 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,740 INFO sqlalchemy.engine.base.Engine ('5091171', 'SolidSanjuro', 254)
+2017-07-21 13:07:12,741 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,752 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,753 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,753 INFO sqlalchemy.engine.base.Engine ('4611686018446733016', 'AntDawg14315', 2)
+2017-07-21 13:07:12,753 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,764 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,765 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,765 INFO sqlalchemy.engine.base.Engine ('13744815', 'Mitchdt20', 254)
+2017-07-21 13:07:12,765 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,776 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,777 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,777 INFO sqlalchemy.engine.base.Engine ('12486025', 'rizzo1979', 254)
+2017-07-21 13:07:12,779 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,789 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,790 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,790 INFO sqlalchemy.engine.base.Engine ('9777309', 'MAPD', 254)
+2017-07-21 13:07:12,792 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,802 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,803 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,803 INFO sqlalchemy.engine.base.Engine ('8917474', 'South3rn_Beatdwn', 254)
+2017-07-21 13:07:12,805 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,815 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,815 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,815 INFO sqlalchemy.engine.base.Engine ('14074174', 'The_Vex_Offender', 254)
+2017-07-21 13:07:12,817 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,832 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,832 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,833 INFO sqlalchemy.engine.base.Engine ('4030165', 'PharisaicHeart', 254)
+2017-07-21 13:07:12,834 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,851 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,851 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,851 INFO sqlalchemy.engine.base.Engine ('12261128', 'JUK4618', 254)
+2017-07-21 13:07:12,853 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,868 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,869 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,869 INFO sqlalchemy.engine.base.Engine ('15102513', 'Kirksplosion', 254)
+2017-07-21 13:07:12,871 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,886 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,887 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,887 INFO sqlalchemy.engine.base.Engine ('13340015', 'Roscroft', 254)
+2017-07-21 13:07:12,889 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,902 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,903 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,903 INFO sqlalchemy.engine.base.Engine ('511779', 'Thorn_23_TX', 254)
+2017-07-21 13:07:12,905 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,916 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,917 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,917 INFO sqlalchemy.engine.base.Engine ('14505128', 'Froodie4D', 254)
+2017-07-21 13:07:12,920 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,930 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,931 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,931 INFO sqlalchemy.engine.base.Engine ('12340850', 'MasonF123', 254)
+2017-07-21 13:07:12,933 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,945 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,945 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,946 INFO sqlalchemy.engine.base.Engine ('5559314', 'syNN_x', 254)
+2017-07-21 13:07:12,948 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,963 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,964 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,964 INFO sqlalchemy.engine.base.Engine ('14926038', 'Mr_Lonegunman', 254)
+2017-07-21 13:07:12,966 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:12,983 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:12,983 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:12,984 INFO sqlalchemy.engine.base.Engine ('14238880', 'Fraleesi', 254)
+2017-07-21 13:07:12,986 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,002 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,003 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,003 INFO sqlalchemy.engine.base.Engine ('4028382', 'RaynMan80', 254)
+2017-07-21 13:07:13,005 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,021 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,022 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,022 INFO sqlalchemy.engine.base.Engine ('11832201', 'Bob Leigh', 254)
+2017-07-21 13:07:13,025 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,037 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,038 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,038 INFO sqlalchemy.engine.base.Engine ('13927634', 'ride4life61191', 254)
+2017-07-21 13:07:13,041 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,051 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,052 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,052 INFO sqlalchemy.engine.base.Engine ('11483549', 'SPEKTRIX1289', 254)
+2017-07-21 13:07:13,054 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,066 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,067 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,067 INFO sqlalchemy.engine.base.Engine ('14628362', 'dakonip', 254)
+2017-07-21 13:07:13,070 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,081 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,082 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,082 INFO sqlalchemy.engine.base.Engine ('5963102', 'Greenwoodguy', 254)
+2017-07-21 13:07:13,084 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,099 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,100 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,100 INFO sqlalchemy.engine.base.Engine ('14516488', 'shadowpuppet2009', 254)
+2017-07-21 13:07:13,102 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,118 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,119 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,119 INFO sqlalchemy.engine.base.Engine ('11706105', 'jool143', 254)
+2017-07-21 13:07:13,121 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,137 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,138 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,138 INFO sqlalchemy.engine.base.Engine ('6189371', 'DarthMayhe', 254)
+2017-07-21 13:07:13,141 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,157 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,158 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,159 INFO sqlalchemy.engine.base.Engine ('5394420', 'darksaysay', 254)
+2017-07-21 13:07:13,162 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,174 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,174 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,175 INFO sqlalchemy.engine.base.Engine ('6021213', 'LutherArkwright', 254)
+2017-07-21 13:07:13,177 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,188 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,189 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,189 INFO sqlalchemy.engine.base.Engine ('14833879', 'CreedKiller01', 254)
+2017-07-21 13:07:13,190 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,199 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,199 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,199 INFO sqlalchemy.engine.base.Engine ('11717737', 'Bluesoull', 254)
+2017-07-21 13:07:13,201 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,210 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,210 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,211 INFO sqlalchemy.engine.base.Engine ('9746252', 'richardwolfe83', 254)
+2017-07-21 13:07:13,212 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,226 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,227 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,227 INFO sqlalchemy.engine.base.Engine ('11843460', 'bethelia', 254)
+2017-07-21 13:07:13,229 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,246 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,247 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,247 INFO sqlalchemy.engine.base.Engine ('10292262', 'Three2YaHead', 254)
+2017-07-21 13:07:13,249 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,266 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,267 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,267 INFO sqlalchemy.engine.base.Engine ('14239541', 'Dr-Thunder93', 254)
+2017-07-21 13:07:13,269 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,286 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,287 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,287 INFO sqlalchemy.engine.base.Engine ('11435272', 'KillaB523', 254)
+2017-07-21 13:07:13,289 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,302 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,303 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,303 INFO sqlalchemy.engine.base.Engine ('4611686018447742444', 'Canadian_Mentat', 2)
+2017-07-21 13:07:13,305 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,316 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,317 INFO sqlalchemy.engine.base.Engine INSERT INTO bungie (id, bungie_name, membership_type) VALUES (?, ?, ?)
+2017-07-21 13:07:13,317 INFO sqlalchemy.engine.base.Engine ('6881252', 'BAM', 254)
+2017-07-21 13:07:13,320 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,331 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,333 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie
+2017-07-21 13:07:13,334 INFO sqlalchemy.engine.base.Engine ()
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/5091171/254/
+Fetching membership data for: SolidSanjuro
+2017-07-21 13:07:13,829 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:13,830 INFO sqlalchemy.engine.base.Engine ('4611686018428659295', 'SolidSanjuro', 2, '5091171', None)
+2017-07-21 13:07:13,832 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:13,844 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:13,845 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:13,845 INFO sqlalchemy.engine.base.Engine ('4611686018446733016',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/4611686018446733016/2/
+Fetching membership data for: AntDawg14315
+2017-07-21 13:07:14,999 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:15,000 INFO sqlalchemy.engine.base.Engine ('4611686018446733016', 'AntDawg14315', 2, '4611686018446733016', None)
+2017-07-21 13:07:15,001 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:15,016 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:15,018 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:15,018 INFO sqlalchemy.engine.base.Engine ('13744815',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/13744815/254/
+Fetching membership data for: Mitchdt20
+2017-07-21 13:07:15,776 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:15,777 INFO sqlalchemy.engine.base.Engine ('4611686018434293736', 'MitchDT18', 1, '13744815', None)
+2017-07-21 13:07:15,778 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:15,794 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:15,795 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:15,796 INFO sqlalchemy.engine.base.Engine ('4611686018437322453', 'Mitchdt20', 2, '13744815', None)
+2017-07-21 13:07:15,798 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:15,815 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:15,817 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:15,817 INFO sqlalchemy.engine.base.Engine ('12486025',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/12486025/254/
+Fetching membership data for: rizzo1979
+2017-07-21 13:07:16,751 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:16,752 INFO sqlalchemy.engine.base.Engine ('4611686018442450679', 'rizzo1979', 2, '12486025', None)
+2017-07-21 13:07:16,753 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:16,765 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:16,766 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:16,767 INFO sqlalchemy.engine.base.Engine ('9777309',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/9777309/254/
+Fetching membership data for: MAPD
+2017-07-21 13:07:17,612 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:17,612 INFO sqlalchemy.engine.base.Engine ('4611686018444348832', 'MAPD', 2, '9777309', None)
+2017-07-21 13:07:17,613 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:17,631 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:17,632 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:17,632 INFO sqlalchemy.engine.base.Engine ('8917474',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/8917474/254/
+Fetching membership data for: South3rn_Beatdwn
+2017-07-21 13:07:18,424 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:18,424 INFO sqlalchemy.engine.base.Engine ('4611686018441413783', 'South3rn_Beatdwn', 2, '8917474', None)
+2017-07-21 13:07:18,425 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:18,445 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:18,446 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:18,446 INFO sqlalchemy.engine.base.Engine ('14074174',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14074174/254/
+Fetching membership data for: The_Vex_Offender
+2017-07-21 13:07:19,076 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:19,077 INFO sqlalchemy.engine.base.Engine ('4611686018462222204', 'The_Vex_Offender', 2, '14074174', None)
+2017-07-21 13:07:19,078 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:19,092 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:19,094 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:19,094 INFO sqlalchemy.engine.base.Engine ('4030165',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/4030165/254/
+Fetching membership data for: PharisaicHeart
+2017-07-21 13:07:19,992 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:19,992 INFO sqlalchemy.engine.base.Engine ('4611686018440231318', 'PharisaicHeart', 2, '4030165', None)
+2017-07-21 13:07:19,993 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:20,005 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:20,006 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:20,007 INFO sqlalchemy.engine.base.Engine ('12261128',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/12261128/254/
+Fetching membership data for: JUK4618
+2017-07-21 13:07:20,930 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:20,931 INFO sqlalchemy.engine.base.Engine ('4611686018453668254', 'JUK4618', 2, '12261128', None)
+2017-07-21 13:07:20,932 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:20,946 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:20,947 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:20,947 INFO sqlalchemy.engine.base.Engine ('15102513',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/15102513/254/
+Fetching membership data for: Kirksplosion
+2017-07-21 13:07:21,870 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:21,870 INFO sqlalchemy.engine.base.Engine ('4611686018465969663', 'Kirksplosion', 2, '15102513', None)
+2017-07-21 13:07:21,872 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:21,884 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:21,885 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:21,885 INFO sqlalchemy.engine.base.Engine ('13340015',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/13340015/254/
+Fetching membership data for: Roscroft
+2017-07-21 13:07:22,305 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:22,305 INFO sqlalchemy.engine.base.Engine ('4611686018456448671', 'Roscroft', 2, '13340015', None)
+2017-07-21 13:07:22,307 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:22,321 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:22,322 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:22,322 INFO sqlalchemy.engine.base.Engine ('511779',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/511779/254/
+Fetching membership data for: Thorn_23_TX
+2017-07-21 13:07:22,811 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:22,811 INFO sqlalchemy.engine.base.Engine ('4611686018431516020', 'Thorn23TX', 1, '511779', None)
+2017-07-21 13:07:22,812 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:22,824 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:22,825 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:22,825 INFO sqlalchemy.engine.base.Engine ('4611686018429406839', 'Thorn23TX', 2, '511779', None)
+2017-07-21 13:07:22,827 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:22,839 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:22,841 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:22,841 INFO sqlalchemy.engine.base.Engine ('14505128',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14505128/254/
+Fetching membership data for: Froodie4D
+2017-07-21 13:07:23,546 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:23,546 INFO sqlalchemy.engine.base.Engine ('4611686018464264448', 'Froodie4D', 2, '14505128', None)
+2017-07-21 13:07:23,547 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:23,562 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:23,564 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:23,564 INFO sqlalchemy.engine.base.Engine ('12340850',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/12340850/254/
+Fetching membership data for: MasonF123
+2017-07-21 13:07:24,055 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:24,056 INFO sqlalchemy.engine.base.Engine ('4611686018455195769', 'MasonF123', 2, '12340850', None)
+2017-07-21 13:07:24,057 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:24,069 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:24,070 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:24,070 INFO sqlalchemy.engine.base.Engine ('5559314',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/5559314/254/
+Fetching membership data for: syNN_x
+2017-07-21 13:07:24,591 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:24,592 INFO sqlalchemy.engine.base.Engine ('4611686018430157715', 'syNN_x', 2, '5559314', None)
+2017-07-21 13:07:24,593 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:24,604 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:24,605 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:24,606 INFO sqlalchemy.engine.base.Engine ('14926038',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14926038/254/
+Fetching membership data for: Mr_Lonegunman
+2017-07-21 13:07:25,003 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:25,004 INFO sqlalchemy.engine.base.Engine ('4611686018465678824', 'Mr_Lonegunman', 2, '14926038', None)
+2017-07-21 13:07:25,005 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:25,019 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:25,020 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:25,020 INFO sqlalchemy.engine.base.Engine ('14238880',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14238880/254/
+Fetching membership data for: Fraleesi
+2017-07-21 13:07:25,630 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:25,630 INFO sqlalchemy.engine.base.Engine ('4611686018462981571', 'Fraleesi', 2, '14238880', None)
+2017-07-21 13:07:25,632 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:25,646 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:25,647 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:25,647 INFO sqlalchemy.engine.base.Engine ('4028382',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/4028382/254/
+Fetching membership data for: RaynMan80
+2017-07-21 13:07:26,465 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:26,465 INFO sqlalchemy.engine.base.Engine ('4611686018428559116', 'Rayn-Man80', 2, '4028382', None)
+2017-07-21 13:07:26,467 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:26,482 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:26,483 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:26,483 INFO sqlalchemy.engine.base.Engine ('11832201',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/11832201/254/
+Fetching membership data for: Bob Leigh
+2017-07-21 13:07:27,197 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:27,197 INFO sqlalchemy.engine.base.Engine ('4611686018447160444', 'Bob-Leigh', 2, '11832201', None)
+2017-07-21 13:07:27,198 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:27,213 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:27,214 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:27,214 INFO sqlalchemy.engine.base.Engine ('13927634',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/13927634/254/
+Fetching membership data for: ride4life61191
+2017-07-21 13:07:27,720 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:27,720 INFO sqlalchemy.engine.base.Engine ('4611686018461719960', 'ride4life61191', 2, '13927634', None)
+2017-07-21 13:07:27,721 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:27,733 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:27,734 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:27,734 INFO sqlalchemy.engine.base.Engine ('11483549',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/11483549/254/
+Fetching membership data for: SPEKTRIX1289
+2017-07-21 13:07:28,633 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:28,634 INFO sqlalchemy.engine.base.Engine ('4611686018452172059', 'SPEKTRIX1289', 2, '11483549', None)
+2017-07-21 13:07:28,638 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:28,650 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:28,651 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:28,651 INFO sqlalchemy.engine.base.Engine ('14628362',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14628362/254/
+Fetching membership data for: dakonip
+2017-07-21 13:07:29,202 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:29,202 INFO sqlalchemy.engine.base.Engine ('4611686018464694837', 'dakonip', 2, '14628362', None)
+2017-07-21 13:07:29,204 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:29,217 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:29,218 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:29,219 INFO sqlalchemy.engine.base.Engine ('5963102',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/5963102/254/
+Fetching membership data for: Greenwoodguy
+2017-07-21 13:07:29,874 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:29,875 INFO sqlalchemy.engine.base.Engine ('4611686018433402210', 'Greenwoodguy', 2, '5963102', None)
+2017-07-21 13:07:29,877 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:29,891 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:29,893 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:29,893 INFO sqlalchemy.engine.base.Engine ('14516488',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14516488/254/
+Fetching membership data for: shadowpuppet2009
+2017-07-21 13:07:30,434 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:30,434 INFO sqlalchemy.engine.base.Engine ('4611686018464342414', 'shadowpuppet2009', 2, '14516488', None)
+2017-07-21 13:07:30,435 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:30,450 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:30,451 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:30,452 INFO sqlalchemy.engine.base.Engine ('11706105',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/11706105/254/
+Fetching membership data for: jool143
+2017-07-21 13:07:31,061 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:31,062 INFO sqlalchemy.engine.base.Engine ('4611686018452935690', 'jool143', 2, '11706105', None)
+2017-07-21 13:07:31,063 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:31,077 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:31,078 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:31,079 INFO sqlalchemy.engine.base.Engine ('6189371',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/6189371/254/
+Fetching membership data for: DarthMayhe
+2017-07-21 13:07:32,002 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:32,002 INFO sqlalchemy.engine.base.Engine ('4611686018436500548', 'DarthMayhew_', 2, '6189371', None)
+2017-07-21 13:07:32,003 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:32,016 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:32,018 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:32,018 INFO sqlalchemy.engine.base.Engine ('5394420',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/5394420/254/
+Fetching membership data for: darksaysay
+2017-07-21 13:07:32,629 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:32,630 INFO sqlalchemy.engine.base.Engine ('4611686018429415861', 'darksaysay', 2, '5394420', None)
+2017-07-21 13:07:32,631 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:32,643 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:32,644 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:32,644 INFO sqlalchemy.engine.base.Engine ('6021213',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/6021213/254/
+Fetching membership data for: LutherArkwright
+2017-07-21 13:07:33,046 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:33,047 INFO sqlalchemy.engine.base.Engine ('4611686018452497782', 'LutherArkwright', 1, '6021213', None)
+2017-07-21 13:07:33,048 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:33,061 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:33,061 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:33,062 INFO sqlalchemy.engine.base.Engine ('4611686018429214619', 'LutherArkwright', 2, '6021213', None)
+2017-07-21 13:07:33,064 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:33,075 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:33,077 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:33,077 INFO sqlalchemy.engine.base.Engine ('14833879',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14833879/254/
+Fetching membership data for: CreedKiller01
+2017-07-21 13:07:33,463 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:33,464 INFO sqlalchemy.engine.base.Engine ('4611686018465391940', 'CreedKiller01', 2, '14833879', None)
+2017-07-21 13:07:33,465 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:33,478 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:33,479 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:33,479 INFO sqlalchemy.engine.base.Engine ('11717737',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/11717737/254/
+Fetching membership data for: Bluesoull
+2017-07-21 13:07:33,985 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:33,986 INFO sqlalchemy.engine.base.Engine ('4611686018437079666', 'Bluesoull', 2, '11717737', None)
+2017-07-21 13:07:33,987 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:34,003 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:34,004 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:34,004 INFO sqlalchemy.engine.base.Engine ('9746252',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/9746252/254/
+Fetching membership data for: richardwolfe83
+2017-07-21 13:07:34,825 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:34,826 INFO sqlalchemy.engine.base.Engine ('4611686018438908535', 'Richardwolfe1992', 2, '9746252', None)
+2017-07-21 13:07:34,837 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:34,848 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:34,849 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:34,850 INFO sqlalchemy.engine.base.Engine ('11843460',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/11843460/254/
+Fetching membership data for: bethelia
+2017-07-21 13:07:35,262 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:35,262 INFO sqlalchemy.engine.base.Engine ('4611686018453063011', 'bethelia', 2, '11843460', None)
+2017-07-21 13:07:35,263 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:35,275 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:35,277 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:35,277 INFO sqlalchemy.engine.base.Engine ('10292262',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/10292262/254/
+Fetching membership data for: Three2YaHead
+2017-07-21 13:07:35,723 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:35,723 INFO sqlalchemy.engine.base.Engine ('4611686018448324479', 'Three2YaHead', 2, '10292262', None)
+2017-07-21 13:07:35,728 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:35,742 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:35,744 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:35,744 INFO sqlalchemy.engine.base.Engine ('14239541',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/14239541/254/
+Fetching membership data for: Dr-Thunder93
+2017-07-21 13:07:36,142 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:36,142 INFO sqlalchemy.engine.base.Engine ('4611686018462984826', 'Dr-Thunder93', 2, '14239541', None)
+2017-07-21 13:07:36,144 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:36,155 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:36,157 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:36,157 INFO sqlalchemy.engine.base.Engine ('11435272',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/11435272/254/
+Fetching membership data for: KillaB523
+2017-07-21 13:07:36,622 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:36,622 INFO sqlalchemy.engine.base.Engine ('4611686018437547531', 'KillaB523', 2, '11435272', None)
+2017-07-21 13:07:36,624 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:36,637 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:36,638 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:36,639 INFO sqlalchemy.engine.base.Engine ('4611686018447742444',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/4611686018447742444/2/
+Fetching membership data for: Canadian_Mentat
+2017-07-21 13:07:37,130 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:37,130 INFO sqlalchemy.engine.base.Engine ('4611686018447742444', 'Canadian_Mentat', 2, '4611686018447742444', None)
+2017-07-21 13:07:37,131 INFO sqlalchemy.engine.base.Engine COMMIT
+2017-07-21 13:07:37,143 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2017-07-21 13:07:37,144 INFO sqlalchemy.engine.base.Engine SELECT bungie.id AS bungie_id, bungie.bungie_name AS bungie_bungie_name, bungie.membership_type AS bungie_membership_type 
+FROM bungie 
+WHERE bungie.id = ?
+2017-07-21 13:07:37,144 INFO sqlalchemy.engine.base.Engine ('6881252',)
+Connecting to Bungie: https://bungie.net/Platform/User/GetMembershipsById/6881252/254/
+Fetching membership data for: BAM
+2017-07-21 13:07:37,925 INFO sqlalchemy.engine.base.Engine INSERT INTO account (id, display_name, membership_type, bungie_id, discord_id) VALUES (?, ?, ?, ?, ?)
+2017-07-21 13:07:37,925 INFO sqlalchemy.engine.base.Engine ('4611686018429138938', 'BAM_110', 2, '6881252', None)
+2017-07-21 13:07:37,932 INFO sqlalchemy.engine.base.Engine COMMIT

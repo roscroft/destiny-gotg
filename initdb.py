@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -16,12 +16,12 @@ def loadConfig():
         os.environ[value[0]] = value[1]
 
 loadConfig()
-
 Base = declarative_base()
 
 class Bungie(Base):
     __tablename__ = 'bungie'
     id = Column(String(50), primary_key=True)
+    last_updated = Column(DateTime)
     bungie_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
 
@@ -33,6 +33,7 @@ class Discord(Base):
 class Account(Base):
     __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
+    last_updated = Column(DateTime)
     display_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
     bungie_id = Column(String(50), ForeignKey('bungie.id'))
@@ -42,7 +43,8 @@ class Account(Base):
 
 class PvETotal(Base):
     __tablename__ = 'pveTotal'
-    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Integer)
     activitiesCleared = Column(Integer)
@@ -107,7 +109,8 @@ class PvETotal(Base):
 
 class PvEAverage(Base):
     __tablename__ = 'pveAverage'
-    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Float)
     assists = Column(Float)
@@ -146,7 +149,8 @@ class PvEAverage(Base):
 
 class PvPTotal(Base):
     __tablename__ = 'pvpTotal'
-    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Integer)
     activitiesEntered = Column(Integer)
@@ -215,7 +219,8 @@ class PvPTotal(Base):
 
 class PvPAverage(Base):
     __tablename__ = 'pvpAverage'
-    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Float)
     assists = Column(Float)
@@ -259,6 +264,7 @@ class PvPAverage(Base):
 class Character(Base):
     __tablename__ = 'character'
     id = Column(Integer, primary_key=True)
+    last_updated = Column(DateTime)
     minutes_played = Column(Integer)
     light_level = Column(Integer)    
     membership_id = Column(Integer, ForeignKey('account.id'))
@@ -267,7 +273,8 @@ class Character(Base):
 
 class CharacterUsesWeapon(Base):
     __tablename__ = 'characterUsesWeapon'
-    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    last_updated = Column(DateTime)
     character = relationship(Character)
     weapon_hash = Column(Integer)
     kills = Column(Integer)
@@ -276,7 +283,8 @@ class CharacterUsesWeapon(Base):
 
 class AggregateStatsCharacter(Base):
     __tablename__ = 'aggregateStatsCharacter'
-    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    last_updated = Column(DateTime)
     character = relationship(Character)
     activity_hash = Column(Integer)
     activityAssists = Column(Integer)
@@ -325,5 +333,5 @@ class WeaponReference(Base):
 
 #print(f"sqlite:///{os.environ['DBPATH']}")
 engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
-Base.metadata.drop_all(engine)
+#Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
