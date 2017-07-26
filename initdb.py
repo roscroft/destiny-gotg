@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
+
 def loadConfig(): 
     """Load configs from the config file""" 
     config = open(f"{APP_PATH}/config", "r").readlines() 
@@ -16,6 +17,7 @@ def loadConfig():
         os.environ[value[0]] = value[1]
 
 loadConfig()
+
 Base = declarative_base()
 
 class Bungie(Base):

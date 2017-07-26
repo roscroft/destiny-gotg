@@ -1,6 +1,5 @@
 import os
 import sys
-import model
 
 APP_PATH = "/etc/destinygotg"
 
@@ -12,15 +11,17 @@ def main():
         return
     # Make sure the APP_PATH directory exists
     setAppPath()
-    # Ensure a config file exists
-    if not os.path.exists(f"{APP_PATH}/config"):
+    # Ensure a correct config file exists
+    if not configExists():
         generateConfig()
     # Load the config values into environment vars
     loadConfig()
-    if not model.checkForManifest():
+    import model
+    if not model.checkManifest():
         model.getManifest()
     if not model.checkDB():
-       model.buildDB()
+        model.initDB()
+        model.buildDB()
     #runFlask()
 
 def setAppPath():
@@ -50,6 +51,15 @@ def generateConfig():
     config.write(f"MANIFEST_CONTENT:{APP_PATH}/manifest.content\n")
     config.write(f"MANIFEST_PATH:{APP_PATH}/manifest.db\n")
     config.close()
+
+def configExists():
+    """Check if there are any missing fields, or if the file doesn't exist"""
+    if os.path.exists(f"{APP_PATH}/config"):
+        return True
+    else:
+        print("No config file")
+        return False
+    #TODO: Implement config file checker to see if it has all fields
 
 def loadConfig():
     """Load configs from the config file"""

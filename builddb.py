@@ -18,12 +18,12 @@ APP_PATH = "/etc/destinygotg"
 URL_START = "https://bungie.net/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
 
-def loadConfig(): 
-    """Load configs from the config file""" 
-    config = open(f"{APP_PATH}/config", "r").readlines() 
-    for value in config: 
-        value = value.strip().split(":") 
-        os.environ[value[0]] = value[1]
+#def loadConfig(): 
+#    """Load configs from the config file""" 
+#    config = open(f"{APP_PATH}/config", "r").readlines() 
+#    for value in config: 
+#        value = value.strip().split(":") 
+#        os.environ[value[0]] = value[1]
 
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -35,12 +35,12 @@ def buildDB():
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
-    #handleBungieUsers(session)
-    #handleDestinyUsers(session)
-    #handleAggregateStats(session)
-    #handleCharacters(session)
-    #handleAggregateActivities(session)
-    #handleWeaponUsage(session)
+    handleBungieUsers(session)
+    handleDestinyUsers(session)
+    handleAggregateStats(session)
+    handleCharacters(session)
+    handleAggregateActivities(session)
+    handleWeaponUsage(session)
     handleReferenceTables(session)
 
 def handleBungieUsers(session):
