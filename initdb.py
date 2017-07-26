@@ -301,18 +301,20 @@ class AggregateStatsCharacter(Base):
 
 class ActivityReference(Base):
     __tablename__ = 'activityReference'
-    activity_hash = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     activity_name = Column(String(50))
 
 class ClassReference(Base):
-    __tablename__ = 'characterReference'
-    class_hash = Column(Integer, primary_key=True)
+    __tablename__ = 'classReference'
+    id = Column(Integer, primary_key=True)
     class_name = Column(String(50))
 
 class WeaponReference(Base):
     __tablename__ = 'weaponReference'
-    weapon_hash = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     weapon_name = Column(String(50))
+    weapon_type = Column(String(50))
+    weapon_rarity = Column(String(50))
 
 # I will not be including single game tracking for a while, probably. Maybe when D2 gets started I'll ramp it up, but we're going to need some more storage space.
 #class Activity(Base):

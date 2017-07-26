@@ -17,6 +17,8 @@ def main():
         generateConfig()
     # Load the config values into environment vars
     loadConfig()
+    if not model.checkForManifest():
+        model.getManifest()
     if not model.checkDB():
        model.buildDB()
     #runFlask()
@@ -45,6 +47,8 @@ def generateConfig():
     config.write(f"BUNGIE_APIKEY:{apikey}\n")
     config.write(f"BUNGIE_CLANID:{clanid}\n")
     config.write(f"DBPATH:{APP_PATH}/guardians.db\n")
+    config.write(f"MANIFEST_CONTENT:{APP_PATH}/manifest.content\n")
+    config.write(f"MANIFEST_PATH:{APP_PATH}/manifest.db\n")
     config.close()
 
 def loadConfig():

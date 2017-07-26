@@ -11,6 +11,8 @@ from sqlalchemy import exists
 from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference
 from datetime import datetime
 from sqlalchemy.sql.expression import literal_column
+import sqlite3
+
 #load env vars for testing purposes
 APP_PATH = "/etc/destinygotg"
 URL_START = "https://bungie.net/Platform"
@@ -33,12 +35,13 @@ def buildDB():
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
-    handleBungieUsers(session)
-    handleDestinyUsers(session)
-    handleAggregateStats(session)
-    handleCharacters(session)
-    handleAggregateActivities(session)
-    handleWeaponUsage(session)
+    #handleBungieUsers(session)
+    #handleDestinyUsers(session)
+    #handleAggregateStats(session)
+    #handleCharacters(session)
+    #handleAggregateActivities(session)
+    #handleWeaponUsage(session)
+    handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -257,6 +260,86 @@ def handleWeaponUsage(session):
             weaponDict['precision_kill_percentage'] = weaponValues['uniqueWeaponKillsPrecisionKills']['basic']['value']
         new_weapon_stats = CharacterUsesWeapon(**weaponDict)
         insertOrUpdate(CharacterUsesWeapon, new_weapon_stats, session)
+
+def handleReferenceTables(session):
+    """Connects to the manifest.content database and builds the necessary reference tables."""
+
+    hash_dict = {'DestinyActivityDefinition': 'activityHash',
+                #'DestinyActivityTypeDefinition': 'activityTypeHash',
+                'DestinyClassDefinition': 'classHash',
+                #'DestinyGenderDefinition': 'genderHash',
+                #'DestinyInventoryBucketDefinition': 'bucketHash',
+                'DestinyInventoryItemDefinition': 'itemHash',
+                #'DestinyProgressionDefinition': 'progressionHash',
+                #'DestinyRaceDefinition': 'raceHash',
+                #'DestinyTalentGridDefinition': 'gridHash',
+                #'DestinyUnlockFlagDefinition': 'flagHash',
+                #'DestinyHistoricalStatsDefinition': 'statId',
+                #'DestinyDirectorBookDefinition': 'bookHash',
+                #'DestinyStatDefinition': 'statHash',
+                #'DestinySandboxPerkDefinition': 'perkHash',
+                #'DestinyDestinationDefinition': 'destinationHash',
+                #'DestinyPlaceDefinition': 'placeHash',
+                #'DestinyActivityBundleDefinition': 'bundleHash',
+                #'DestinyStatGroupDefinition': 'statGroupHash',
+                #'DestinySpecialEventDefinition': 'eventHash',
+                #'DestinyFactionDefinition': 'factionHash',
+                #'DestinyVendorCategoryDefinition': 'categoryHash',
+                #'DestinyEnemyRaceDefinition': 'raceHash',
+                #'DestinyScriptedSkullDefinition': 'skullHash',
+                #'DestinyGrimoireCardDefinition': 'cardId'
+                }
+
+    con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
+    with con:
+        cur = con.cursor()
+        desired_defs = {}
+        #for every table name in the dictionary
+        for table_name in hash_dict.keys():
+            #get a list of all the jsons from the table
+            cur.execute('SELECT json from '+table_name)
+            #this returns a list of tuples: the first item in each tuple is our json
+            items = cur.fetchall()
+            #create a list of jsons
+            item_jsons = [json.loads(item[0]) for item in items]
+            #create a dictionary with the hashes as keys
+            #and the jsons as values
+            item_dict = {}
+            hash = hash_dict[table_name]
+            for item in item_jsons:   
+                item_dict[item[hash]] = item
+
+            #add that dictionary to our all_data using the name of the table
+            #as a key. 
+            desired_defs[table_name] = item_dict 
+    
+        #First, characters
+        cur.execute('SELECT * FROM DestinyClassDefinition')
+        classes = cur.fetchall()
+        for classdef in classes:
+            classinfo = json.loads(classdef[1])
+            classDict = {}
+            classDict['id'] = classinfo['classHash']
+            classDict['class_name'] = classinfo['className']
+            new_class_def = ClassReference(**classDict)
+            insertOrUpdate(ClassReference, new_class_def, session)
+
+        #Next, weapons
+        cur.execute("SELECT * FROM DestinyInventoryItemDefinition")
+        #Can easily be adjusted to pull info for all items (don't filter on weapon types)
+        weapon_types = ['Rocket Launcher', 'Scout Rifle', 'Fusion Rifle', 'Sniper Rifle', 'Shotgun', 'Machine Gun', 'Pulse Rifle', 'Auto Rifle', 'Hand Cannon', 'Sidearm']
+        weapons = cur.fetchall()
+        for weapon in weapons:
+            weaponinfo = json.loads(weapon[1])
+            weaponDict = {}
+            if not ("itemTypeName" in weaponinfo and weaponinfo['itemTypeName'] in weapon_types):
+                continue
+            weaponDict['id'] = weaponinfo['itemHash']
+            weaponDict['weapon_name'] = weaponinfo['itemName']
+            weaponDict['weapon_type'] = weaponinfo['itemTypeName']
+            weaponDict['weapon_rarity'] = weaponinfo['tierTypeName']
+            new_weapon_def = WeaponReference(**weaponDict)
+            insertOrUpdate(WeaponReference, new_weapon_def, session)
 
 def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
