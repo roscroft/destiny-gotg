@@ -1,8 +1,10 @@
+#!/usr/bin/python
 import os
-import sqlite3
+import json, sqlite3
 import initdb
-import manifest
 import builddb
+import requests, zipfile
+import shutil
 
 def checkDB():
     """Check to see if a database exists"""
@@ -18,7 +20,19 @@ def checkManifest():
 
 def getManifest():
     """Pulls the requested definitions into the manifest database"""
-    manifest.getManifest()
+    manifest_url = "http://www.bungie.net/Platform/Destiny/Manifest/"
+    r = requests.get(manifest_url)
+    manifest = r.json()
+    mani_url = f"http://www.bungie.net/{manifest['Response']['mobileWorldContentPaths']['en']}"
+    #Download the file, write it to MANZIP
+    r = requests.get(mani_url)
+    with open(f"{APP_PATH}/MANZIP", "wb") as zip:
+        zip.write(r.content)
+    #Extract the file contents, and rename the extracted file
+    with zipfile.ZipFile(f"{APP_PATH}/MANZIP") as zip:
+        name = zip.namelist()
+        zip.extractall()
+    shutil.move(name[0], os.environ['MANIFEST_CONTENT'])
 
 def buildDB():
     """Main function to build the full database"""
