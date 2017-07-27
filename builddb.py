@@ -160,7 +160,6 @@ def handleCharacters(session):
         data = jsonRequest(account_url, outFile, message)
         if data is None:
             #TODO: Throw an error
-            print("We fucked up")
             continue
 
         #Grab all of the individual accounts and put them in the Account table
