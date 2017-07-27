@@ -4,7 +4,7 @@ import sys
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from destinygotg import engine
+from destinygotg import loadConfig()
 
 Base = declarative_base()
 
@@ -338,12 +338,5 @@ if __name__ == "__main__":
     # loadConfig for testing purposes
     APP_PATH = "/etc/destinygotg"
 
-    def loadConfig(): 
-        """Load configs from the config file""" 
-        config = open(f"{APP_PATH}/config", "r").readlines() 
-        for value in config: 
-            value = value.strip().split(":") 
-            os.environ[value[0]] = value[1]
-        
     loadConfig()
     initDB(engine)
