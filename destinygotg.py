@@ -19,9 +19,11 @@ def main():
     import model
     if not model.checkManifest():
         model.getManifest()
-    if not model.checkDB():
-        model.initDB()
-        model.buildDB()
+    #if not model.checkDB():
+    #    model.initDB()
+    #    model.buildDB()
+    model.initDB()
+    model.buildDB()
     #runFlask()
 
 def setAppPath():

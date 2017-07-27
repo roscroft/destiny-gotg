@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import initdb
 import manifest
 import builddb
 
@@ -9,7 +10,7 @@ def checkDB():
 
 def initDB():
     """Sets up the tables for the database"""
-    import initdb
+    pass
 
 def checkManifest():
     """Check to see if manifest file exists"""
@@ -21,5 +22,4 @@ def getManifest():
 
 def buildDB():
     """Main function to build the full database"""
-    print("Am i even called?")
     builddb.buildDB()

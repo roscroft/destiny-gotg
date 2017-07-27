@@ -305,7 +305,12 @@ class ActivityReference(Base):
     __tablename__ = 'activityReference'
     id = Column(Integer, primary_key=True)
     activity_name = Column(String(50))
+    activity_type_hash = Column(String(50))
 
+class ActivityTypeReference(Base):
+    __tablename__ = 'activityTypeReference'
+    id = Column(Integer, primary_key=True)
+    activity_type_name = Column(String(50))
 class ClassReference(Base):
     __tablename__ = 'classReference'
     id = Column(Integer, primary_key=True)
