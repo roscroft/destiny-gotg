@@ -5,43 +5,39 @@ import os
 import json
 import requests
 import sys
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import exists
 from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference
 from datetime import datetime
 from sqlalchemy.sql.expression import literal_column
 import sqlite3
+from destinygotg import Session
+from sqlalchemy import and_
 
-#load env vars for testing purposes
+# loadConfig for testing purposes
 APP_PATH = "/etc/destinygotg"
+def loadConfig(): 
+    """Load configs from the config file""" 
+    config = open(f"{APP_PATH}/config", "r").readlines() 
+    for value in config: 
+        value = value.strip().split(":") 
+        os.environ[value[0]] = value[1]
+
 URL_START = "https://bungie.net/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
-
-#def loadConfig(): 
-#    """Load configs from the config file""" 
-#    config = open(f"{APP_PATH}/config", "r").readlines() 
-#    for value in config: 
-#        value = value.strip().split(":") 
-#        os.environ[value[0]] = value[1]
 
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
 
 def buildDB():
     """Main function to build the full database"""
-    # Add echo=True to below line for SQL logging
-    engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")#, echo=True)
-    Base.metadata.bind = engine
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-    handleBungieUsers(session)
-    handleDestinyUsers(session)
-    handleAggregateStats(session)
-    handleCharacters(session)
-    handleAggregateActivities(session)
+    session = Session()
+    #handleBungieUsers(session)
+    #handleDestinyUsers(session)
+    #handleAggregateStats(session)
+    #handleCharacters(session)
+    #handleAggregateActivities(session)
     handleWeaponUsage(session)
-    handleReferenceTables(session)
+    #handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -248,18 +244,25 @@ def handleWeaponUsage(session):
             continue
 
         #This part does the heavy lifting of table building
-        weaponDict = {}
-        weaponDict['last_updated'] = datetime.now()
-        weaponDict['id'] = characterId
         weapons = data['Response']['data']['weapons']
         for weapon in weapons:
-            weaponDict['weapon_hash'] = weapon['referenceId']
+            weaponDict = {}
+            weaponDict['last_updated'] = datetime.now()
+            weaponDict['character_id'] = characterId
+            weaponDict['id'] = weapon['referenceId']
             weaponValues = weapon['values']
             weaponDict['kills'] = weaponValues['uniqueWeaponKills']['basic']['value']
             weaponDict['precision_kills'] = weaponValues['uniqueWeaponPrecisionKills']['basic']['value']
             weaponDict['precision_kill_percentage'] = weaponValues['uniqueWeaponKillsPrecisionKills']['basic']['value']
-        new_weapon_stats = CharacterUsesWeapon(**weaponDict)
-        insertOrUpdate(CharacterUsesWeapon, new_weapon_stats, session)
+            new_weapon_stats = CharacterUsesWeapon(**weaponDict)
+            
+            matches = session.query(exists().where(and_(CharacterUsesWeapon.id == new_weapon_stats.id, CharacterUsesWeapon.character_id == new_weapon_stats.character_id))).scalar()
+            if matches:
+                # We have to do some strange things to pass update statements. This creates a dynamic dictionary to update all fields.
+                session.query(CharacterUsesWeapon).filter_by(id=new_weapon_stats.id, character_id=new_weapon_stats.character_id).update({column: getattr(new_weapon_stats, column) for column in CharacterUsesWeapon.__table__.columns.keys()})
+            else:
+                session.add(new_weapon_stats)
+            session.commit()
 
 def handleReferenceTables(session):
     """Connects to the manifest.content database and builds the necessary reference tables."""

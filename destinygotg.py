@@ -1,7 +1,16 @@
 import os
 import sys
+import model
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 APP_PATH = "/etc/destinygotg"
+DBPATH = f"{APP_PATH}/guardians.db"
+
+# Create the application-level engine and SessionMaker objects
+# Add echo=True to below line for SQL logging
+engine = create_engine(f"sqlite:///{DBPATH}")#, echo=True)
+Session = sessionmaker(bind=engine)
 
 def main():
     """Run the application"""
@@ -11,19 +20,23 @@ def main():
         return
     # Make sure the APP_PATH directory exists
     setAppPath()
+
     # Ensure a correct config file exists
     if not configExists():
         generateConfig()
+    
     # Load the config values into environment vars
     loadConfig()
-    import model
+    
     if not model.checkManifest():
         model.getManifest()
+    
     if not model.checkDB():
-        model.initDB()
-        model.buildDB()
-    else:
-        model.buildDB()
+        model.initDB(engine)
+    
+    model.initDB(engine)
+    model.buildDB()
+    
     #runFlask()
 
 def setAppPath():
@@ -49,9 +62,8 @@ def generateConfig():
     clanid = input("Please enter your Clan ID: ")
     config.write(f"BUNGIE_APIKEY:{apikey}\n")
     config.write(f"BUNGIE_CLANID:{clanid}\n")
-    config.write(f"DBPATH:{APP_PATH}/guardians.db\n")
+    config.write(f"DBPATH:{DBPATH}\n")
     config.write(f"MANIFEST_CONTENT:{APP_PATH}/manifest.content\n")
-    config.write(f"MANIFEST_PATH:{APP_PATH}/manifest.db\n")
     config.close()
 
 def configExists():

@@ -5,14 +5,17 @@ import initdb
 import builddb
 import requests, zipfile
 import shutil
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import initdb
 
 def checkDB():
     """Check to see if a database exists"""
     return os.path.isfile(os.environ['DBPATH'])
 
-def initDB():
+def initDB(engine):
     """Sets up the tables for the database"""
-    pass
+    initdb.initDB(engine)
 
 def checkManifest():
     """Check to see if manifest file exists"""

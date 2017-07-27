@@ -4,9 +4,9 @@ import sys
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import create_engine
+from destinygotg import engine
 
-#load env vars for testing purposes
+# loadConfig for testing purposes
 APP_PATH = "/etc/destinygotg"
 
 def loadConfig(): 
@@ -15,8 +15,6 @@ def loadConfig():
     for value in config: 
         value = value.strip().split(":") 
         os.environ[value[0]] = value[1]
-
-loadConfig()
 
 Base = declarative_base()
 
@@ -275,10 +273,10 @@ class Character(Base):
 
 class CharacterUsesWeapon(Base):
     __tablename__ = 'characterUsesWeapon'
-    id = Column(Integer, ForeignKey('character.id'), primary_key=True)
-    last_updated = Column(DateTime)
+    id = Column(Integer, primary_key=True) # Weapon hash
+    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
-    weapon_hash = Column(Integer)
+    last_updated = Column(DateTime)
     kills = Column(Integer)
     precision_kills = Column(Integer)
     precision_kill_percentage = Column(Float)
@@ -340,7 +338,11 @@ class WeaponReference(Base):
 #    activity = relationship(Activity)
 #    #Other character-specific activity related fields
 
-#print(f"sqlite:///{os.environ['DBPATH']}")
-engine = create_engine(f"sqlite:///{os.environ['DBPATH']}")
-#Base.metadata.drop_all(engine)
-Base.metadata.create_all(engine)
+def initDB(engine):
+    Base.metadata.bind = engine
+    #Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+
+if __name__ == "__main__":
+    loadConfig()
+    initDB(engine)

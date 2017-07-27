@@ -1,21 +1,20 @@
-#!/usr/bin/python3.6
-#I made this file because I don't understand the architecture. Should be easy enough to cut/paste functions later.
-
 import re
 import sqlite3 as lite
 import sys
-from initdb import PvPTotal, PvETotal, PvPAvg, PvEAvg, Base
+sys.path.append('../../')
+sys.path.append('../')
+import DatabaseModules.databaseStatements as db
+import sys
 
-def validateRequest(session, request):
-    pvptotals = PvPTotal.__table__.columns.keys()
-    pvetotals = PvETotal.__table__.columns.keys()
-    pvpavgs = PvPAvg.__table__.columns.keys()
-    pveavgs = PvEAvg.__table__.columns.keys()
+def validateRequest(request):
+    trackedStats = '../Leaderboard/TrackedStats/'
+    pveStatPath = trackedStats + 'trackedPvEStats.txt'
+    pvpStatPath = trackedStats + 'trackedPvPStats.txt'
 
-    clanNames = session.query(Account, Account.display_name).all()
-
-
-
+    databasePath = '../Leaderboard/guardians.db'
+    con = lite.connect(databasePath)
+    destNames = []
+    discNames = []
 
     req = "SELECT destName FROM Discord"
     destNames2 = db.select(req)
