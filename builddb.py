@@ -1,26 +1,14 @@
 #!/usr/bin/python
 #This file (with update option set) is run daily; it pulls new clan members and new accounts. For existing members, it adds newly created characters, and updates all existing stats.
 #Perhaps most importantly, it pulls in new activities completed by all members.
-import os
-import json
-import requests
-import sys
-from sqlalchemy import exists
-from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference
-from datetime import datetime
-from sqlalchemy.sql.expression import literal_column
+import os, sys
+import json, requests
 import sqlite3
-from destinygotg import Session
-from sqlalchemy import and_
-
-# loadConfig for testing purposes
-APP_PATH = "/etc/destinygotg"
-def loadConfig(): 
-    """Load configs from the config file""" 
-    config = open(f"{APP_PATH}/config", "r").readlines() 
-    for value in config: 
-        value = value.strip().split(":") 
-        os.environ[value[0]] = value[1]
+from datetime import datetime
+from sqlalchemy import exists, and_
+from sqlalchemy.sql.expression import literal_column
+from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference
+from destinygotg import Session, loadConfig
 
 URL_START = "https://bungie.net/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
@@ -364,6 +352,9 @@ def needsUpdate(table, kwargs, session):
         return True
 
 if __name__ == "__main__":
+    
+    # loadConfig for testing purposes
+    APP_PATH = "/etc/destinygotg"
     loadConfig()
     #import time
     #start_time = time.time()
