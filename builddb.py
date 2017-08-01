@@ -252,87 +252,64 @@ def handleWeaponUsage(session):
                 session.add(new_weapon_stats)
             session.commit()
 
-
-
-
-
 def handleReferenceTables(session):
     """Connects to the manifest.content database and builds the necessary reference tables."""
-    con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
-    cur = con.cursor()
-
-    #First, characters
-    print("Building class reference table...")
-    cur.execute('SELECT * FROM DestinyClassDefinition')
-    classes = cur.fetchall()
-    for classdef in classes:
-        classinfo = json.loads(classdef[1])
-        classDict = {}
-        classDict['id'] = classinfo['classHash']
-        classDict['class_name'] = classinfo['className']
-        new_class_def = ClassReference(**classDict)
-        insertOrUpdate(ClassReference, new_class_def, session)
+    def buildReferenceTable(tableName, table, statement, dictionary, condition=None):
+        print(f"Building {tableName} reference table...")
+        con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
+        cur = con.cursor()
+        with con:
+            cur.execute(statement)
+            group = cur.fetchall()
+            for item in group:
+                itemInfo = json.loads(item[1])
+                itemDict = {}
+                if not condition is None and condition(itemInfo):
+                    continue
+                for (key,value) in dictionary.items():
+                    itemDict[key] = itemInfo[value]
+                new_item_def = table(**itemDict)
+                session.add(new_item_def)
+                session.commit()
     
-    #Next, weapons
-    print("Building weapon reference table...")
-    cur.execute("SELECT * FROM DestinyInventoryItemDefinition")
-    #Can easily be adjusted to pull info for all items (don't filter on weapon types)
-    weapon_types = ['Rocket Launcher', 'Scout Rifle', 'Fusion Rifle', 'Sniper Rifle', 'Shotgun', 'Machine Gun', 'Pulse Rifle', 'Auto Rifle', 'Hand Cannon', 'Sidearm']
-    weapons = cur.fetchall()
-    for weapon in weapons:
-        weaponinfo = json.loads(weapon[1])
-        weaponDict = {}
-        if not ("itemTypeName" in weaponinfo and weaponinfo['itemTypeName'] in weapon_types):
-            continue
-        weaponDict['id'] = weaponinfo['itemHash']
-        weaponDict['weapon_name'] = weaponinfo['itemName']
-        weaponDict['weapon_type'] = weaponinfo['itemTypeName']
-        weaponDict['weapon_rarity'] = weaponinfo['tierTypeName']
-        new_weapon_def = WeaponReference(**weaponDict)
-        insertOrUpdate(WeaponReference, new_weapon_def, session)
-    
-    #Finally, activities
-    print("Building activity reference table...")
-    cur.execute("SELECT * FROM DestinyActivityDefinition")
-    activities = cur.fetchall()
-    for activity in activities:
-        activityinfo = json.loads(activity[1])
-        activityDict = {}
-        if not ("activityName" in activityinfo):
-            continue
-        activityDict['id'] = activityinfo['activityHash']
-        activityDict['activity_name'] = activityinfo['activityName']
-        activityDict['activity_type_hash'] = activityinfo['activityTypeHash']
-        new_activity_def = ActivityReference(**activityDict)
-        insertOrUpdate(ActivityReference, new_activity_def, session)
+    # Classes
+    classTable = ClassReference
+    classInfo = {'id':'classHash', 'class_name':'className'}
+    classStatement = "SELECT * FROM DestinyClassDefinition"
+    classDict = buildReferenceTable("class", classTable, classStatement, classInfo)
 
-    #Actually finallly, activity types
-    print("Building activity type reference table...")
-    cur.execute("SELECT * FROM DestinyActivityTypeDefinition")
-    activities = cur.fetchall()
-    for activity in activities:
-        activityinfo = json.loads(activity[1])
-        activityDict = {}
-        if not ("activityTypeName" in activityinfo):
-            continue
-        activityDict['id'] = activityinfo['activityTypeHash']
-        activityDict['activity_type_name'] = activityinfo['activityTypeName']
-        new_activity_def = ActivityTypeReference(**activityDict)
-        insertOrUpdate(ActivityTypeReference, new_activity_def, session)
+    # Weapons
+    weaponTable = WeaponReference
+    weaponInfo = {'id':'itemHash', 'weapon_name':'itemName', 'weapon_type':'itemTypeName', 'weapon_rarity':'tierTypeName'}
+    weaponStatement = "SELECT * FROM DestinyInventoryItemDefinition"
+    def weaponCondition(info):
+        weapon_types = ['Rocket Launcher', 'Scout Rifle', 'Fusion Rifle', 'Sniper Rifle', 'Shotgun', 'Machine Gun', 'Pulse Rifle', 'Auto Rifle', 'Hand Cannon', 'Sidearm']
+        return not ("itemTypeName" in info and info['itemTypeName'] in weapon_types)
+    weaponDict = buildReferenceTable("weapon", weaponTable, weaponStatement, weaponInfo, weaponCondition)
 
-    # Buckets too
-    print("Building bucket reference table...")
-    cur.execute("SELECT * FROM DestinyInventoryBucketDefinition")
-    buckets = cur.fetchall()
-    for bucket in buckets:
-        bucketinfo = json.loads(bucket[1])
-        bucketDict = {}
-        if not ("bucketName" in bucketinfo):
-            continue
-        bucketDict['id'] = bucketinfo['bucketHash']
-        bucketDict['bucket_name'] = bucketinfo['bucketName']
-        new_bucket_def = BucketReference(**bucketDict)
-        insertOrUpdate(BucketReference, new_bucket_def, session)
+    # Activities
+    activityTable = ActivityReference
+    activityInfo = {'id':'activityHash', 'activity_name':'activityName', 'activity_type_hash':'activityTypeHash'}
+    activityStatement = "SELECT * FROM DestinyActivityDefinition"
+    def activityCondition(info):
+        return not ("activityName" in info)
+    activityDict = buildReferenceTable("activity", activityTable, activityStatement, activityInfo, activityCondition)
+
+    # Activity types
+    activityTypeTable = ActivityTypeReference
+    activityTypeInfo = {'id':'activityTypeHash', 'activity_type_name':'activityTypeName'}
+    activityTypeStatement = "SELECT * FROM DestinyActivityTypeDefinition"
+    def activityTypeCondition(info):
+        return not ("activityTypeName" in info)
+    activityTypeDict = buildReferenceTable("activity type", activityTypeTable, activityTypeStatement, activityTypeInfo, activityTypeCondition)
+
+    # Buckets
+    bucketTable = BucketReference
+    bucketInfo = {'id':'bucketHash', 'bucket_name':'bucketName'}
+    bucketStatement = "SELECT * FROM DestinyInventoryBucketDefinition"
+    def bucketCondition(info): 
+        return not ("bucketName" in info)
+    bucketDict = buildReferenceTable("bucket", bucketTable, bucketStatement, bucketInfo, bucketCondition)
 
 def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
