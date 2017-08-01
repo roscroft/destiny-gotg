@@ -4,7 +4,7 @@ import sys
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from destinygotg import loadConfig()
+from destinygotg import loadConfig
 
 Base = declarative_base()
 
@@ -254,12 +254,13 @@ class PvPAverage(Base):
 class Character(Base):
     __tablename__ = 'character'
     id = Column(Integer, primary_key=True)
-    last_updated = Column(DateTime)
-    minutes_played = Column(Integer)
-    light_level = Column(Integer)    
     membership_id = Column(Integer, ForeignKey('account.id'))
-    class_hash = Column(Integer)
     account = relationship(Account)
+    minutes_played = Column(Integer)
+    light_level = Column(Integer)
+    class_hash = Column(Integer)
+    grimoire = Column(Integer)
+    last_updated = Column(DateTime)
 
 class CharacterUsesWeapon(Base):
     __tablename__ = 'characterUsesWeapon'
@@ -311,6 +312,11 @@ class WeaponReference(Base):
     weapon_name = Column(String(50))
     weapon_type = Column(String(50))
     weapon_rarity = Column(String(50))
+
+class BucketReference(Base):
+    __tablename__ = 'bucketReference'
+    id = Column(Integer, primary_key=True)
+    bucket_name = Column(String(50))
 
 # I will not be including single game tracking for a while, probably. Maybe when D2 gets started I'll ramp it up, but we're going to need some more storage space.
 #class Activity(Base):

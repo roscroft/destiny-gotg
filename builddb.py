@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
-from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference
+from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference
 from destinygotg import Session, loadConfig
 
 URL_START = "https://bungie.net/Platform"
@@ -24,8 +24,8 @@ def buildDB():
     #handleAggregateStats(session)
     #handleCharacters(session)
     #handleAggregateActivities(session)
-    handleWeaponUsage(session)
-    #handleReferenceTables(session)
+    #handleWeaponUsage(session)
+    handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -172,6 +172,7 @@ def handleCharacters(session):
             characterDict['light_level'] = character['characterBase']['powerLevel']
             characterDict['membership_id'] = membershipId
             characterDict['class_hash'] = character['characterBase']['classHash']
+            characterDict['grimoire'] = character['characterBase']['grimoireScore']
             new_character = Character(**characterDict)
             insertOrUpdate(Character, new_character, session)
 
@@ -251,9 +252,12 @@ def handleWeaponUsage(session):
                 session.add(new_weapon_stats)
             session.commit()
 
+
+
+
+
 def handleReferenceTables(session):
     """Connects to the manifest.content database and builds the necessary reference tables."""
-    
     con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
     cur = con.cursor()
 
@@ -315,6 +319,20 @@ def handleReferenceTables(session):
         activityDict['activity_type_name'] = activityinfo['activityTypeName']
         new_activity_def = ActivityTypeReference(**activityDict)
         insertOrUpdate(ActivityTypeReference, new_activity_def, session)
+
+    # Buckets too
+    print("Building bucket reference table...")
+    cur.execute("SELECT * FROM DestinyInventoryBucketDefinition")
+    buckets = cur.fetchall()
+    for bucket in buckets:
+        bucketinfo = json.loads(bucket[1])
+        bucketDict = {}
+        if not ("bucketName" in bucketinfo):
+            continue
+        bucketDict['id'] = bucketinfo['bucketHash']
+        bucketDict['bucket_name'] = bucketinfo['bucketName']
+        new_bucket_def = BucketReference(**bucketDict)
+        insertOrUpdate(BucketReference, new_bucket_def, session)
 
 def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
