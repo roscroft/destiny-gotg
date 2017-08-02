@@ -5,9 +5,7 @@ import initdb
 import builddb
 import requests, zipfile
 import shutil
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import initdb
+import discordController
 
 def checkDB():
     """Check to see if a database exists"""
@@ -40,3 +38,6 @@ def getManifest():
 def buildDB():
     """Main function to build the full database"""
     builddb.buildDB()
+
+def runDiscord(engine):
+    discordController.runBot(engine)

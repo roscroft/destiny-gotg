@@ -25,7 +25,7 @@ def buildDB():
     #handleCharacters(session)
     #handleAggregateActivities(session)
     #handleWeaponUsage(session)
-    handleReferenceTables(session)
+    #handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -269,9 +269,8 @@ def handleReferenceTables(session):
                 for (key,value) in dictionary.items():
                     itemDict[key] = itemInfo[value]
                 new_item_def = table(**itemDict)
-                session.add(new_item_def)
-                session.commit()
-    
+                insertOrUpdate(table, new_item_def, session)
+
     # Classes
     classTable = ClassReference
     classInfo = {'id':'classHash', 'class_name':'className'}

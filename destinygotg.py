@@ -37,6 +37,7 @@ def main():
     model.initDB(engine)
     model.buildDB()
     
+    model.runDiscord(engine)
     #runFlask()
 
 def setAppPath():
@@ -60,8 +61,10 @@ def generateConfig():
     config = open(f"{APP_PATH}/config", "w+")
     apikey = input("Please enter your Bungie API Key: ")
     clanid = input("Please enter your Clan ID: ")
+    disc_apikey = input("Please enter your Discord API Key: ")
     config.write(f"BUNGIE_APIKEY:{apikey}\n")
     config.write(f"BUNGIE_CLANID:{clanid}\n")
+    config.write(f"DISCORD_APIKEY:{disc_apikey}\n")
     config.write(f"DBPATH:{DBPATH}\n")
     config.write(f"MANIFEST_CONTENT:{APP_PATH}/manifest.content\n")
     config.close()
