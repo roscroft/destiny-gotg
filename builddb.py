@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
-from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference
+from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference
 from destinygotg import Session, loadConfig
 
 URL_START = "https://bungie.net/Platform"
@@ -24,6 +24,7 @@ def buildDB():
     #handleAggregateStats(session)
     #handleCharacters(session)
     #handleAggregateActivities(session)
+    #handleMedals(session)
     #handleWeaponUsage(session)
     #handleReferenceTables(session)
 
@@ -196,6 +197,7 @@ def handleAggregateActivities(session):
         if data is None:
             #TODO: Throw an error
             print("")
+            continue
         
         #This part does the heavy lifting of table building
         aggStatDict = {}
@@ -228,6 +230,7 @@ def handleWeaponUsage(session):
         if data is None:
             #TODO: Throw an error
             print("")
+            continue
         elif data['Response']['data'] == {}:
             continue
 
@@ -251,6 +254,38 @@ def handleWeaponUsage(session):
             else:
                 session.add(new_weapon_stats)
             session.commit()
+
+def handleMedals(session):
+    """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
+    accounts = session.query(Account).all()
+    for account in accounts:
+        membershipId = account.id
+        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
+        #kwargs = {"id" : characterId}
+        #if not needsUpdate(MedalsCharacter, kwargs, session):
+        #    print(f"Not updating MedalsCharacter table for user: {displayName}")
+        #    continue
+        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
+        stat_url = f"{URL_START}/Destiny/Stats/Account/{membershipType}/{membershipId}/?Groups=Medals"
+        message = f"Fetching medal stats for: {displayName}"
+        outFile =f"{displayName}_medals.json"
+        data = jsonRequest(stat_url, outFile, message)
+        if data is None:
+            #TODO: Throw an error
+            print("")
+            continue
+        
+        #This part does the heavy lifting of table building
+        medalDict = {}
+        medalDict['last_updated'] = datetime.now()
+        characters = data['Response']['characters']
+        for character in characters:
+            medalDict['id'] = character['characterId']
+            if 'merged' in character and 'allTime' in character['merged']:
+                for medal in character['merged']['allTime']:
+                    medalDict[medal] = character['merged']['allTime'][medal]['basic']['value']
+            new_medal_statistics = MedalsCharacter(**medalDict)
+            insertOrUpdate(MedalsCharacter, new_medal_statistics, session)
 
 def handleReferenceTables(session):
     """Connects to the manifest.content database and builds the necessary reference tables."""
@@ -345,11 +380,10 @@ def needsUpdate(table, kwargs, session):
         return True
 
 if __name__ == "__main__":
-    
     # loadConfig for testing purposes
     APP_PATH = "/etc/destinygotg"
     loadConfig()
-    #import time
-    #start_time = time.time()
+    import time
+    start_time = time.time()
     buildDB()
-    #print("--- %s seconds ---" % (time.time() - start_time))
+    print("--- %s seconds ---" % (time.time() - start_time))

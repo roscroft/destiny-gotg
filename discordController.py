@@ -3,7 +3,8 @@ import os, re, sys
 import discord, asyncio
 from datetime import datetime
 from destinygotg import Session, loadConfig
-from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base
+from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base, Discord, Account
+from sqlalchemy import exists
 
 def runBot(engine):
     # The regular bot definition things
@@ -20,18 +21,46 @@ def runBot(engine):
     async def queryDatabase(channel, statement, connection):
         result = connection.execute(statement)
         resultList = [row for row in result]
-        
         await client.send_message(channel, resultList)
-        #for row in result:
-        #    await client.send_message(channel, row)
+    
+    @client.event
+    async def registerHandler(discordAuthor):
+        discId = discordAuthor.id
+        session = Session()
+        userIsRegistered = session.query(exists().where(Discord.id == discId)).scalar()
+        if userIsRegistered:
+            destinyName = session.query(Account.display_name).filter(Account.discord_id == discId)
+        else:
+            destinyName = await registerUser(discordAuthor)
+        return destinyName
+
+    @client.event
+    async def registerUser(discordAuthor):
+        session = Session()
+        def checkIfValidUser(userName):
+            return session.query(exists().where(Account.display_name == userName)).scalar()
+        #Need to send a DM requesting the PSN name
+        destination = discordAuthor
+        discName = discordAuthor.name
+        await client.send_message(destination, discName+", please enter your PSN display name.")
+        nameMsg = await client.wait_for_message(author=discordAuthor,check=checkIfValidUser(discName))
+        destName = nameMsg.content
+        discordDict = {}
+        discordDict['id'] = discordAuthor.id
+        discordDict['discord_name'] = discordAuthor.name
+        new_discord_user = Discord(**discordDict)
+        session.add(new_discord_user)
+        session.commit()
+        await client.send_message(destination, discName+", you have been successfully registered!")
+        return destName
 
     @client.event
     async def on_message(message):
         if message.content.startswith('!timeleft'):
             output = timeLeft()
             await client.send_message(message.channel, output)
-        elif message.content.startswith('!help'):
-            await client.send_message(message.channel, 'Commands: !timeleft, !stat.')
+        #elif message.content.startswith('!help'):
+        #    await client.send_message(message.channel, 'Commands: !timeleft, !stat.')
         elif message.content.startswith('Right Gary?'):
             await client.send_message(message.channel, 'Right.')
         elif message.content.startswith('Say goodbye'):
@@ -48,58 +77,20 @@ def runBot(engine):
         elif message.content.startswith('!stat'):
             discordAuthor = message.author
             destName = await registerHandler(discordAuthor)
-            req = message.content
-            output = statCommand(req, destName)
-            await client.send_message(message.channel, embed=output)
+            #req = message.content
+            #output = statCommand(req, destName)
+            #await client.send_message(message.channel, embed=output)
+            output = f"Your destiny username is: {destName}"
+            await client.send_message(message.channel, output)
         elif message.author.name == "Roscroft" and message.channel.is_private:
-            await client.send_message(discord.Object(id='322173351059521537'), message.content)
-        elif message.content.startswith('!test'):
+            if not message.content == "Roscroft":
+                await client.send_message(discord.Object(id='322173351059521537'), message.content)
+        elif message.content.startswith('!channel-id'):
             print(message.channel.id)
 
     client.run(os.environ['DISCORD_APIKEY'])
 
 
-#@client.event
-#async def registerUser(discordAuthor):
-#    def checkIfValidUser(msg):
-#        request = "SELECT EXISTS(SELECT Name FROM Bungie WHERE Name=?)"
-#        params = (msg.content,)
-#        output = db.select(request, params)
-#        return output[0][0]
-#
-#    #Need to send a DM requesting the PSN name
-#    destination = discordAuthor
-#    discName = discordAuthor.name
-#    await client.send_message(destination, discName+", please enter your PSN display name.")
-#    nameMsg = await client.wait_for_message(author=discordAuthor,check=checkIfValidUser)
-#    destName = nameMsg.content
-#    print(destName, discName)
-#    request = "UPDATE Discord SET discName=? WHERE destName=?"
-#    params = (discName, destName)
-#    db.update(request, params)
-#    
-#    await client.send_message(destination, discName+", you have been successfully registered!")
-#    return destName
-#
-#@client.event
-#async def registerHandler(discordAuthor):
-#    discName = discordAuthor.name
-#    request = "SELECT EXISTS(SELECT destName FROM Discord WHERE discName=?)"
-#    params = (discName,)
-#    output = db.select(request, params)
-#    if output[0][0]:
-#        request = "SELECT destName FROM Discord WHERE discName=?"
-#        output = db.select(request, params)
-#        return output[0][0]
-#    else:
-#        destName = await registerUser(discordAuthor)
-#        return destName
-#
-#with open('botToken.txt','r') as f:
-#    botToken = f.readline().strip()
-#
-#client.run(botToken)
-#
 ##Manages single user stat requests
 ##Request is read in as a list, always in the following order:
 ##[pvp|pve], [total|avg], [stat (aliases discussed below)], ([vs], [user1], [user2], ...)
