@@ -3,8 +3,34 @@ import os, re, sys
 import discord, asyncio
 from datetime import datetime
 from destinygotg import Session, loadConfig
-from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base, Discord, Account
-from sqlalchemy import exists
+from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base, Discord, Account, MedalsCharacter
+from sqlalchemy import exists, select
+
+statDict = { "kd"           :(PvPTotal, "killsDeathsRatio")
+            ,"kda"          :(PvPTotal, "killsDeathsAssists")
+            ,"wl"           :(PvPTotal, "winLossRatio")
+            ,"bgs"          :(PvPTotal, "bestSingleGameScore")
+            ,"lks"          :(PvPTotal, "longestKillSpree")
+            ,"suicides"     :(PvPTotal, "suicides")
+            ,"spg"          :(PvPAverage, "suicides")
+            ,"mk"           :(PvPTotal, "bestSingleGameKills")
+            ,"kills"        :(PvPTotal, "kills")
+            ,"kpg"          :(PvPAverage, "kills")
+            ,"deaths"       :(PvPTotal, "deaths")
+            ,"dpg"          :(PvPAverage, "deaths")
+            ,"assists"      :(PvPTotal, "assists")
+            ,"apg"          :(PvPAverage, "assists")
+            ,"cr"           :(PvPTotal, "combatRating")
+            ,"pkills"       :(PvPTotal, "precisionKills")
+            ,"score"        :(PvPTotal, "score")
+            ,"scpg"         :(PvPAverage, "score")
+            ,"crucibletime" :(PvPTotal, "secondsPlayed")
+            ,"akills"       :(PvPTotal, "abilityKills")
+            ,"games"        :(PvPTotal, "activitiesEntered")
+            ,"wins"         :(PvPTotal, "activitiesWon")
+            ,"lsl"          :(PvPTotal, "longestSingleLife")
+            ,"mercy"        :(MedalsCharacter, "medalsActivityCompleteVictoryMercy")
+            }
 
 def runBot(engine):
     # The regular bot definition things
@@ -74,20 +100,43 @@ def runBot(engine):
                 await queryDatabase(channel, statement, connection)
             else:
                 await client.send_message(message.channel, "Permission denied!")
-        elif message.content.startswith('!stat'):
-            discordAuthor = message.author
-            destName = await registerHandler(discordAuthor)
-            #req = message.content
-            #output = statCommand(req, destName)
-            #await client.send_message(message.channel, embed=output)
-            output = f"Your destiny username is: {destName}"
-            await client.send_message(message.channel, output)
+        #elif message.content.startswith('!stat'):
+        #    discordAuthor = message.author
+         #   destName = await registerHandler(discordAuthor)
+          #  #req = message.content
+           # #output = statCommand(req, destName)
+           # #await client.send_message(message.channel, embed=output)
+           # output = f"Your destiny username is: {destName}"
+           # await client.send_message(message.channel, output)
         elif message.author.name == "Roscroft" and message.channel.is_private:
             if not message.content == "Roscroft":
                 await client.send_message(discord.Object(id='322173351059521537'), message.content)
         elif message.content.startswith('!channel-id'):
             print(message.channel.id)
+        elif message.content.startswith("!stat"):
+            author = message.author.name
+            content = message.content
+            valid, stat = validate(author, content)
+            if valid:
+                output = statRequest(author, stat)
+                await client.send_message(discord.Object(id='342754108534554624'), output)
+            else:
+                await client.send_message(message.channel, "Invalid stat request.")
 
+    def validate(author, content):
+        stat = content[6:]
+        tracked = stat in statDict.keys()
+        return (tracked, stat)
+
+    def statRequest(author, stat):
+        session = Session()
+        (table, col) = statDict[stat]
+        columns = [col]
+        res = session.query(*(getattr(table, column) for column in columns)).join(Account).filter(Account.display_name == author).first()
+        if len(res) == 1:
+            return res[0]
+        return res
+    
     client.run(os.environ['DISCORD_APIKEY'])
 
 
