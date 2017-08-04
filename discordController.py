@@ -108,15 +108,15 @@ def runBot(engine):
         elif message.content.startswith("!stat"):
             author = message.author.name
             content = message.content
-            if message.channel.id is not '342754108534554624':
-                await client.send_message(message.channel, "Please use the #stat channel for stat requests.")
+            #if message.channel.id is not '342754108534554624':
+           #     await client.send_message(message.channel, "Please use the #stat channel for stat requests.")
+            #else:
+            valid, stat = validate(author, content)
+            if valid:
+                output = statRequest(author, stat)
+                await client.send_message(discord.Object(id='342754108534554624'), output)
             else:
-                valid, stat = validate(author, content)
-                if valid:
-                    output = statRequest(author, stat)
-                    await client.send_message(discord.Object(id='342754108534554624'), output)
-                else:
-                    await client.send_message(message.channel, "Invalid stat request.")
+                await client.send_message(message.channel, "Invalid stat request.")
 
     def validate(author, content):
         stat = content[6:]
@@ -127,10 +127,19 @@ def runBot(engine):
         session = Session()
         (table, col) = statDict[stat]
         columns = [col]
-        res = session.query(*(getattr(table, column) for column in columns)).join(Account).filter(Account.display_name == author).first()
-        if len(res) == 1:
-            return res[0]
+        res = session.query(display_name, *(getattr(table, column) for column in columns)).join(Account).filter(Account.display_name == author).first()
+        print(res)
         return res
+
+    def statEmbed(res, statMessage):
+        userList = [i for i in res]
+        userTitle = ", ".join(userList)
+        if len(userList)==18:
+            userTitle = "Top 18"
+        em = discord.Embed(title = statTitle + "for: "+userTitle, colour=0xADD8E6)
+        for result in resultList:
+            em.add_field(name=result[0],value=result[1])
+        return em
     
     client.run(os.environ['DISCORD_APIKEY'])
 
