@@ -100,14 +100,6 @@ def runBot(engine):
                 await queryDatabase(channel, statement, connection)
             else:
                 await client.send_message(message.channel, "Permission denied!")
-        #elif message.content.startswith('!stat'):
-        #    discordAuthor = message.author
-         #   destName = await registerHandler(discordAuthor)
-          #  #req = message.content
-           # #output = statCommand(req, destName)
-           # #await client.send_message(message.channel, embed=output)
-           # output = f"Your destiny username is: {destName}"
-           # await client.send_message(message.channel, output)
         elif message.author.name == "Roscroft" and message.channel.is_private:
             if not message.content == "Roscroft":
                 await client.send_message(discord.Object(id='322173351059521537'), message.content)
@@ -116,12 +108,15 @@ def runBot(engine):
         elif message.content.startswith("!stat"):
             author = message.author.name
             content = message.content
-            valid, stat = validate(author, content)
-            if valid:
-                output = statRequest(author, stat)
-                await client.send_message(discord.Object(id='342754108534554624'), output)
+            if message.channel.id is not '342754108534554624':
+                await client.send_message(message.channel, "Please use the #stat channel for stat requests.")
             else:
-                await client.send_message(message.channel, "Invalid stat request.")
+                valid, stat = validate(author, content)
+                if valid:
+                    output = statRequest(author, stat)
+                    await client.send_message(discord.Object(id='342754108534554624'), output)
+                else:
+                    await client.send_message(message.channel, "Invalid stat request.")
 
     def validate(author, content):
         stat = content[6:]
@@ -253,47 +248,6 @@ def runBot(engine):
 #if __name__ == "__main__":
 #    print (timeLeft())
 #
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
 #def validateRequest(session, request):
 #    pvptotals = PvPTotal.__table__.columns.keys()
 #    pvetotals = PvETotal.__table__.columns.keys()
@@ -359,13 +313,3 @@ def runBot(engine):
 #        return 6
 #    else:
 #        return 0
-#
-#if __name__ == "__main__":
-#    request = "!stat pvp total kills"
-#    out = validateRequest(request)
-#    print(out)
-
-#if __name__ == "__main__":
-#    # loadConfig for testing purposes
-#    APP_PATH = "/etc/destinygotg"
-#    loadConfig()
