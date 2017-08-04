@@ -294,6 +294,8 @@ class MedalsCharacter(Base):
     __tablename__ = 'medalsCharacter'
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
+    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    account = relationship(Account)
     last_updated = Column(DateTime)
     activitiesEntered = Column(Integer)
     allMedalsEarned = Column(Integer)

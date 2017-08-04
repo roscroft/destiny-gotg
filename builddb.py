@@ -10,7 +10,7 @@ from sqlalchemy.sql.expression import literal_column
 from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference
 from destinygotg import Session, loadConfig
 
-URL_START = "https://bungie.net/Platform"
+URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
 
 def makeHeader():
@@ -281,6 +281,7 @@ def handleMedals(session):
         characters = data['Response']['characters']
         for character in characters:
             medalDict['id'] = character['characterId']
+            medalDict['membership_id'] = membershipId
             if 'merged' in character and 'allTime' in character['merged']:
                 for medal in character['merged']['allTime']:
                     medalDict[medal] = character['merged']['allTime'][medal]['basic']['value']
