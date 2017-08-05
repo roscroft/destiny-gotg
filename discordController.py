@@ -4,32 +4,34 @@ import discord, asyncio
 from datetime import datetime
 from destinygotg import Session, loadConfig
 from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base, Discord, Account, MedalsCharacter
-from sqlalchemy import exists, select
+from sqlalchemy import exists
+from decimal import *
 
-statDict = { "kd"           :(PvPTotal, "killsDeathsRatio")
-            ,"kda"          :(PvPTotal, "killsDeathsAssists")
-            ,"wl"           :(PvPTotal, "winLossRatio")
-            ,"bgs"          :(PvPTotal, "bestSingleGameScore")
-            ,"lks"          :(PvPTotal, "longestKillSpree")
-            ,"suicides"     :(PvPTotal, "suicides")
-            ,"spg"          :(PvPAverage, "suicides")
-            ,"mk"           :(PvPTotal, "bestSingleGameKills")
-            ,"kills"        :(PvPTotal, "kills")
-            ,"kpg"          :(PvPAverage, "kills")
-            ,"deaths"       :(PvPTotal, "deaths")
-            ,"dpg"          :(PvPAverage, "deaths")
-            ,"assists"      :(PvPTotal, "assists")
-            ,"apg"          :(PvPAverage, "assists")
-            ,"cr"           :(PvPTotal, "combatRating")
-            ,"pkills"       :(PvPTotal, "precisionKills")
-            ,"score"        :(PvPTotal, "score")
-            ,"scpg"         :(PvPAverage, "score")
-            ,"crucibletime" :(PvPTotal, "secondsPlayed")
-            ,"akills"       :(PvPTotal, "abilityKills")
-            ,"games"        :(PvPTotal, "activitiesEntered")
-            ,"wins"         :(PvPTotal, "activitiesWon")
-            ,"lsl"          :(PvPTotal, "longestSingleLife")
-            ,"mercy"        :(MedalsCharacter, "medalsActivityCompleteVictoryMercy")
+statDict = { "kd"           :(PvPTotal, "killsDeathsRatio", "'s kill/death ratio is: ")
+            ,"kda"          :(PvPTotal, "killsDeathsAssists", "'s kills/assists/death ratio is: ")
+            ,"wl"           :(PvPTotal, "winLossRatio", "'s win/loss ratio is: ")
+            ,"bgs"          :(PvPTotal, "bestSingleGameScore", "'s best single game score is: ")
+            ,"lks"          :(PvPTotal, "longestKillSpree", "'s longest kill spree is: ")
+            ,"suicides"     :(PvPTotal, "suicides", "'s total number of suicides is: ")
+            ,"spg"          :(PvPAverage, "suicides", "'s average suicides per game is: ")
+            ,"mk"           :(PvPTotal, "bestSingleGameKills", "'s best single game kill score is: ")
+            ,"kills"        :(PvPTotal, "kills", "'s total number of kills is: ")
+            ,"kpg"          :(PvPAverage, "kills", "'s average kills per game is: ")
+            ,"deaths"       :(PvPTotal, "deaths", "'s total number of deaths is: ")
+            ,"dpg"          :(PvPAverage, "deaths", "'s average deaths per game is: ")
+            ,"assists"      :(PvPTotal, "assists", "'s total number of assists is: ")
+            ,"apg"          :(PvPAverage, "assists", "'s average assists per game is: ")
+            ,"cr"           :(PvPTotal, "combatRating", "'s combat rating is: ")
+            ,"pkills"       :(PvPTotal, "precisionKills", "'s total number of precision kills is: ")
+            ,"score"        :(PvPTotal, "score", "'s total score is: ")
+            ,"scpg"         :(PvPAverage, "score", "'s average score per game is: ")
+            ,"crucibletime" :(PvPTotal, "secondsPlayed", "'s total playtime in seconds is: ")
+            ,"akills"       :(PvPTotal, "abilityKills", "'s total number of ability kills is: ")
+            ,"akpg"         :(PvPAverage, "abilityKills", "'s average ability kills per game is: ")
+            ,"games"        :(PvPTotal, "activitiesEntered", "'s total number of activities entered is: ")
+            ,"wins"         :(PvPTotal, "activitiesWon", "'s total number of activities won is: ")
+            ,"lsl"          :(PvPTotal, "longestSingleLife", "'s longest single life in seconds is: ")
+            ,"mercy"        :(MedalsCharacter, "medalsActivityCompleteVictoryMercy", "'s total number of mercy medals is: ")
             }
 
 def runBot(engine):
@@ -113,8 +115,9 @@ def runBot(engine):
             #else:
             valid, stat = validate(author, content)
             if valid:
-                output = statRequest(author, stat)
-                await client.send_message(discord.Object(id='342754108534554624'), output)
+                output = singleStatRequest(author, stat)
+                #await client.send_message(discord.Object(id='342754108534554624'), output)
+                await client.send_message(message.channel, output)# embed=output)
             else:
                 await client.send_message(message.channel, "Invalid stat request.")
 
@@ -123,22 +126,18 @@ def runBot(engine):
         tracked = stat in statDict.keys()
         return (tracked, stat)
 
-    def statRequest(author, stat):
+    def singleStatRequest(author, stat):
+        """Actually retrieves the stat and returns the stat info in an embed"""
         session = Session()
-        (table, col) = statDict[stat]
+        (table, col, message) = statDict[stat]
         columns = [col]
-        res = session.query(display_name, *(getattr(table, column) for column in columns)).join(Account).filter(Account.display_name == author).first()
-        print(res)
-        return res
-
-    def statEmbed(res, statMessage):
-        userList = [i for i in res]
-        userTitle = ", ".join(userList)
-        if len(userList)==18:
-            userTitle = "Top 18"
-        em = discord.Embed(title = statTitle + "for: "+userTitle, colour=0xADD8E6)
-        for result in resultList:
-            em.add_field(name=result[0],value=result[1])
+        #res = session.query(display_name, *(getattr(table, column) for column in columns)).join(Account).filter(Account.display_name == author).first()
+        res = session.query(*(getattr(table, column) for column in columns)).join(Account).filter(Account.display_name == author).first()
+        #Returns a tuple containing the stat, but only the first element is defined for some reason.
+        getcontext().prec = 4
+        result = Decimal(res[0])*Decimal(1.0)
+        #em = discord.Embed(title = f"{author}{message}{result}", colour=0xADD8E6)
+        em = f"```{author}{message}{result}```"
         return em
     
     client.run(os.environ['DISCORD_APIKEY'])
