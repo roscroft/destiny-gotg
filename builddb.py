@@ -30,7 +30,7 @@ def buildDB():
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
-    clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage=1&platformType=2"
+    clan_url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage=1&platformType=2"
     outFile = "clanUser_p1.json"
     message = "Fetching page 1 of clan users."
     data = jsonRequest(clan_url, outFile, message)
@@ -353,8 +353,8 @@ def jsonRequest(url, outFile, message=""):
     data = res.json()
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-    #    with open(outFile,"w+") as f:
-    #        json.dump(data, f)
+        with open(outFile,"w+") as f:
+            json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)
