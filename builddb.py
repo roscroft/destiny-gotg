@@ -20,13 +20,13 @@ def makeHeader():
 def buildDB():
     """Main function to build the full database"""
     session = Session()
-    handleBungieUsers(session)
-    handleDestinyUsers(session)
-    handleAggregateStats(session)
-    handleCharacters(session)
-    handleAggregateActivities(session)
-    handleMedals(session)
-    handleWeaponUsage(session)
+    #handleBungieUsers(session)
+    #handleDestinyUsers(session)
+    #handleAggregateStats(session)
+    #handleCharacters(session)
+    #handleAggregateActivities(session)
+    #handleMedals(session)
+    #handleWeaponUsage(session)
     #handleReferenceTables(session)
 
 def handleBungieUsers(session):
@@ -36,7 +36,8 @@ def handleBungieUsers(session):
     outFile = f"clanUser_p{currentPage}.json"
     message = f"Fetching page {currentPage} of clan users."
     data = jsonRequest(clan_url, outFile, message)
-    while data['Response']['hasMore']:
+    hasMore = True
+    while hasMore:
         #if data is None:
         #    #TODO: Throw some error or something
         #    print("")
@@ -45,23 +46,21 @@ def handleBungieUsers(session):
             bungieDict = {}
             bungieDict['last_updated'] = datetime.now()
             bungieDict['membership_type']=254
-            if "bungieNetUserInfo" in user and "membershipId" in user["bungieNetUserInfo"] and 'displayName' in user['bungieNetUserInfo']:
+            if "bungieNetUserInfo" in user:
                 bungieDict['id'] = user['bungieNetUserInfo']['membershipId']
                 bungieDict['bungie_name'] = user['bungieNetUserInfo']['displayName']
             #Some people have improperly linked accounts, this will handle those by setting bungieId as their PSN id
             else:
                 bungieDict['id'] = user['membershipId']
                 bungieDict['bungie_name'] = user['destinyUserInfo']['displayName']
-            #if bungieDict['id'] == '0':
-            #    bungieDict['id'] = user['membershipId']
-            #    bungieDict['membership_type'] = user['membershipType']
+                bungieDict['membership_type'] = user['destinyUserInfo']['membershipType']
             bungie_user = Bungie(**bungieDict)
             insertOrUpdate(Bungie, bungie_user, session)
-        
         currentPage += 1
         clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
         outFile = f"clanUser_p{currentPage}.json"
         message = f"Fetching page {currentPage} of clan users."
+        hasMore = data['Response']['hasMore']
         data = jsonRequest(clan_url, outFile, message)
 
 def handleDestinyUsers(session):
@@ -383,8 +382,8 @@ def jsonRequest(url, outFile, message=""):
     data = res.json()
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        #with open(outFile,"w+") as f:
-        #    json.dump(data, f)
+        with open(outFile,"w+") as f:
+            json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)
