@@ -31,7 +31,6 @@ def buildDB():
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
-    
     currentPage = 1
     clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
     outFile = f"clanUser_p{currentPage}.json"
@@ -84,7 +83,16 @@ def handleDestinyUsers(session):
             #TODO: Throw an error
             print("")
             continue
-
+       # elif data == "DestinyAccountNotFound":
+       #     columns = [m.key for m in Bungie.__table__.columns]
+       #     accountDict = {}
+       #     for column in columns:
+       #         if column != "last_updated":
+       #             accountDict[column] = None
+       #         accountDict['last_update'] = datetime.now()
+       #         new_account = Account(**accountDict)
+       #         insertOrUpdate(Account, new_account, session)
+       # else:
         #Grab all of the individual accounts and put them in the Account table
         accounts = data['Response']['destinyMemberships']
         for account in accounts:
@@ -211,7 +219,6 @@ def handleAggregateActivities(session):
             #TODO: Throw an error
             print("")
             continue
-        
         #This part does the heavy lifting of table building
         aggStatDict = {}
         aggStatDict['last_updated'] = datetime.now()
@@ -246,8 +253,17 @@ def handleWeaponUsage(session):
             continue
         elif data['Response']['data'] == {}:
             continue
-
-        #This part does the heavy lifting of table building
+       # elif data['Response']['data'] == {}:
+       #     columns = [m.key for m in CharacterUsesWeapon.__table__.columns]
+       #     weaponDict = {}
+       #     weaponDict['last_updated'] = datetime.now()
+       #     weaponDict['character_id'] = characterId
+       #     for column in columns:
+       #         if column != 'character_id' and column != 'last_updated':
+       #             weaponDict[column] = None
+       #     new_weapon_stats = CharacterUsesWeapon(**weaponDict)
+       #     insertOrUpdate(CharacterUsesWeapon, new_weapon_stats, session)
+       # else:
         weapons = data['Response']['data']['weapons']
         for weapon in weapons:
             weaponDict = {}
@@ -372,7 +388,7 @@ def jsonRequest(url, outFile, message=""):
         return data
     else:
         print("Error Status: " + error_stat)
-        return None
+        return None 
 
 def insertOrUpdate(table, obj, session):
     matches = session.query(exists().where(table.id == obj.id)).scalar()
