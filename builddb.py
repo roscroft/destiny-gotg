@@ -379,7 +379,7 @@ def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
     print(message)
     res = requests.get(url, headers=makeHeader())
-    print(res.text)
+    #print(res.text)
     data = res.json()
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
