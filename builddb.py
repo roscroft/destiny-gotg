@@ -10,7 +10,8 @@ from sqlalchemy.sql.expression import literal_column
 from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference
 from destinygotg import Session, loadConfig
 
-URL_START = "https://bungie.net/d1/Platform"
+URL_START = "https://bungie.net/Platform"
+#URL_START = "https://bungie.net/D1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
 
 def makeHeader():
@@ -19,38 +20,50 @@ def makeHeader():
 def buildDB():
     """Main function to build the full database"""
     session = Session()
-    #handleBungieUsers(session)
-    #handleDestinyUsers(session)
-    #handleAggregateStats(session)
-    #handleCharacters(session)
-    #handleAggregateActivities(session)
-    #handleMedals(session)
-    #handleWeaponUsage(session)
+    handleBungieUsers(session)
+    handleDestinyUsers(session)
+    handleAggregateStats(session)
+    handleCharacters(session)
+    handleAggregateActivities(session)
+    handleMedals(session)
+    handleWeaponUsage(session)
     #handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
-    clan_url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Membersv3/?lc=en&fmt=true&currentPage=1&platformType=2"
-    outFile = "clanUser_p1.json"
-    message = "Fetching page 1 of clan users."
-    data = jsonRequest(clan_url, outFile, message)
-    if data is None:
-        #TODO: Throw some error or something
-        print("")
     
-    #This section stores all clan users in the Bungie table 
-    for user in data['Response']['results']:
-        bungieDict = {}
-        bungieDict['last_updated'] = datetime.now()
-        bungieDict['membership_type']=254
-        bungieDict['id'] = user['user']['membershipId']
-        #Some people have improperly linked accounts, this will handle those by setting bungieId as their PSN id
-        if bungieDict['id'] == '0':
-            bungieDict['id'] = user['membershipId']
-            bungieDict['membership_type'] = user['membershipType']
-        bungieDict['bungie_name'] = user['user']['displayName']
-        bungie_user = Bungie(**bungieDict)
-        insertOrUpdate(Bungie, bungie_user, session)
+    currentPage = 1
+    clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
+    outFile = f"clanUser_p{currentPage}.json"
+    message = f"Fetching page {currentPage} of clan users."
+    data = jsonRequest(clan_url, outFile, message)
+    while data['Response']['hasMore']:
+        #if data is None:
+        #    #TODO: Throw some error or something
+        #    print("")
+        #This section stores all clan users in the Bungie table 
+        for user in data['Response']['results']:
+            bungieDict = {}
+            bungieDict['last_updated'] = datetime.now()
+            bungieDict['membership_type']=254
+            if "bungieNetUserInfo" in user and "membershipId" in user["bungieNetUserInfo"] and 'displayName' in user['bungieNetUserInfo']:
+                bungieDict['id'] = user['bungieNetUserInfo']['membershipId']
+                bungieDict['bungie_name'] = user['bungieNetUserInfo']['displayName']
+            #Some people have improperly linked accounts, this will handle those by setting bungieId as their PSN id
+            else:
+                bungieDict['id'] = user['membershipId']
+                bungieDict['bungie_name'] = user['destinyUserInfo']['displayName']
+            #if bungieDict['id'] == '0':
+            #    bungieDict['id'] = user['membershipId']
+            #    bungieDict['membership_type'] = user['membershipType']
+            bungie_user = Bungie(**bungieDict)
+            insertOrUpdate(Bungie, bungie_user, session)
+        
+        currentPage += 1
+        clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
+        outFile = f"clanUser_p{currentPage}.json"
+        message = f"Fetching page {currentPage} of clan users."
+        data = jsonRequest(clan_url, outFile, message)
 
 def handleDestinyUsers(session):
     """Retrieve JSONs for users, listing their Destiny accounts. Builds account table."""
@@ -218,14 +231,14 @@ def handleWeaponUsage(session):
         characterId = character.id
         membershipId = character.membership_id
         displayName = session.query(Account).filter_by(id=membershipId).first().display_name
-        kwargs = {"id" : characterId}
+        kwargs = {"character_id" : characterId}
         if not needsUpdate(CharacterUsesWeapon, kwargs, session):
             print(f"Not updating CharacterUsesWeapon table for user: {displayName}")
             continue
         membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
         stat_url = f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{membershipId}/{characterId}"
         message = f"Fetching weapon usage stats for: {displayName}"
-        outFile =f"{displayName}_weapons.json"
+        outFile = f"{displayName}_weapons.json"
         data = jsonRequest(stat_url, outFile, message)
         if data is None:
             #TODO: Throw an error
@@ -261,14 +274,14 @@ def handleMedals(session):
     for account in accounts:
         membershipId = account.id
         displayName = session.query(Account).filter_by(id=membershipId).first().display_name
-        #kwargs = {"id" : characterId}
-        #if not needsUpdate(MedalsCharacter, kwargs, session):
-        #    print(f"Not updating MedalsCharacter table for user: {displayName}")
-        #    continue
+        kwargs = {"membership_id" : membershipId}
+        if not needsUpdate(MedalsCharacter, kwargs, session):
+            print(f"Not updating MedalsCharacter table for user: {displayName}")
+            continue
         membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
         stat_url = f"{URL_START}/Destiny/Stats/Account/{membershipType}/{membershipId}/?Groups=Medals"
         message = f"Fetching medal stats for: {displayName}"
-        outFile =f"{displayName}_medals.json"
+        outFile = f"{displayName}_medals.json"
         data = jsonRequest(stat_url, outFile, message)
         if data is None:
             #TODO: Throw an error
@@ -350,11 +363,12 @@ def jsonRequest(url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
     print(message)
     res = requests.get(url, headers=makeHeader())
+    print(res.text)
     data = res.json()
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        with open(outFile,"w+") as f:
-            json.dump(data, f)
+        #with open(outFile,"w+") as f:
+        #    json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)

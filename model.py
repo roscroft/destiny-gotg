@@ -7,6 +7,9 @@ import requests, zipfile
 import shutil
 import discordController
 
+APP_PATH = "/etc/destinygotg"
+DBPATH = f"{APP_PATH}/guardians.db"
+
 def checkDB():
     """Check to see if a database exists"""
     return os.path.isfile(os.environ['DBPATH'])

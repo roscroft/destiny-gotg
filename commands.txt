@@ -1,0 +1,14 @@
+
+sudo add-apt-repository ppa:jonathonf/python3.6
+sudo apt-get update
+sudo apt-get install python3.6
+
+sudo apt-get install python3-pip
+
+pip3 install --upgrade pip
+
+python3.6 -m pip install -U discord.py
+
+python3.6 -m pip install -U sqlalchemy
+
+
