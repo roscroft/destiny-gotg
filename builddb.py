@@ -382,8 +382,8 @@ def jsonRequest(url, outFile, message=""):
     data = res.json()
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        with open(outFile,"w+") as f:
-            json.dump(data, f)
+        #with open(outFile,"w+") as f:
+        #    json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)

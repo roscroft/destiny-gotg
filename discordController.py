@@ -4,8 +4,13 @@ import discord, asyncio
 from datetime import datetime
 from destinygotg import Session, loadConfig
 from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base, Discord, Account, MedalsCharacter
-from sqlalchemy import exists
+from sqlalchemy import exists, desc
 from decimal import *
+import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.mlab as mlab
+import matplotlib.pyplot as plt; plt.rcdefaults()
 
 playerList = [item[0] for item in Session().query(Account.display_name).all()]
 
@@ -128,6 +133,51 @@ def runBot(engine):
                 await client.send_message(message.channel, embed=output)
             else:
                 await client.send_message(message.channel, "```Invalid stat request.```")
+        elif message.content.startswith("!clanstat"):
+            content = message.content
+            author = message.author.name
+            valid, stat, player = validateClanStat(author, content)
+            output = clanStatRequest(stat, player)
+            await client.send_file(message.channel, './Figures/hist.png')
+    
+    def clanStatRequest(stat, player):
+        session = Session()
+        (table, col, message) = statDict[stat]
+        columns = [col]
+        res = session.query(*(getattr(table, column) for column in columns), Account.display_name).join(Account).all()
+        rawdata = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
+        data = sorted(rawdata, key=lambda x: x[1])
+        plt.clf()
+        #num_bins = 45
+        #n, bins, patches = plt.hist(nums, num_bins, facecolor='blue', alpha=0.5)
+        #plt.xlabel('Kill/Death Ratio')
+        #plt.ylabel('Guardians')
+        #plt.title('Histogram of K/D')
+        objects = [item[0] for item in data]
+        print(player)
+        objects = [" " if item != player else item for item in objects]
+        values = [item[1] for item in data]
+        
+        fig, ax = plt.subplots(figsize=(14,6))
+        index = np.arange(len(objects))
+        plt.bar(index, values, alpha=0.4, color='b', align='center')
+        plt.xlabel("Guardians")
+        plt.ylabel("Tracked Stat")
+        plt.title("Clan Tracked Stat")
+        plt.xticks(index, objects)
+        fig.autofmt_xdate()
+        plt.tight_layout()
+        plt.savefig('./Figures/hist.png')
+    
+    def validateClanStat(author, content):
+        statList = content.split(" ")
+        stat = statList[1]
+        isTracked = stat in statDict.keys()
+        isValidPlayer = author in playerList
+        player = ""
+        if isValidPlayer:
+            player = author
+        return (isTracked, stat, player)
 
     def validate(author, content):
         statList = content.split(" ")
