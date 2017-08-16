@@ -265,11 +265,16 @@ def validate(player, content):
         trackCode = 1
     elif stat in medalDict.keys():
         trackCode = 2
+    elif stat[:-2] in medalDict.keys() and stat[-2:] == "pg":
+        trackCode = 3
+        stat = stat[:-2]
     players = []
     isValid = (trackCode != 0)
     if len(statList) > 1:
         isVs = statList[1] == "vs"
         players = statList[2:]
+        if players == ["all"]:
+            players = playerList
         areValidPlayers = [player in playerList for player in players]
         isValid = (trackCode != 0) and isVs and (False not in areValidPlayers)
     return (isValid, players, trackCode, stat)
@@ -306,25 +311,49 @@ def singleStatRequest(player, code, stat):
         name = player
         if message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
             message = f"Total {message} Medals"
+    elif code == 3:
+        (table, col, message) = medalDict[stat]
+        columns = [col]
+        res = session.query(func.sum(*(getattr(table, column) for column in columns))).join(Account).filter(Account.display_name == player).group_by(MedalsCharacter.membership_id).first()
+        num = float(res[0])
+        denominator = session.query(PvPTotal.activitiesEntered).join(Account).filter(Account.display_name == player).first()
+        act = denominator[0]
+        num = num/act
+        name = player
+        if message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
+            message = f"{message} Medals per Game"
+        else:
+            message = f"{message} per Game"
     #em = discord.Embed(title = f"{author}{message}{result}", colour=0xADD8E6)
     em = f"```{message} for {name}: {num}```"
     return em
 
 def multiStatRequest(players, code, stat):
     session = Session()
+    data = []
     if code == 1:
         (table, col, message) = statDict[stat]
         columns = [col]
-        res = session.query(*(getattr(table, column) for column in columns), Account.display_name).join(Account).filter(Account.display_name.in_(players)).order_by(*(getattr(table, column) for column in columns).desc()).all()
+        res = session.query(*(getattr(table, column) for column in columns), Account.display_name).join(Account).filter(Account.display_name.in_(players)).order_by(Account.display_name).all()
+        data = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
     elif code == 2:
         (table, col, message) = medalDict[stat]
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(MedalsCharacter.membership_id).order_by(func.sum(*(getattr(table, column) for column in columns)).desc()).all()
-    rawdata = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None] 
-    if message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(MedalsCharacter.membership_id).order_by(Account.display_name).all()
+        data = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
+    elif code == 3:
+        (table, col, message) = medalDict[stat]
+        columns = [col]
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(MedalsCharacter.membership_id).order_by(Account.display_name).all()
+        numActivities = session.query(PvPTotal.activitiesEntered).join(Account).filter(Account.display_name.in_(players)).order_by(Account.display_name).all()
+        data = [(res[i][1], truncateDecimals(float(res[i][0])/numActivities[i][0])) for i in range(len(res)) if res[i][0] is not None]
+    data = sorted(data, key=lambda x: x[1], reverse=True)
+    if (code == 2 or code == 3) and message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
         message = f"Total {message} Medals"
     em = discord.Embed(title = f"{message}", colour=0xADD8E6)
-    for (name, num) in rawdata:
+    if len(data) > 10:
+        data = data[:9]
+    for (name, num) in data:
         em.add_field(name=name, value=num)
     return em
 

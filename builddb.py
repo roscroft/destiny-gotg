@@ -20,14 +20,14 @@ def makeHeader():
 def buildDB():
     """Main function to build the full database"""
     session = Session()
-    #handleBungieUsers(session)
-    #handleDestinyUsers(session)
-    #handleAggregateStats(session)
-    #handleCharacters(session)
-    #handleAggregateActivities(session)
-    #handleMedals(session)
-    #handleWeaponUsage(session)
-    #handleReferenceTables(session)
+    handleBungieUsers(session)
+    handleDestinyUsers(session)
+    handleAggregateStats(session)
+    handleCharacters(session)
+    handleAggregateActivities(session)
+    handleMedals(session)
+    handleWeaponUsage(session)
+    handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -315,6 +315,9 @@ def handleMedals(session):
                     medalDict[medal] = character['merged']['allTime'][medal]['basic']['value']
             new_medal_statistics = MedalsCharacter(**medalDict)
             insertOrUpdate(MedalsCharacter, new_medal_statistics, session)
+
+# This is going to be a lot. 2-36 are all different activity modes that will each require tracking.
+def handleActivityHistory(session):
 
 def handleReferenceTables(session):
     """Connects to the manifest.content database and builds the necessary reference tables."""
