@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
-from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference
+from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash
 from destinygotg import Session, loadConfig
 
 URL_START = "https://bungie.net/Platform"
@@ -20,14 +20,15 @@ def makeHeader():
 def buildDB():
     """Main function to build the full database"""
     session = Session()
-    handleBungieUsers(session)
-    handleDestinyUsers(session)
-    handleAggregateStats(session)
-    handleCharacters(session)
-    handleAggregateActivities(session)
-    handleMedals(session)
-    handleWeaponUsage(session)
-    handleReferenceTables(session)
+    #handleBungieUsers(session)
+    #handleDestinyUsers(session)
+    #handleAggregateStats(session)
+    #handleCharacters(session)
+    #handleAggregateActivities(session)
+    #handleMedals(session)
+    #handleWeaponUsage(session)
+    handleActivityHistory(session)
+    #handleReferenceTables(session)
 
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
@@ -252,17 +253,6 @@ def handleWeaponUsage(session):
             continue
         elif data['Response']['data'] == {}:
             continue
-       # elif data['Response']['data'] == {}:
-       #     columns = [m.key for m in CharacterUsesWeapon.__table__.columns]
-       #     weaponDict = {}
-       #     weaponDict['last_updated'] = datetime.now()
-       #     weaponDict['character_id'] = characterId
-       #     for column in columns:
-       #         if column != 'character_id' and column != 'last_updated':
-       #             weaponDict[column] = None
-       #     new_weapon_stats = CharacterUsesWeapon(**weaponDict)
-       #     insertOrUpdate(CharacterUsesWeapon, new_weapon_stats, session)
-       # else:
         weapons = data['Response']['data']['weapons']
         for weapon in weapons:
             weaponDict = {}
@@ -318,6 +308,39 @@ def handleMedals(session):
 
 # This is going to be a lot. 2-36 are all different activity modes that will each require tracking.
 def handleActivityHistory(session):
+    characters = session.query(Character).all()
+    for character in characters:
+        characterId = character.id
+        membershipId = character.membership_id
+        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
+        kwargs = {"id" : characterId}
+        if not needsUpdate(CharacterStatMayhemClash, kwargs, session):
+            pass
+            print(f"Not updating CharacterStatMayhemClash table for user: {displayName}")
+            continue
+        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
+        stat_url = f"{URL_START}/Destiny/Stats/{membershipType}/{membershipId}/?modes=MayhemClash"#{characterId}/?modes=MayhemClash"
+        message = f"Fetching mayhem clash stats for: {displayName}"
+        outFile = f"{displayName}_stats.json"
+        data = jsonRequest(stat_url, outFile, message)
+        print("Data received.")
+        if data is None:
+            #TODO: Throw an error
+            print("")
+            continue
+        
+        #This part does the heavy lifting of table building
+        actDict = {}
+        actDict['id'] = characterId
+        actDict['last_updated'] = datetime.now()
+        if 'allTime' in data['Response']['mayhemClash']:
+            stats = data['Response']['mayhemClash']['allTime']
+        else:
+            continue
+        for stat in stats:
+            actDict[stat] = stats[stat]['basic']['value']
+            new_activity_statistics = CharacterStatMayhemClash(**actDict)
+            insertOrUpdate(CharacterStatMayhemClash, new_activity_statistics, session)
 
 def handleReferenceTables(session):
     """Connects to the manifest.content database and builds the necessary reference tables."""
@@ -385,8 +408,8 @@ def jsonRequest(url, outFile, message=""):
     data = res.json()
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        #with open(outFile,"w+") as f:
-        #    json.dump(data, f)
+        with open(outFile,"w+") as f:
+            json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)

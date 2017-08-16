@@ -485,6 +485,73 @@ class MedalsCharacter(Base):
 
 class CharacterStatMayhemClash(Base):
     __tablename__ = "characterStatMayhemClash"
+    id = Column(Integer, ForeignKey('character.id'), primary_key=True)
+    character = relationship(Character)
+    last_updated = Column(DateTime)
+    abilityKills = Column(Integer)
+    activitiesEntered = Column(Integer)
+    activitiesWon = Column(Integer)
+    allParticipantsCount = Column(Integer)
+    allParticipantsScore = Column(Integer)
+    allParticipantsTimePlayed = Column(Integer)
+    assists = Column(Integer)
+    averageKillDistance = Column(Float)
+    averageLifespan = Column(Float)
+    averageDeathDistance = Column(Float)
+    averageScorePerKill = Column(Float)
+    averageScorePerLife = Column(Float)
+    bestSingleGameKills = Column(Integer)
+    bestSingleGameScore = Column(Integer)
+    closeCalls = Column(Integer)
+    combatRating = Column(Float)
+    deaths = Column(Integer)
+    defensiveKills = Column(Integer)
+    dominationKills = Column(Integer)
+    highestCharacterLevel = Column(Integer)
+    highestLightLevel = Column(Integer)
+    kills = Column(Integer)
+    killsDeathsAssists = Column(Float)
+    killsDeathsRatio = Column(Float)
+    longestKillDistance = Column(Integer)
+    longestKillSpree = Column(Integer)
+    longestSingleLife = Column(Integer)
+    mostPrecisionKills = Column(Integer)
+    objectivesCompleted = Column(Integer)
+    offensiveKills = Column(Integer)
+    orbsDropped = Column(Integer)
+    orbsGathered = Column(Integer)
+    precisionKills = Column(Integer)
+    relicsCaptured = Column(Integer)
+    remainingTimeAfterQuitSeconds = Column(Integer)
+    resurrectionsPerformed = Column(Integer)
+    resurrectionsReceived = Column(Integer)
+    score = Column(Integer)
+    secondsPlayed = Column(Integer)
+    suicides = Column(Integer)
+    teamScore = Column(Integer)
+    totalActivityDurationSeconds = Column(Integer)
+    totalDeathDistance = Column(Integer)
+    totalKillDistance = Column(Integer)
+    weaponBestType = Column(Integer)
+    weaponKillsAutoRifle = Column(Integer)
+    weaponKillsHandCannon = Column(Integer)
+    weaponKillsFusionRifle = Column(Integer)
+    weaponKillsGrenade = Column(Integer)
+    weaponKillsMachinegun = Column(Integer)
+    weaponKillsMelee = Column(Integer)
+    weaponKillsPulseRifle = Column(Integer)
+    weaponKillsRelic = Column(Integer)
+    weaponKillsRocketLauncher = Column(Integer)
+    weaponKillsScoutRifle = Column(Integer)
+    weaponKillsShotgun = Column(Integer)
+    weaponKillsSideArm = Column(Integer)
+    weaponKillsSniper = Column(Integer)
+    weaponKillsSubmachinegun = Column(Integer)
+    weaponKillsSuper = Column(Integer)
+    weaponKillsSword = Column(Integer)
+    winLossRatio = Column(Float)
+    zonesCaptured = Column(Integer)
+    zonesNeutralized = Column(Integer)
 
 #class CharacterStatMayhemRumble(Base):
 #    __tablename__ = "characterStatMayhemRumble"
@@ -515,11 +582,6 @@ class CharacterStatMayhemClash(Base):
 #
 #class CharacterStatSupremacyMayhem(Base):
 #    __tablename__ = "characterStatSupremacyMayhem"
-
-
-
-
-
 
 class ActivityReference(Base):
     __tablename__ = 'activityReference'
