@@ -485,8 +485,8 @@ class MedalsCharacter(Base):
 
 class CharacterStatMayhemClash(Base):
     __tablename__ = "characterStatMayhemClash"
-    id = Column(Integer, ForeignKey('character.id'), primary_key=True)
-    character = relationship(Character)
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    account = relationship(Account)
     last_updated = Column(DateTime)
     abilityKills = Column(Integer)
     activitiesEntered = Column(Integer)

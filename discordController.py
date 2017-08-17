@@ -248,7 +248,7 @@ def runBot(engine):
                 await client.send_message(message.channel, "```Invalid stat request.```")
         elif message.content.startswith("!clangraph"):
             content = message.content
-            author = message.author.name
+            player = await registerHandler(message.author)
             valid, authplayer, code, stat = validateClanStat(player, content)
             output = clanGraphRequest(authplayer, code, stat)
             await client.send_file(message.channel, './Figures/hist.png')
@@ -280,17 +280,20 @@ def validate(player, content):
     return (isValid, players, trackCode, stat)
 
 def validateClanStat(player, content):
-    statList = content.split(" ")[1]
+    stat = content.split(" ")[1]
     trackCode = 0
     if stat in statDict.keys():
         trackCode = 1
     elif stat in medalDict.keys():
         trackCode = 2
+    elif stat[:-2] in medalDict.keys() and stat[-2:] == "pg":
+        trackCode = 3
+        stat = stat[:-2]
     isValidPlayer = player in playerList
     playerName = ""
     if isValidPlayer:
         playerName = player
-    return ((trackCode != 0), stat, playerName)
+    return ((trackCode != 0), playerName, trackCode, stat)
     
 def singleStatRequest(player, code, stat):
     """Actually retrieves the stat and returns the stat info in an embed"""
@@ -357,12 +360,31 @@ def multiStatRequest(players, code, stat):
         em.add_field(name=name, value=num)
     return em
 
-def clanGraphRequest(stat, player):
+def clanGraphRequest(player, code, stat):
     session = Session()
-    (table, col, message) = statDict[stat]
-    columns = [col]
-    res = session.query(*(getattr(table, column) for column in columns), Account.display_name).join(Account).all()
-    rawdata = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
+    rawdata = []
+    message = ""
+    if code == 1:
+        (table, col, message) = statDict[stat]
+        columns = [col]
+        res = session.query(*(getattr(table, column) for column in columns), Account.display_name).join(Account).all()
+        rawdata = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
+    elif code == 2:
+        (table, col, message) = medalDict[stat]
+        columns = [col]
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(MedalsCharacter.membership_id).all()
+        rawdata = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
+    elif code == 3:
+        (table, col, message) = medalDict[stat]
+        
+        columns = [col]
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(MedalsCharacter.membership_id).all()
+        numActivities = session.query(PvPTotal.activitiesEntered, Account.display_name).join(Account).all()
+        #Need to associate numActivities with the correct username
+        rawdata = [(item[1], truncateDecimals(item[0])/float(activity[0])) for item in res for activity in numActivities if item[1] == activity[1] and item[0] is not None and activity[0] is not None]
+        print(rawdata)
+    if (code == 2 or code == 3) and message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
+        message = f"Total {message} Medals"
     data = sorted(rawdata, key=lambda x: x[1])
     plt.clf()
     #num_bins = 45
@@ -378,8 +400,8 @@ def clanGraphRequest(stat, player):
     index = np.arange(len(objects))
     plt.bar(index, values, alpha=0.4, color='b', align='center')
     plt.xlabel("Guardians")
-    plt.ylabel("Tracked Stat")
-    plt.title("Clan Tracked Stat")
+    plt.ylabel(f"{message}")
+    plt.title(f"Clan {message} Comparison")
     plt.xticks(index, objects)
     fig.autofmt_xdate()
     plt.tight_layout()

@@ -27,7 +27,7 @@ def buildDB():
     #handleAggregateActivities(session)
     #handleMedals(session)
     #handleWeaponUsage(session)
-    handleActivityHistory(session)
+    #handleActivityHistory(session)
     #handleReferenceTables(session)
 
 def handleBungieUsers(session):
@@ -308,18 +308,17 @@ def handleMedals(session):
 
 # This is going to be a lot. 2-36 are all different activity modes that will each require tracking.
 def handleActivityHistory(session):
-    characters = session.query(Character).all()
-    for character in characters:
-        characterId = character.id
-        membershipId = character.membership_id
-        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
-        kwargs = {"id" : characterId}
+    accounts = session.query(Account).all()
+    for account in accounts:
+        membershipId = account.id
+        displayName = account.display_name
+        kwargs = {"id" : membershipId}
         if not needsUpdate(CharacterStatMayhemClash, kwargs, session):
             pass
             print(f"Not updating CharacterStatMayhemClash table for user: {displayName}")
             continue
-        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
-        stat_url = f"{URL_START}/Destiny/Stats/{membershipType}/{membershipId}/?modes=MayhemClash"#{characterId}/?modes=MayhemClash"
+        membershipType = account.membership_type
+        stat_url = f"{URL_START}/Destiny/Stats/{membershipType}/{membershipId}/0/?modes=MayhemClash"
         message = f"Fetching mayhem clash stats for: {displayName}"
         outFile = f"{displayName}_stats.json"
         data = jsonRequest(stat_url, outFile, message)
@@ -331,7 +330,7 @@ def handleActivityHistory(session):
         
         #This part does the heavy lifting of table building
         actDict = {}
-        actDict['id'] = characterId
+        actDict['id'] = membershipId
         actDict['last_updated'] = datetime.now()
         if 'allTime' in data['Response']['mayhemClash']:
             stats = data['Response']['mayhemClash']['allTime']
