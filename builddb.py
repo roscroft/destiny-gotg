@@ -9,6 +9,9 @@ from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
 from initdb import Base, Bungie, Account, PvPTotal, PvPAverage, PvETotal, PvEAverage, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
 from destinygotg import Session, loadConfig
+sys.path.append("./")
+import importlib
+endpoints = importlib.import_module("Destiny-API-Frameworks.python.endpoints")
 
 URL_START = "https://bungie.net/Platform"
 #URL_START = "https://bungie.net/D1/Platform"
@@ -19,8 +22,8 @@ def makeHeader():
 
 def buildDB():
     """Main function to build the full database"""
-    handleBungieUsers()
-    handleDestinyUsers()
+    handleBungieTable()
+    handleAccountTable()
     #handleAggregateStats(session)
     #handleCharacters(session)
     #handleAggregateActivities(session)
@@ -29,8 +32,69 @@ def buildDB():
     #handleActivityHistory(session)
     #handleReferenceTables(session)
 
-def handleBungieUsers():
+#infoMap = {'attrs':{'attr1':'attr1Name', ...}
+#           ,'kwargs':{'kwargs1':'attr1', ...}
+#           ,'url_params':{'param1':'attr1', ...}
+#           ,'values':{'value1':'location1', ...}
+#           ,'statics':{'static1':'attr1', ...}
+
+def requestAndInsert(session, request_session, infoMap, url, outFile, message, iterator, table, instrument=None):
+    """Does everything else"""
+    #Actual request done here
+    data = jsonRequest(request_session, url, outFile, message)
+    if data is None:
+        print("No data retrieved.")
+        return None
+    #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
+    group = dynamicDictIndex(data, iterator)
+    for elem in group:
+        #buildDict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
+        insertDict = buildDict(elem, infoMap['values'])
+        #Statics are pre-defined values - maybe the id from user.id in defineParams
+        if 'statics' in infoMap:
+            for (key, value) in infoMap['statics'].items():
+                insertDict[key] = infoMap['attrs'][value]
+        #Create a new element for insertion using kwargs
+        insert_elem = table(**insertDict)
+        #Upsert the element
+        insertOrUpdate(table, insert_elem, session)
+    if instrument is not None:
+        #The only instrumentation we use so far is hasMore, but it's here if we need it for other things.
+        output = dynamicDictIndex(data, instrument)
+        return output
+
+def defineParams(queryTable, infoMap, urlFunction, iterator, table, instrument=None):
+    """Does like everything"""
+    #Build a single request session for the duration of the table creation
+    request_session = requests.session()
     session = Session()
+    #Elems is what we'll be iterating through - could be users, characters, etc.
+    elems = session.query(queryTable).all()
+    for elem in elems:
+        #Attrs are the attributes associated with the elem. User.id or user.membership_type, for example. AKA fields in the database.
+        attrMap = {}
+        for (key, value) in infoMap['attrs'].items():
+            attrMap[key] = getattr(elem, value)
+        #Kwargs are used to check if the database needs updating for the current elem.
+        kwargs = {}
+        for (key, value) in infoMap['kwargs'].items():
+            kwargs[key] = attrMap[value]
+        if not needsUpdate(table, kwargs, session):
+            print(f"Not updating {table.__tablename__} table for user: {queriedMap['name']}")
+            continue
+        #urlParams are used to build the request URL.
+        urlParams = {}
+        for (key, value) in infoMap['url_params'].items():
+            urlParams[key] = attrMap[value]
+        url = urlFunction(**urlParams)
+        outFile = f"{attrMap['name']}_{table.__tablename__}.json"
+        message = f"Fetching {table.__tablename__} data for: {attrMap['name']}"
+        requestAndInsert(session, request_session, infoMap, url, outFile, message, iterator, table, instrument)
+
+def handleBungieTable():
+    """Fills Bungie table with all users in the clan"""
+    session = Session()
+    request_session = requests.session()
     currentPage = 1
     clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
     outFile = f"clanUser_p{currentPage}.json"
@@ -40,116 +104,56 @@ def handleBungieUsers():
                          ,'bungie_name':[['bungieNetUserInfo', 'displayName'], ['destinyUserInfo','displayName']]
                          ,'membership_type':[['bungieNetUserInfo', 'membershipType'], ['destinyUserInfo', 'membershipType']]}}
     instrument = ['Response', 'hasMore']
-    output = requestAndInsert(session, infoMap, clan_url, outFile, message, iterator, Bungie, instrument)
+    output = requestAndInsert(session, request_session, infoMap, clan_url, outFile, message, iterator, Bungie, instrument)
     while output is True:
         currentPage += 1
         clan_url = f"{URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
         outFile = f"clanUser_p{currentPage}.json"
         message = f"Fetching page {currentPage} of clan users."
-        output = requestAndInsert(session, infoMap, clan_url, outFile, message, iterator, Bungie, instrument)
+        output = requestAndInsert(session, request_session, infoMap, clan_url, outFile, message, iterator, Bungie, instrument)
 
-def dynamicDictIndex(dct, value):
-    try:
-        ret = dct
-        for item in value:
-            ret = ret[item]
-    except KeyError:
-        ret = None
-    return ret
+def accountUrl(id, membershipType):
+    return f"{URL_START}/User/GetMembershipsById/{id}/{membershipType}"
 
-def buildDict(dct, valueMap):
-    outDict = {}
-    for (key, valList) in valueMap.items():
-        ret = dynamicDictIndex(dct, valList[0])
-        if ret == None:
-            ret = dynamicDictIndex(dct, valList[1])
-        outDict[key] = ret
-    return outDict
-
-#infoMap = {'attrs':{'attr1':'attr1Name', ...}
-#           ,'kwargs':{'kwargs1':'attr1', ...}
-#           ,'values':{'value1':'location1', ...}
-#           ,'statics':{'static1':'attr1', ...}
-
-def requestAndInsert(session, infoMap, url, outFile, message, iterator, table, instrument=None):
-    """Documentation of function"""
-    data = jsonRequest(url, outFile, message)
-    if data is None:
-        print("No data retrieved.")
-        return None
-    group = dynamicDictIndex(data, iterator)
-    for elem in group:
-        insertDict = buildDict(elem, infoMap['values'])
-        if 'statics' in infoMap:
-            for (key, value) in infoMap['statics']:
-                insertDict[key] = infoMap['attrs'][value]
-        insert_elem = table(**insertDict)
-        insertOrUpdate(table, insert_elem, session)
-    if instrument is not None:
-        output = dynamicDictIndex(data, instrument)
-        return output
-
-def multiRequestAndInsert(session, elems, infoMap, url, outFile, message, iterator, table, instrument=None):
-    for elem in elems:
-        attrMap = {}
-        for (key, value) in infoMap['attrs']:
-            attrMap[key] = getattr(elem, value)
-        kwargs = {}
-        for (key, value) in infoMap['kwargs']:
-            kwargs[key] = attrMap[value]
-        if not needsUpdate(table, kwargs, session):
-            print(f"Not updating {table} table for user: {queriedMap['name']}")
-            continue
-        requestAndInsert(session, infoMap, url, outFile, message, iterator, table, instrument)
-
-def handleDestinyUsers():
-    """Retrieve JSONs for users, listing their Destiny accounts. Builds account table."""
+def handleAccountTable():
+    """Retrieve JSONs for users, listing their Destiny accounts. Fills account table."""
     session = Session()
-    elems = session.query(Bungie).all()
+    queryTable = Bungie
     infoMap = {'attrs'  :{'id'             : 'id'
                          ,'name'           : 'bungie_name'
                          ,'membershipType' : 'membership_type'}
               ,'kwargs' :{'bungie_id' : 'id'}
+              ,'url_params' :{'id'             : 'id'
+                             ,'membershipType' : 'membershipType'}
               ,'values' :{'id'              : [['membershipId']]
                          ,'membership_type' : [['membershipType']]
                          ,'display_name'    : [['displayName']]}
               ,'statics' :{'bungie_id' : 'id'}}
-    user_url = f"{URL_START}/User/GetMembershipsById/{attrMap['id']}/{attrMap['membershipType']}/"
-    outFile = f"{bungieName}.json"
-    message = f"Fetching membership data for: {bungieName}"
     iterator = ['Response', 'destinyMemberships']
     table = Account
-    multiRequestAndInsert(session, elems, infoMap, user_url, outFile, message, iterator, table)
+    defineParams(queryTable, infoMap, accountUrl, iterator, table)
 
-def oldHandleDestinyUsers(session):
-    """Retrieve JSONs for users, listing their Destiny accounts. Builds account table."""
-    users = session.query(Bungie).all()
-    for user in users:
-        bungieId = user.id
-        bungieName = user.bungie_name
-        kwargs = {"bungie_id" : bungieId}
-        if not needsUpdate(Account, kwargs, session):
-            print(f"Not updating account table for user: {bungieName}")
-            continue
-        membershipType = user.membership_type
-        user_url = f"{URL_START}/User/GetMembershipsById/{bungieId}/{membershipType}/"
-        message = f"Fetching membership data for: {bungieName}"
-        outFile = f"{bungieName}.json"
-        data = jsonRequest(user_url, outFile, message)
-        if data is None:
-            #TODO: Throw an error
-            print("")
-            continue
-        #Grab all of the individual accounts and put them in the Account table
-        accounts = data['Response']['destinyMemberships']
-        for account in accounts:
-            accountDict = {}
-            accountDict['id'] = account['membershipId']
-            accountDict['membership_type'] = account['membershipType']
-            accountDict['display_name'] = account['displayName']
-            accountDict['bungie_id'] = bungieId
-            new_account = Account(**accountDict)
-            insertOrUpdate(Account, new_account, session)
+#def aggregateStatsUrl(membershipType, id):
+#    return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
+
+#def handleAggregatePvpTable():
+#    """Fills aggregateStats table with aggregate PvP stats."""
+#    session = Session()
+#    queryTable = Account
+#    infoMap = {'attrs'  :{'id'             : 'id'
+#                         ,'name'           : 'display_name'
+#                         ,'membershipType' : 'membership_type'}
+#              ,'kwargs' :{'id' : 'id'}
+#              ,'url_params' :{'id'             : 'id'
+#                             ,'membershipType' : 'membershipType'}
+#              ,'values' :{'id'              : [['membershipId']]
+#                         ,'membership_type' : [['membershipType']]
+#                         ,'display_name'    : [['displayName']]}
+#              ,'statics' :{'bungie_id' : 'id'}}
+#    iterator = ['Response', 'destinyMemberships']
+#    table = Account
+#    defineParams(queryTable, infoMap, accountUrl, iterator, table)
+
 
 def handleAggregateStats(session):
     """Retrieve aggregate stats for users. Builds PvP and PvE average and total tables."""
@@ -436,10 +440,30 @@ def handleReferenceTables(session):
         return not ("bucketName" in info)
     bucketDict = buildReferenceTable("bucket", bucketTable, bucketStatement, bucketInfo, bucketCondition)
 
-def jsonRequest(url, outFile, message=""):
+def dynamicDictIndex(dct, value):
+    try:
+        ret = dct
+        for item in value:
+            ret = ret[item]
+    except KeyError:
+        ret = None
+    return ret
+
+def buildDict(dct, valueMap):
+    outDict = {}
+    for (key, valList) in valueMap.items():
+        ret = dynamicDictIndex(dct, valList[0])
+        if ret == None:
+            ret = dynamicDictIndex(dct, valList[1])
+        outDict[key] = ret
+    return outDict
+
+def jsonRequest(request_session, url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
     print(message)
-    res = requests.get(url, headers=makeHeader())
+    headers = makeHeader()
+    print(url)
+    res = request_session.get(url, headers=headers)
     #print(res.text)
     data = res.json()
     error_stat = data['ErrorStatus']
