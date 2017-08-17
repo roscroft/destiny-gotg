@@ -12,7 +12,7 @@ mpl.use('Agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt; plt.rcdefaults()
 
-playerList = [item[0] for item in Session().query(Account.display_name).all()]
+#playerList = [item[0] for item in Session().query(Account.display_name).all()]
 
 statDict = { "kd"           :(PvPTotal, "killsDeathsRatio", "Kill/Death Ratio")
             ,"kda"          :(PvPTotal, "killsDeathsAssists", "Kill/Assists/Death Ratio")

@@ -11,7 +11,6 @@ Base = declarative_base()
 class Bungie(Base):
     __tablename__ = 'bungie'
     id = Column(String(50), primary_key=True)
-    last_updated = Column(DateTime)
     bungie_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
 
@@ -23,7 +22,6 @@ class Discord(Base):
 class Account(Base):
     __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
-    last_updated = Column(DateTime)
     display_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
     bungie_id = Column(String(50), ForeignKey('bungie.id'))
@@ -34,7 +32,6 @@ class Account(Base):
 class PvETotal(Base):
     __tablename__ = 'pveTotal'
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
-    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Integer)
     activitiesCleared = Column(Integer)
@@ -100,7 +97,6 @@ class PvETotal(Base):
 class PvEAverage(Base):
     __tablename__ = 'pveAverage'
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
-    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Float)
     assists = Column(Float)
@@ -140,7 +136,6 @@ class PvEAverage(Base):
 class PvPTotal(Base):
     __tablename__ = 'pvpTotal'
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
-    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Integer)
     activitiesEntered = Column(Integer)
@@ -210,7 +205,6 @@ class PvPTotal(Base):
 class PvPAverage(Base):
     __tablename__ = 'pvpAverage'
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
-    last_updated = Column(DateTime)
     account = relationship(Account)
     abilityKills = Column(Float)
     assists = Column(Float)
@@ -260,14 +254,12 @@ class Character(Base):
     light_level = Column(Integer)
     class_hash = Column(Integer)
     grimoire = Column(Integer)
-    last_updated = Column(DateTime)
 
 class CharacterUsesWeapon(Base):
     __tablename__ = 'characterUsesWeapon'
     id = Column(Integer, primary_key=True) # Weapon hash
     character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
-    last_updated = Column(DateTime)
     kills = Column(Integer)
     precision_kills = Column(Integer)
     precision_kill_percentage = Column(Float)
@@ -275,7 +267,6 @@ class CharacterUsesWeapon(Base):
 class AggregateStatsCharacter(Base):
     __tablename__ = 'aggregateStatsCharacter'
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
-    last_updated = Column(DateTime)
     character = relationship(Character)
     activity_hash = Column(Integer)
     activityAssists = Column(Integer)
@@ -296,7 +287,6 @@ class MedalsCharacter(Base):
     character = relationship(Character)
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
-    last_updated = Column(DateTime)
     activitiesEntered = Column(Integer)
     allMedalsEarned = Column(Integer)
     allMedalsScore = Column(Integer)
@@ -487,7 +477,6 @@ class CharacterStatMayhemClash(Base):
     __tablename__ = "characterStatMayhemClash"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
-    last_updated = Column(DateTime)
     abilityKills = Column(Integer)
     activitiesEntered = Column(Integer)
     activitiesWon = Column(Integer)
@@ -627,6 +616,12 @@ class BucketReference(Base):
 #    instance_id = Column(Integer, ForeignKey('activity.instance_id'), primary_key=True)
 #    activity = relationship(Activity)
 #    #Other character-specific activity related fields
+
+class LastUpdated(Base):
+    __tablename__ = 'lastUpdated'
+    id = Column(Integer, primary_key=True)
+    table_name = Column(String(50))
+    last_updated = Column(DateTime)
 
 def initDB(engine):
     Base.metadata.bind = engine
