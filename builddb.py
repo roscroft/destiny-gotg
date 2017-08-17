@@ -20,7 +20,7 @@ def makeHeader():
 def buildDB():
     """Main function to build the full database"""
     session = Session()
-    #handleBungieUsers(session)
+    handleBungieUsers(session)
     #handleDestinyUsers(session)
     #handleAggregateStats(session)
     #handleCharacters(session)
@@ -30,6 +30,33 @@ def buildDB():
     #handleActivityHistory(session)
     #handleReferenceTables(session)
 
+def hookintoexample():
+    url = ""
+    outFile = ""
+    message = ""
+    locMap = {}
+
+
+def requestAndInsert(url, outFile, message):
+    """Documentation of function"""
+    session = Session()
+    
+def dynamicDictIndex(dct, value):
+    ret = dct
+    for item in value:
+        ret = ret[item]
+    return ret
+
+def buildDict(dct, locMap):
+    outDict = {}
+    for (key, valList) in locMap.items():
+        try:
+            ret = dynamicDictIndex(dct, valList[0])
+        except KeyError:
+            ret = dynamicDictIndex(dct, valList[1])
+        outDict[key] = ret
+    return outDict
+
 def handleBungieUsers(session):
     """Retrieve JSON containing all clan users, and build the Bungie table from the JSON"""
     currentPage = 1
@@ -38,23 +65,16 @@ def handleBungieUsers(session):
     message = f"Fetching page {currentPage} of clan users."
     data = jsonRequest(clan_url, outFile, message)
     hasMore = True
+    iterator = ['Reponse', 'results']
+    locMap = {'id':[['bungieNetUserInfo', 'membershipId'], ['membershipId']]
+             ,'bungie_name':[['bungieNetUserInfo', 'displayName'], ['destinyUserInfo','displayName']]
+             ,'membership_type':[[254], ['destinyUserInfo', 'membershipType']]}
     while hasMore:
-        #if data is None:
-        #    #TODO: Throw some error or something
-        #    print("")
         #This section stores all clan users in the Bungie table 
-        for user in data['Response']['results']:
-            bungieDict = {}
+        users = dynamicDictIndex(data, iterator)
+        for user in users:
+            bungieDict = builtDict(user, locMap)
             bungieDict['last_updated'] = datetime.now()
-            bungieDict['membership_type']=254
-            if "bungieNetUserInfo" in user:
-                bungieDict['id'] = user['bungieNetUserInfo']['membershipId']
-                bungieDict['bungie_name'] = user['bungieNetUserInfo']['displayName']
-            #Some people have improperly linked accounts, this will handle those by setting bungieId as their PSN id
-            else:
-                bungieDict['id'] = user['membershipId']
-                bungieDict['bungie_name'] = user['destinyUserInfo']['displayName']
-                bungieDict['membership_type'] = user['destinyUserInfo']['membershipType']
             bungie_user = Bungie(**bungieDict)
             insertOrUpdate(Bungie, bungie_user, session)
         currentPage += 1
