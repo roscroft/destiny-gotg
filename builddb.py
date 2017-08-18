@@ -7,12 +7,11 @@ import sqlite3
 from datetime import datetime
 from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
-from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, CharacterUsesWeapon, AggregateStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
+from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, CharacterUsesWeapon, ActivityStatsAccount, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
 from destinygotg import Session, loadConfig
 sys.path.append("./")
-import importlib
+import importlib, time, itertools
 endpoints = importlib.import_module("Destiny-API-Frameworks.python.endpoints")
-import time
 
 URL_START = "https://bungie.net/Platform"
 #URL_START = "https://bungie.net/D1/Platform"
@@ -21,9 +20,12 @@ UPDATE_DIFF = 1 # Number of days between updates
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
 
-def timeit(func, args):
+def timeit(func, args=None):
     start_time = time.clock()
-    func(args)
+    if args == None:
+        func()
+    else:
+        func(args)
     print("--- %s seconds ---" % (time.clock() - start_time))
 
 def buildDB():
@@ -33,7 +35,7 @@ def buildDB():
     #handleAccountTable()
     #handleAggregateTables()
     #handleCharacterTable()
-    timeit(oldHandleAggregateActivities, session)
+    #timeit(oldHandleAggregateActivities, session)
     timeit(handleActivityStatsTable)
     #handleAggregateActivities(session)
     #handleMedals(session)
@@ -56,6 +58,7 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
         return None
     #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
     group = dynamicDictIndex(data, iterator)
+    print(group) 
     for elem in group:
         #buildDict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
         insertDict = buildDict(elem, infoMap['values'])
@@ -216,7 +219,7 @@ def handleCharacterTable():
 
 def handleActivityStatsTable():
     def activityUrl(id, membershipType):
-        return stat_url = f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{id}/0"
+        return f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{id}/{c_id}/"
     session = Session()
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
@@ -225,12 +228,12 @@ def handleActivityStatsTable():
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'id' : [['characterBase', 'characterId']]
-                         ,'minutes_played' : [['characterBase', 'minutesPlayedTotal']]
-                         ,'light_level' : [['characterBase', 'powerLevel']]
-                         ,'class_hash' : [['characterBase', 'classHash']]
-                         ,'grimoire' : [['characterBase', 'grimoireScore']]}
+              ,'values' :{'activity_hash' : 'activityHash'
+                         ,'getAllStats' : [['placeholder', 'basic', 'value']]}
               ,'statics' :{'id' : 'id'}}
+    iterator = ['Response', 'data', 'activities']
+    table = ActivityStatsAccount
+    defineParams(queryTable, infoMap, activityUrl, iterator, table)
 
 def oldHandleAggregateActivities(session):
     """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
@@ -429,6 +432,7 @@ def handleReferenceTables(session):
     bucketDict = buildReferenceTable("bucket", bucketTable, bucketStatement, bucketInfo, bucketCondition)
 
 def dynamicDictIndex(dct, value):
+    print(dct, value)
     try:
         ret = dct
         for item in value:
@@ -436,29 +440,6 @@ def dynamicDictIndex(dct, value):
     except KeyError:
         ret = None
     return ret
-
-def buildDict(dct, valueMap):
-    outDict = {}
-    if 'getAllStats' in valueMap:
-        path = valueMap['getAllStats']
-        for (key, value) in dynamicDictIndex(dct, path).items():
-            outDict[key] = value
-    else:
-        for (key, valList) in valueMap.items():
-            if 'placeholder' in valList:
-                valList = valList[0]
-                firstTier = list(itertools.takewhile(lambda x: x != 'placeholder', valList)) 
-                secondTier = list(itertools.dropwhile(lambda x: x != 'placeholder', valList))[1:]
-                newDict = dynamicDictIndex(dct, firstTier)
-                if secondTier == ['getAllStats']:
-                    for (key, value) in 
-                ret = dynamicDictIndex(newDict, secondTier)
-            else:
-                ret = dynamicDictIndex(dct, valList[0])
-                if ret == None:
-                    ret = dynamicDictIndex(dct, valList[1])
-            outDict[key] = ret
-    return outDict
 
 def buildDict(dct, valueMap):
     def getAllStats(dct, path):
@@ -475,9 +456,22 @@ def buildDict(dct, valueMap):
         outDict = getAllStats(dct)
     else:
         for (key, valList) in valueMap.items():
-        
-        
-
+            print(key, valList)
+            if 'placeholder' in valList[0]:
+                valList = valList[0]
+                firstTier = list(itertools.takewhile(lambda x: x != 'placeholder', valList)) 
+                secondTier = list(itertools.dropwhile(lambda x: x != 'placeholder', valList))[1:]
+                newDict = dynamicDictIndex(dct, firstTier)
+                if secondTier == ['getAllStats']:
+                    outDict = {**outDict, **getAllStats(newDict, "")}
+                else:
+                    outDict[key] = dynamicDictIndex(newDict, secondTier)
+            else:
+                ret = dynamicDictIndex(dct, valList[0])
+                if ret == None:
+                    ret = dynamicDictIndex(dct, valList[1])
+                outDict[key] = ret
+    return outDict
 
 def jsonRequest(request_session, url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
