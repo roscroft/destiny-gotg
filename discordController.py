@@ -3,7 +3,7 @@ import os, re, sys
 import discord, asyncio
 from datetime import datetime
 from destinygotg import Session, loadConfig
-from initdb import PvPTotal, PvETotal, PvPAverage, PvEAverage, Base, Discord, Account, MedalsCharacter
+from initdb import PvPAggregate, PvEAggregate, Base, Discord, Account, MedalsCharacter
 from sqlalchemy import exists, desc, func
 from decimal import *
 import numpy as np
@@ -14,30 +14,30 @@ import matplotlib.pyplot as plt; plt.rcdefaults()
 
 #playerList = [item[0] for item in Session().query(Account.display_name).all()]
 
-statDict = { "kd"           :(PvPTotal, "killsDeathsRatio", "Kill/Death Ratio")
-            ,"kda"          :(PvPTotal, "killsDeathsAssists", "Kill/Assists/Death Ratio")
-            ,"wl"           :(PvPTotal, "winLossRatio", "Win/Loss Ratio")
-            ,"bgs"          :(PvPTotal, "bestSingleGameScore", "Best Single Game Score")
-            ,"lks"          :(PvPTotal, "longestKillSpree", "Longest Kill Spree")
-            ,"suicides"     :(PvPTotal, "suicides", "Total Number of Suicides")
-            ,"spg"          :(PvPAverage, "suicides", "Suicides per Game")
-            ,"mk"           :(PvPTotal, "bestSingleGameKills", "Best Single Game Kills")
-            ,"kills"        :(PvPTotal, "kills", "Total Number of Kills")
-            ,"kpg"          :(PvPAverage, "kills", "Kills per Game")
-            ,"deaths"       :(PvPTotal, "deaths", "Total Number of Deaths")
-            ,"dpg"          :(PvPAverage, "deaths", "Deaths per Game")
-            ,"assists"      :(PvPTotal, "assists", "Total Number of Assists")
-            ,"apg"          :(PvPAverage, "assists", "Assists Per Game")
-            ,"cr"           :(PvPTotal, "combatRating", "Combat Rating")
-            ,"pkills"       :(PvPTotal, "precisionKills", "Total Number of Precision Kills")
-            ,"score"        :(PvPTotal, "score", "Total score")
-            ,"scpg"         :(PvPAverage, "score", "Score per Game")
-            ,"crucibletime" :(PvPTotal, "secondsPlayed", "Total Seconds in the Crucible")
-            ,"akills"       :(PvPTotal, "abilityKills", "Total Number of Ability Kills")
-            ,"akpg"         :(PvPAverage, "abilityKills", "Ability Kills per Game")
-            ,"games"        :(PvPTotal, "activitiesEntered", "Total Number of Activities Entered")
-            ,"wins"         :(PvPTotal, "activitiesWon", "Total Number of Activities Won")
-            ,"lsl"          :(PvPTotal, "longestSingleLife", "Longest Single Life")
+statDict = { "kd"           :(PvPAggregate, "killsDeathsRatio", "Kill/Death Ratio")
+            ,"kda"          :(PvPAggregate, "killsDeathsAssists", "Kill/Assists/Death Ratio")
+            ,"wl"           :(PvPAggregate, "winLossRatio", "Win/Loss Ratio")
+            ,"bgs"          :(PvPAggregate, "bestSingleGameScore", "Best Single Game Score")
+            ,"lks"          :(PvPAggregate, "longestKillSpree", "Longest Kill Spree")
+            ,"suicides"     :(PvPAggregate, "suicides", "Total Number of Suicides")
+            ,"spg"          :(PvPAggregate, "suicides", "Suicides per Game")
+            ,"mk"           :(PvPAggregate, "bestSingleGameKills", "Best Single Game Kills")
+            ,"kills"        :(PvPAggregate, "kills", "Total Number of Kills")
+            ,"kpg"          :(PvPAggregate, "kills", "Kills per Game")
+            ,"deaths"       :(PvPAggregate, "deaths", "Total Number of Deaths")
+            ,"dpg"          :(PvPAggregate, "deaths", "Deaths per Game")
+            ,"assists"      :(PvPAggregate, "assists", "Total Number of Assists")
+            ,"apg"          :(PvPAggregate, "assists", "Assists Per Game")
+            ,"cr"           :(PvPAggregate, "combatRating", "Combat Rating")
+            ,"pkills"       :(PvPAggregate, "precisionKills", "Total Number of Precision Kills")
+            ,"score"        :(PvPAggregate, "score", "Total score")
+            ,"scpg"         :(PvPAggregate, "score", "Score per Game")
+            ,"crucibletime" :(PvPAggregate, "secondsPlayed", "Total Seconds in the Crucible")
+            ,"akills"       :(PvPAggregate, "abilityKills", "Total Number of Ability Kills")
+            ,"akpg"         :(PvPAggregate, "abilityKills", "Ability Kills per Game")
+            ,"games"        :(PvPAggregate, "activitiesEntered", "Total Number of Activities Entered")
+            ,"wins"         :(PvPAggregate, "activitiesWon", "Total Number of Activities Won")
+            ,"lsl"          :(PvPAggregate, "longestSingleLife", "Longest Single Life")
             }
 
 medalDict = { "activities"        :(MedalsCharacter, "activitiesEntered", "Activities Entered")
@@ -319,7 +319,7 @@ def singleStatRequest(player, code, stat):
         columns = [col]
         res = session.query(func.sum(*(getattr(table, column) for column in columns))).join(Account).filter(Account.display_name == player).group_by(MedalsCharacter.membership_id).first()
         num = float(res[0])
-        denominator = session.query(PvPTotal.activitiesEntered).join(Account).filter(Account.display_name == player).first()
+        denominator = session.query(PvPAggregate.activitiesEntered).join(Account).filter(Account.display_name == player).first()
         act = denominator[0]
         num = num/act
         name = player
@@ -348,7 +348,7 @@ def multiStatRequest(players, code, stat):
         (table, col, message) = medalDict[stat]
         columns = [col]
         res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(MedalsCharacter.membership_id).order_by(Account.display_name).all()
-        numActivities = session.query(PvPTotal.activitiesEntered).join(Account).filter(Account.display_name.in_(players)).order_by(Account.display_name).all()
+        numActivities = session.query(PvPAggregate.activitiesEntered).join(Account).filter(Account.display_name.in_(players)).order_by(Account.display_name).all()
         data = [(res[i][1], truncateDecimals(float(res[i][0])/numActivities[i][0])) for i in range(len(res)) if res[i][0] is not None]
     data = sorted(data, key=lambda x: x[1], reverse=True)
     if (code == 2 or code == 3) and message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
@@ -379,7 +379,7 @@ def clanGraphRequest(player, code, stat):
         
         columns = [col]
         res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(MedalsCharacter.membership_id).all()
-        numActivities = session.query(PvPTotal.activitiesEntered, Account.display_name).join(Account).all()
+        numActivities = session.query(PvPAggregate.activitiesEntered, Account.display_name).join(Account).all()
         #Need to associate numActivities with the correct username
         rawdata = [(item[1], truncateDecimals(item[0])/float(activity[0])) for item in res for activity in numActivities if item[1] == activity[1] and item[0] is not None and activity[0] is not None]
         print(rawdata)
