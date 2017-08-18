@@ -21,17 +21,20 @@ UPDATE_DIFF = 1 # Number of days between updates
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
 
-def timeit(func):
+def timeit(func, args):
     start_time = time.clock()
-    func()
+    func(args)
     print("--- %s seconds ---" % (time.clock() - start_time))
 
 def buildDB():
     """Main function to build the full database"""
+    session = Session()
     #handleBungieTable()
     #handleAccountTable()
     #handleAggregateTables()
     #handleCharacterTable()
+    timeit(oldHandleAggregateActivities, session)
+    timeit(handleActivityStatsTable)
     #handleAggregateActivities(session)
     #handleMedals(session)
     #handleWeaponUsage(session)
@@ -211,8 +214,25 @@ def handleCharacterTable():
     table = Character
     defineParams(queryTable, infoMap, characterUrl, iterator, table)
 
-#TODO: Next 2 functions are basically identical (and can be written identically). Abstract out.
-def handleAggregateActivities(session):
+def handleActivityStatsTable():
+    def activityUrl(id, membershipType):
+        return stat_url = f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{id}/0"
+    session = Session()
+    queryTable = Account
+    infoMap = {'attrs' :{'id' : 'id'
+                        ,'name' : 'display_name'
+                        ,'membershipType' : 'membership_type'}
+              ,'kwargs' :{'id' : 'id'}
+              ,'url_params' :{'id' : 'id'
+                             ,'membershipType' : 'membershipType'}
+              ,'values' :{'id' : [['characterBase', 'characterId']]
+                         ,'minutes_played' : [['characterBase', 'minutesPlayedTotal']]
+                         ,'light_level' : [['characterBase', 'powerLevel']]
+                         ,'class_hash' : [['characterBase', 'classHash']]
+                         ,'grimoire' : [['characterBase', 'grimoireScore']]}
+              ,'statics' :{'id' : 'id'}}
+
+def oldHandleAggregateActivities(session):
     """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
     characters = session.query(Character).all()
     for character in characters:
@@ -425,11 +445,39 @@ def buildDict(dct, valueMap):
             outDict[key] = value
     else:
         for (key, valList) in valueMap.items():
-            ret = dynamicDictIndex(dct, valList[0])
-            if ret == None:
-                ret = dynamicDictIndex(dct, valList[1])
+            if 'placeholder' in valList:
+                valList = valList[0]
+                firstTier = list(itertools.takewhile(lambda x: x != 'placeholder', valList)) 
+                secondTier = list(itertools.dropwhile(lambda x: x != 'placeholder', valList))[1:]
+                newDict = dynamicDictIndex(dct, firstTier)
+                if secondTier == ['getAllStats']:
+                    for (key, value) in 
+                ret = dynamicDictIndex(newDict, secondTier)
+            else:
+                ret = dynamicDictIndex(dct, valList[0])
+                if ret == None:
+                    ret = dynamicDictIndex(dct, valList[1])
             outDict[key] = ret
     return outDict
+
+def buildDict(dct, valueMap):
+    def getAllStats(dct, path):
+        outDict = {}
+        if path == [[""]]:
+            for (key, value) in dct.items():
+                outDict[key] = value
+        else:
+            for (key, value) in dynamicDictIndex(dct, path).items():
+                outDict[key] = value
+        return outDict
+    outDict = {}
+    if 'getAllStats' in valueMap.keys():
+        outDict = getAllStats(dct)
+    else:
+        for (key, valList) in valueMap.items():
+        
+        
+
 
 def jsonRequest(request_session, url, outFile, message=""):
     print(f"Connecting to Bungie: {url}")
