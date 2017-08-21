@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
-from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, CharacterUsesWeapon, ActivityStatsAccount, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
+from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, CharacterUsesWeapon, ActivityStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
 from destinygotg import Session, loadConfig
 sys.path.append("./")
 import importlib, time, itertools
@@ -34,9 +34,8 @@ def buildDB():
     #handleBungieTable()
     #handleAccountTable()
     #handleAggregateTables()
-    #handleCharacterTable()
-    #timeit(oldHandleAggregateActivities, session)
-    timeit(handleActivityStatsTable)
+    handleCharacterTable()
+    #handleActivityStatsTable()
     #handleAggregateActivities(session)
     #handleMedals(session)
     #handleWeaponUsage(session)
@@ -58,7 +57,7 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
         return None
     #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
     group = dynamicDictIndex(data, iterator)
-    print(group) 
+    #print(group) 
     for elem in group:
         #buildDict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
         insertDict = buildDict(elem, infoMap['values'])
@@ -66,6 +65,7 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
         if 'statics' in infoMap:
             insertDict = {**insertDict, **staticMap}
         #Create a new element for insertion using kwargs
+        #print(insertDict)
         insert_elem = table(**insertDict)
         #Upsert the element
         insertOrUpdate(table, insert_elem, session)
@@ -85,7 +85,13 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
         #Attrs are the attributes associated with the elem. User.id or user.membership_type, for example. AKA fields in the database.
         attrMap = {}
         for (key, value) in infoMap['attrs'].items():
-            attrMap[key] = getattr(elem, value)
+            if queryTable == Character:
+                try: 
+                    attrMap[key] = getattr(elem, value)
+                except AttributeError:
+                    attrMap[key] = getattr(session.query(Account).filter_by(id=attrMap['membershipId']).first(), value)
+            else:
+                attrMap[key] = getattr(elem, value)
         #Kwargs are used to check if the database needs updating for the current elem.
         kwargs = {}
         for (key, value) in infoMap['kwargs'].items():
@@ -118,9 +124,12 @@ def handleBungieTable():
     outFile = f"clanUser_p{currentPage}.json"
     message = f"Fetching page {currentPage} of clan users."
     iterator = ['Response', 'results']
-    infoMap = {'values' :{'id':[['bungieNetUserInfo', 'membershipId'], ['membershipId']]
-                         ,'bungie_name':[['bungieNetUserInfo', 'displayName'], ['destinyUserInfo','displayName']]
-                         ,'membership_type':[['bungieNetUserInfo', 'membershipType'], ['destinyUserInfo', 'membershipType']]}}
+    infoMap = {'values' :{'id':[['bungieNetUserInfo', 'membershipId']]
+                         ,'id_2':[['membershipId']]
+                         ,'bungie_name':[['bungieNetUserInfo', 'displayName']]
+                         ,'bungie_name_2':[['destinyUserInfo', 'displayName']]
+                         ,'membership_type':[['bungieNetUserInfo', 'membershipType']]
+                         ,'membership_type_2':[['destinyUserInfo', 'membershipType']]}}
     instrument = ['Response', 'hasMore']
     output = requestAndInsert(session, request_session, infoMap, {}, clan_url, outFile, message, iterator, Bungie, instrument)
     while output is True:
@@ -189,7 +198,7 @@ def handleAggregateTables():
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'getAllStats' : ''}
+              ,'values' :{'getAllStats' : [[],[]]}
               ,'statics' :{'id' : 'id'}}
     iterator = ['Response', 'mergedAllCharacters', 'results']
     queryTable = Account
@@ -197,74 +206,46 @@ def handleAggregateTables():
     defineParams(queryTable, infoMap, aggregateStatsUrl, iterator, table, altInsert)
 
 def handleCharacterTable():
-    def characterUrl(id, membershipType):
-        return f"{URL_START}/Destiny/{membershipType}/Account/{id}"
+    def characterUrl(membershipId, membershipType):
+        return f"{URL_START}/Destiny/{membershipType}/Account/{membershipId}"
     session = Session()
     queryTable = Account
-    infoMap = {'attrs' :{'id' : 'id'
+    infoMap = {'attrs' :{'membershipId' : 'id'
                         ,'name' : 'display_name'
                         ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'id' : 'id'}
-              ,'url_params' :{'id' : 'id'
+              ,'kwargs' :{'membership_id' : 'membershipId'}
+              ,'url_params' :{'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'id' : [['characterBase', 'characterId']]
                          ,'minutes_played' : [['characterBase', 'minutesPlayedTotal']]
                          ,'light_level' : [['characterBase', 'powerLevel']]
                          ,'class_hash' : [['characterBase', 'classHash']]
                          ,'grimoire' : [['characterBase', 'grimoireScore']]}
-              ,'statics' :{'id' : 'id'}}
+              ,'statics' :{'membership_id' : 'membershipId'}}
     iterator = ['Response', 'data', 'characters']
     table = Character
     defineParams(queryTable, infoMap, characterUrl, iterator, table)
 
 def handleActivityStatsTable():
-    def activityUrl(id, membershipType):
-        return f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{id}/{c_id}/"
+    def activityUrl(id, membershipId, membershipType):
+        return f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
     session = Session()
-    queryTable = Account
+    queryTable = Character
     infoMap = {'attrs' :{'id' : 'id'
+                        ,'membershipId' : 'membership_id'
                         ,'name' : 'display_name'
                         ,'membershipType' : 'membership_type'}
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
+                             ,'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'activity_hash' : 'activityHash'
-                         ,'getAllStats' : [['placeholder', 'basic', 'value']]}
+              ,'multiloop_value' : True
+              ,'values' :{'activityHash' : [['activityHash']]
+                         ,'getAllStats' : [['values'], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}}
     iterator = ['Response', 'data', 'activities']
-    table = ActivityStatsAccount
+    table = ActivityStatsCharacter
     defineParams(queryTable, infoMap, activityUrl, iterator, table)
-
-def oldHandleAggregateActivities(session):
-    """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
-    characters = session.query(Character).all()
-    for character in characters:
-        characterId = character.id
-        membershipId = character.membership_id
-        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
-        kwargs = {"id" : characterId}
-        if not needsUpdate(AggregateStatsCharacter, kwargs, session):
-            print(f"Not updating AggregateStatsCharacter table for user: {displayName}")
-            continue
-        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
-        stat_url = f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{characterId}"
-        message = f"Fetching aggregate activity stats for: {displayName}"
-        outFile =f"{displayName}_activities.json"
-        data = jsonRequest(stat_url, outFile, message)
-        if data is None:
-            #TODO: Throw an error
-            print("")
-            continue
-        #This part does the heavy lifting of table building
-        aggStatDict = {}
-        aggStatDict['id'] = characterId
-        activities = data['Response']['data']['activities']
-        for activity in activities:
-            aggStatDict['activity_hash'] = activity['activityHash']
-            for value in activity['values']:
-                aggStatDict[value] = activity['values'][value]['basic']['value']
-        new_aggregate_statistics = AggregateStatsCharacter(**aggStatDict)
-        insertOrUpdate(AggregateStatsCharacter, new_aggregate_statistics, session)
 
 def handleWeaponUsage(session):
     """Retrieve weapon usage for characters. Builds characterUsesWeapon table."""
@@ -432,7 +413,6 @@ def handleReferenceTables(session):
     bucketDict = buildReferenceTable("bucket", bucketTable, bucketStatement, bucketInfo, bucketCondition)
 
 def dynamicDictIndex(dct, value):
-    print(dct, value)
     try:
         ret = dct
         for item in value:
@@ -442,35 +422,20 @@ def dynamicDictIndex(dct, value):
     return ret
 
 def buildDict(dct, valueMap):
-    def getAllStats(dct, path):
-        outDict = {}
-        if path == [[""]]:
-            for (key, value) in dct.items():
-                outDict[key] = value
-        else:
-            for (key, value) in dynamicDictIndex(dct, path).items():
-                outDict[key] = value
-        return outDict
     outDict = {}
-    if 'getAllStats' in valueMap.keys():
-        outDict = getAllStats(dct)
-    else:
-        for (key, valList) in valueMap.items():
-            print(key, valList)
-            if 'placeholder' in valList[0]:
-                valList = valList[0]
-                firstTier = list(itertools.takewhile(lambda x: x != 'placeholder', valList)) 
-                secondTier = list(itertools.dropwhile(lambda x: x != 'placeholder', valList))[1:]
-                newDict = dynamicDictIndex(dct, firstTier)
-                if secondTier == ['getAllStats']:
-                    outDict = {**outDict, **getAllStats(newDict, "")}
-                else:
-                    outDict[key] = dynamicDictIndex(newDict, secondTier)
+    for (key, valList) in valueMap.items():
+        if len(valList) == 1:
+            if key.endswith('_2'):
+                key = key[:-2]
+            if (key in outDict and outDict[key] == None) or (key not in outDict):
+                outDict[key] = dynamicDictIndex(dct, valList[0])
+        else:
+            loopDict = dynamicDictIndex(dct, valList[0])
+            if key == 'getAllStats':
+                for item in loopDict:
+                    outDict[item] = dynamicDictIndex(loopDict, [item]+valList[1])
             else:
-                ret = dynamicDictIndex(dct, valList[0])
-                if ret == None:
-                    ret = dynamicDictIndex(dct, valList[1])
-                outDict[key] = ret
+                outDict[key] = dynamicDictIndex(loopDict, valList[1])
     return outDict
 
 def jsonRequest(request_session, url, outFile, message=""):

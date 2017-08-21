@@ -254,11 +254,11 @@ class CharacterUsesWeapon(Base):
     precision_kills = Column(Integer)
     precision_kill_percentage = Column(Float)
 
-class ActivityStatsAccount(Base):
-    __tablename__ = 'activityStatsAccount'
+class ActivityStatsCharacter(Base):
+    __tablename__ = 'activityStatsCharacter'
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
-    activity_hash = Column(Integer)
+    activityHash = Column(Integer)
     activityAssists = Column(Integer)
     activityCompletions = Column(Integer)
     activityDeaths = Column(Integer)
