@@ -178,7 +178,7 @@ def runBot(engine):
         session = Session()
         userIsRegistered = session.query(exists().where(Discord.id == discId)).scalar()
         if userIsRegistered:
-            destinyName = session.query(Account.display_name).filter(Account.discord_id == discId).first()[0]
+            destinyName = session.query(Account.display_name).join(Discord).filter(Discord.id == discId).first()[0]
         else:
             destinyName = await registerUser(discordAuthor)
         return destinyName
@@ -197,9 +197,10 @@ def runBot(engine):
         discordDict = {}
         discordDict['id'] = discordAuthor.id
         discordDict['discord_name'] = discordAuthor.name
+        discordDict['membership_id'] = session.query(Account.id).filter(Account.display_name == destName).first()[0]
         new_discord_user = Discord(**discordDict)
         session.add(new_discord_user)
-        session.query(Account).filter(Account.display_name == destName).update({"discord_id":discordAuthor.id})
+        #session.query(Account).filter(Account.display_name == destName).update({"discord_id":discordAuthor.id})
         session.commit()
         await client.send_message(destination, discName+", you have been successfully registered!")
         return destName

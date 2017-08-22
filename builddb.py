@@ -34,7 +34,7 @@ def buildDB():
     """Main function to build the full database"""
     session = Session()
     #handleBungieTable()
-    handleAccountTable()
+#    handleAccountTable()
     #handleAggregateTables()
     #handleCharacterTable()
     #handleWeaponUsageTable()

@@ -14,21 +14,20 @@ class Bungie(Base):
     bungie_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
 
-class Discord(Base):
-    __tablename__ = 'discord'
-    id = Column(Integer, primary_key=True)
-    discord_name = Column(String(50))
-
 class Account(Base):
     __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
-    #does_not_exist = Column(Boolean)
     display_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
     bungie_id = Column(String(50), ForeignKey('bungie.id'))
     bungie = relationship(Bungie)
-    discord_id = Column(Integer, ForeignKey('discord.id'))
-    discord = relationship(Discord)
+
+class Discord(Base):
+    __tablename__ = 'discord'
+    id = Column(Integer, primary_key=True)
+    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    account = relationship(Account)
+    discord_name = Column(String(50))
 
 class PvEAggregate(Base):
     __tablename__ = 'pveAggregate'
