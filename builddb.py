@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from sqlalchemy import exists, and_
 from sqlalchemy.sql.expression import literal_column
-from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, CharacterUsesWeapon, ActivityStatsCharacter, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
+from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, AccountWeaponUsage, CharacterActivityStats, MedalsCharacter, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, CharacterStatMayhemClash, LastUpdated
 from destinygotg import Session, loadConfig
 sys.path.append("./")
 import importlib, time, itertools
@@ -34,8 +34,9 @@ def buildDB():
     #handleBungieTable()
     #handleAccountTable()
     #handleAggregateTables()
-    handleCharacterTable()
+    #handleCharacterTable()
     #handleActivityStatsTable()
+    handleWeaponUsageTable()
     #handleAggregateActivities(session)
     #handleMedals(session)
     #handleWeaponUsage(session)
@@ -58,17 +59,21 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
     #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
     group = dynamicDictIndex(data, iterator)
     #print(group) 
-    for elem in group:
-        #buildDict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
-        insertDict = buildDict(elem, infoMap['values'])
-        #Statics are pre-defined values - maybe the id from user.id in defineParams
-        if 'statics' in infoMap:
-            insertDict = {**insertDict, **staticMap}
-        #Create a new element for insertion using kwargs
-        #print(insertDict)
-        insert_elem = table(**insertDict)
-        #Upsert the element
-        insertOrUpdate(table, insert_elem, session)
+    try:
+        for elem in group:
+            #buildDict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
+            insertDict = buildDict(elem, infoMap['values'])
+            #Statics are pre-defined values - maybe the id from user.id in defineParams
+            if 'statics' in infoMap:
+                insertDict = {**insertDict, **staticMap}
+            #Create a new element for insertion using kwargs
+            #print(insertDict)
+            insert_elem = table(**insertDict)
+            #Upsert the element
+            insertOrUpdate(table, insert_elem, session)
+    except TypeError:
+        print("No data found.")
+        return None
     if instrument is not None:
         #The only instrumentation we use so far is hasMore, but it's here if we need it for other things.
         output = dynamicDictIndex(data, instrument)
@@ -239,13 +244,33 @@ def handleActivityStatsTable():
               ,'url_params' :{'id' : 'id'
                              ,'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
-              ,'multiloop_value' : True
               ,'values' :{'activityHash' : [['activityHash']]
                          ,'getAllStats' : [['values'], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}}
     iterator = ['Response', 'data', 'activities']
-    table = ActivityStatsCharacter
+    table = CharacterActivityStats
     defineParams(queryTable, infoMap, activityUrl, iterator, table)
+
+def handleWeaponUsageTable():
+    def weaponUrl(id, membershipType):
+        #0 can be used instead of character ids
+        return f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
+    session = Session()
+    queryTable = Account
+    infoMap = {'attrs' :{'id' : 'id'
+                        ,'name' : 'display_name'
+                        ,'membershipType' : 'membership_type'}
+              ,'kwargs' :{'id' : 'id'}
+              ,'url_params' :{'id' : 'id'
+                             ,'membershipType' : 'membershipType'}
+              ,'values' :{'id' : [['referenceId']]
+                         ,'kills' : [['values', 'uniqueWeaponKills', 'basic', 'value']]
+                         ,'precision_kills' : [['values', 'uniqueWeaponPrecisionKills', 'basic', 'value']]
+                         ,'precision_kill_percentage' : [['values', 'uniqueWeaponKillsPrecisionKills', 'basic', 'value']]}
+              ,'statics' :{'membership_id' : 'id'}}
+    iterator = ['Response', 'data', 'weapons']
+    table = AccountWeaponUsage
+    defineParams(queryTable, infoMap, weaponUrl, iterator, table)
 
 def handleWeaponUsage(session):
     """Retrieve weapon usage for characters. Builds characterUsesWeapon table."""
@@ -456,12 +481,20 @@ def jsonRequest(request_session, url, outFile, message=""):
         return None 
 
 def insertOrUpdate(table, obj, session):
-    matches = session.query(exists().where(table.id == obj.id)).scalar()
-    if matches:
-        # We have to do some strange things to pass update statements. This create a dynamic dictionary to update all fields.
-        session.query(table).filter_by(id=obj.id).update({column: getattr(obj, column) for column in table.__table__.columns.keys()})
+    if table == AccountWeaponUsage:
+        matches = session.query(exists().where(and_(AccountWeaponUsage.id == obj.id, AccountWeaponUsage.membership_id == obj.membership_id))).scalar()
+        if matches:
+            # We have to do some strange things to pass update statements. This creates a dynamic dictionary to update all fields.
+            session.query(AccountWeaponUsage).filter_by(id=obj.id, membership_id=obj.membership_id).update({column: getattr(obj, column) for column in AccountWeaponUsage.__table__.columns.keys()})
+        else:
+            session.add(obj)
     else:
-        session.add(obj)
+        matches = session.query(exists().where(table.id == obj.id)).scalar()
+        if matches:
+            # We have to do some strange things to pass update statements. This create a dynamic dictionary to update all fields.
+            session.query(table).filter_by(id=obj.id).update({column: getattr(obj, column) for column in table.__table__.columns.keys()})
+        else:
+            session.add(obj)
     session.commit()
 
 def needsUpdate(table, kwargs, session):

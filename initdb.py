@@ -245,17 +245,17 @@ class Character(Base):
     class_hash = Column(Integer)
     grimoire = Column(Integer)
 
-class CharacterUsesWeapon(Base):
-    __tablename__ = 'characterUsesWeapon'
+class AccountWeaponUsage(Base):
+    __tablename__ = 'accountWeaponUsage'
     id = Column(Integer, primary_key=True) # Weapon hash
-    character_id = Column(Integer, ForeignKey('character.id'), primary_key=True)
-    character = relationship(Character)
+    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    account = relationship(Account)
     kills = Column(Integer)
     precision_kills = Column(Integer)
     precision_kill_percentage = Column(Float)
 
-class ActivityStatsCharacter(Base):
-    __tablename__ = 'activityStatsCharacter'
+class CharacterActivityStats(Base):
+    __tablename__ = 'characterActivityStats'
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
     activityHash = Column(Integer)
