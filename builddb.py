@@ -36,7 +36,7 @@ def buildDB():
     #handleAggregateTables()
     #handleCharacterTable()
     #handleActivityStatsTable()
-    handleWeaponUsageTable()
+    #handleWeaponUsageTable()
     #handleAggregateActivities(session)
     #handleMedals(session)
     #handleWeaponUsage(session)
@@ -271,6 +271,27 @@ def handleWeaponUsageTable():
     iterator = ['Response', 'data', 'weapons']
     table = AccountWeaponUsage
     defineParams(queryTable, infoMap, weaponUrl, iterator, table)
+
+def handleMedalTable():
+    def medalUrl(id, membershipType):
+        #0 can be used instead of character ids
+        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
+    session = Session()
+    queryTable = Account
+    infoMap = {'attrs' :{'id' : 'id'
+                        ,'name' : 'display_name'
+                        ,'membershipType' : 'membership_type'}
+              ,'kwargs' :{'membership_id' : 'id'}
+              ,'url_params' :{'id' : 'id'
+                             ,'membershipType' : 'membershipType'}
+              ,'values' :{'id' : [['referenceId']]
+                         ,'kills' : [['values', 'uniqueWeaponKills', 'basic', 'value']]
+                         ,'precision_kills' : [['values', 'uniqueWeaponPrecisionKills', 'basic', 'value']]
+                         ,'precision_kill_percentage' : [['values', 'uniqueWeaponKillsPrecisionKills', 'basic', 'value']]}
+              ,'statics' :{'membership_id' : 'id'}}
+    iterator = ['Response', 'characters']
+    table = CharacterMedals
+    defineParams(queryTable, infoMap, medalUrl, iterator, table)
 
 def handleMedals(session):
     """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
