@@ -22,6 +22,7 @@ class Discord(Base):
 class Account(Base):
     __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
+    #does_not_exist = Column(Boolean)
     display_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
     bungie_id = Column(String(50), ForeignKey('bungie.id'))
@@ -247,9 +248,9 @@ class Character(Base):
 
 class AccountWeaponUsage(Base):
     __tablename__ = 'accountWeaponUsage'
-    id = Column(Integer, primary_key=True) # Weapon hash
-    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True) 
     account = relationship(Account)
+    weaponHash = Column(Integer, primary_key=True)
     kills = Column(Integer)
     precision_kills = Column(Integer)
     precision_kill_percentage = Column(Float)
@@ -461,10 +462,11 @@ class AccountMedals(Base):
 #class CharacterStatAllMayhem(Base):
 #    __tablename__ = "characterStatAllMayhem"
 
-class CharacterStatMayhemClash(Base):
-    __tablename__ = "characterStatMayhemClash"
+class AccountActivityModeStats(Base):
+    __tablename__ = "accountActivityModeStats"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
+    mode = Column(String, primary_key=True)
     abilityKills = Column(Integer)
     activitiesEntered = Column(Integer)
     activitiesWon = Column(Integer)

@@ -12,7 +12,7 @@ mpl.use('Agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt; plt.rcdefaults()
 
-#playerList = [item[0] for item in Session().query(Account.display_name).all()]
+playerList = [item[0] for item in Session().query(Account.display_name).all()]
 
 statDict = { "kd"           :(PvPAggregate, "killsDeathsRatio", "Kill/Death Ratio")
             ,"kda"          :(PvPAggregate, "killsDeathsAssists", "Kill/Assists/Death Ratio")
@@ -20,21 +20,21 @@ statDict = { "kd"           :(PvPAggregate, "killsDeathsRatio", "Kill/Death Rati
             ,"bgs"          :(PvPAggregate, "bestSingleGameScore", "Best Single Game Score")
             ,"lks"          :(PvPAggregate, "longestKillSpree", "Longest Kill Spree")
             ,"suicides"     :(PvPAggregate, "suicides", "Total Number of Suicides")
-            ,"spg"          :(PvPAggregate, "suicides", "Suicides per Game")
+            ,"spg"          :(PvPAggregate, "suicidespg", "Suicides per Game")
             ,"mk"           :(PvPAggregate, "bestSingleGameKills", "Best Single Game Kills")
             ,"kills"        :(PvPAggregate, "kills", "Total Number of Kills")
-            ,"kpg"          :(PvPAggregate, "kills", "Kills per Game")
+            ,"kpg"          :(PvPAggregate, "killspg", "Kills per Game")
             ,"deaths"       :(PvPAggregate, "deaths", "Total Number of Deaths")
-            ,"dpg"          :(PvPAggregate, "deaths", "Deaths per Game")
+            ,"dpg"          :(PvPAggregate, "deathspg", "Deaths per Game")
             ,"assists"      :(PvPAggregate, "assists", "Total Number of Assists")
-            ,"apg"          :(PvPAggregate, "assists", "Assists Per Game")
+            ,"apg"          :(PvPAggregate, "assistspg", "Assists Per Game")
             ,"cr"           :(PvPAggregate, "combatRating", "Combat Rating")
             ,"pkills"       :(PvPAggregate, "precisionKills", "Total Number of Precision Kills")
             ,"score"        :(PvPAggregate, "score", "Total score")
-            ,"scpg"         :(PvPAggregate, "score", "Score per Game")
+            ,"scpg"         :(PvPAggregate, "scorepg", "Score per Game")
             ,"crucibletime" :(PvPAggregate, "secondsPlayed", "Total Seconds in the Crucible")
             ,"akills"       :(PvPAggregate, "abilityKills", "Total Number of Ability Kills")
-            ,"akpg"         :(PvPAggregate, "abilityKills", "Ability Kills per Game")
+            ,"akpg"         :(PvPAggregate, "abilityKillspg", "Ability Kills per Game")
             ,"games"        :(PvPAggregate, "activitiesEntered", "Total Number of Activities Entered")
             ,"wins"         :(PvPAggregate, "activitiesWon", "Total Number of Activities Won")
             ,"lsl"          :(PvPAggregate, "longestSingleLife", "Longest Single Life")
@@ -309,7 +309,7 @@ def singleStatRequest(player, code, stat):
     elif code == 2:
         (table, col, message) = medalDict[stat]
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns))).join(Account).filter(Account.display_name == player).group_by(AccountMedals.membership_id).first()
+        res = session.query(func.sum(*(getattr(table, column) for column in columns))).join(Account).filter(Account.display_name == player).group_by(AccountMedals.id).first()
         num = res[0]
         name = player
         if message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
@@ -317,7 +317,7 @@ def singleStatRequest(player, code, stat):
     elif code == 3:
         (table, col, message) = medalDict[stat]
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns))).join(Account).filter(Account.display_name == player).group_by(AccountMedals.membership_id).first()
+        res = session.query(func.sum(*(getattr(table, column) for column in columns))).join(Account).filter(Account.display_name == player).group_by(AccountMedals.id).first()
         num = float(res[0])
         denominator = session.query(PvPAggregate.activitiesEntered).join(Account).filter(Account.display_name == player).first()
         act = denominator[0]
@@ -342,12 +342,12 @@ def multiStatRequest(players, code, stat):
     elif code == 2:
         (table, col, message) = medalDict[stat]
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(AccountMedals.membership_id).order_by(Account.display_name).all()
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(AccountMedals.id).order_by(Account.display_name).all()
         data = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
     elif code == 3:
         (table, col, message) = medalDict[stat]
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(AccountMedals.membership_id).order_by(Account.display_name).all()
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).filter(Account.display_name.in_(players)).group_by(AccountMedals.id).order_by(Account.display_name).all()
         numActivities = session.query(PvPAggregate.activitiesEntered).join(Account).filter(Account.display_name.in_(players)).order_by(Account.display_name).all()
         data = [(res[i][1], truncateDecimals(float(res[i][0])/numActivities[i][0])) for i in range(len(res)) if res[i][0] is not None]
     data = sorted(data, key=lambda x: x[1], reverse=True)
@@ -372,17 +372,16 @@ def clanGraphRequest(player, code, stat):
     elif code == 2:
         (table, col, message) = medalDict[stat]
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(AccountMedals.membership_id).all()
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(AccountMedals.id).all()
         rawdata = [(item[1], truncateDecimals(item[0])) for item in res if item[0] is not None]
     elif code == 3:
         (table, col, message) = medalDict[stat]
         
         columns = [col]
-        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(AccountMedals.membership_id).all()
+        res = session.query(func.sum(*(getattr(table, column) for column in columns)), Account.display_name).join(Account).group_by(AccountMedals.id).all()
         numActivities = session.query(PvPAggregate.activitiesEntered, Account.display_name).join(Account).all()
         #Need to associate numActivities with the correct username
         rawdata = [(item[1], truncateDecimals(item[0])/float(activity[0])) for item in res for activity in numActivities if item[1] == activity[1] and item[0] is not None and activity[0] is not None]
-        print(rawdata)
     if (code == 2 or code == 3) and message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
         message = f"Total {message} Medals"
     data = sorted(rawdata, key=lambda x: x[1])
