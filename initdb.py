@@ -258,7 +258,7 @@ class CharacterActivityStats(Base):
     __tablename__ = 'characterActivityStats'
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
-    activityHash = Column(Integer)
+    activityHash = Column(Integer, primary_key=True)
     activityAssists = Column(Integer)
     activityCompletions = Column(Integer)
     activityDeaths = Column(Integer)
@@ -271,11 +271,9 @@ class CharacterActivityStats(Base):
     activityWins = Column(Integer)
     fastestCompletionSecondsForActivity = Column(Integer)
 
-class MedalsCharacter(Base):
-    __tablename__ = 'medalsCharacter'
-    id = Column(Integer, ForeignKey('character.id'), primary_key=True)
-    character = relationship(Character)
-    membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
+class AccountMedals(Base):
+    __tablename__ = 'accountMedals'
+    id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     activitiesEntered = Column(Integer)
     allMedalsEarned = Column(Integer)
