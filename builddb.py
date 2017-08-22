@@ -11,7 +11,7 @@ from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character,
 from destinygotg import Session, loadConfig
 sys.path.append("./")
 import importlib, time, itertools
-endpoints = importlib.import_module("Destiny-API-Frameworks.python.endpoints")
+#endpoints = importlib.import_module("Destiny-API-Frameworks.python.endpoints")
 
 URL_START = "https://bungie.net/Platform"
 #URL_START = "https://bungie.net/D1/Platform"
@@ -304,40 +304,6 @@ def handleMedalTable():
     table = AccountMedals
     defineParams(queryTable, infoMap, medalUrl, iterator, table)
 
-def handleMedals():
-    """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
-    session = Session()
-    request_session = requests.session()
-    accounts = session.query(Account).all()
-    for account in accounts:
-        membershipId = account.id
-        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
-        kwargs = {"membership_id" : membershipId}
-        if not needsUpdate(AccountMedals, kwargs, session):
-            print(f"Not updating AccountMedals table for user: {displayName}")
-            continue
-        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
-        stat_url = f"{URL_START}/Destiny/Stats/Account/{membershipType}/{membershipId}/?Groups=Medals"
-        message = f"Fetching medal stats for: {displayName}"
-        outFile = f"{displayName}_medals.json"
-        data = jsonRequest(request_session, stat_url, outFile, message)
-        if data is None:
-            #TODO: Throw an error
-            print("")
-            continue
-        
-        #This part does the heavy lifting of table building
-        medalDict = {}
-        characters = data['Response']['characters']
-        for character in characters:
-            medalDict['id'] = character['characterId']
-            medalDict['membership_id'] = membershipId
-            if 'merged' in character and 'allTime' in character['merged']:
-                for medal in character['merged']['allTime']:
-                    medalDict[medal] = character['merged']['allTime'][medal]['basic']['value']
-            new_medal_statistics = AccountMedals(**medalDict)
-            insertOrUpdate(AccountMedals, new_medal_statistics, session)
-
 # This is going to be a lot. 2-36 are all different activity modes that will each require tracking.
 def handleActivityHistory(session):
     accounts = session.query(Account).all()
@@ -449,15 +415,16 @@ def buildDict(dct, valueMap):
             if (key in outDict and outDict[key] == None) or (key not in outDict):
                 outDict[key] = dynamicDictIndex(dct, valList[0])
         else:
-            loopDict = dynamicDictIndex(dct, valList[0])
-            if loopDict == None:
-                continue
-            else:
-                if key == 'getAllStats':
-                    for item in loopDict:
-                        outDict[item] = dynamicDictIndex(loopDict, [item]+valList[1])
-                else:
-                    outDict[key] = dynamicDictIndex(loopDict, valList[1])
+            outDict[dct['statId']] = dynamicDictIndex(dct, valList[1])
+           # loopDict = dynamicDictIndex(dct, valList[0])
+           # print(loopDict)
+           # if loopDict == None:
+           #     continue
+           # if key == 'getAllStats':
+           #     for item in loopDict:
+           #         outDict[item] = dynamicDictIndex(loopDict, [item]+valList[1])
+           # else:
+           #     outDict[key] = dynamicDictIndex(loopDict, valList[1])
     return outDict
 
 def jsonRequest(request_session, url, outFile, message=""):
