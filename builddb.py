@@ -272,47 +272,6 @@ def handleWeaponUsageTable():
     table = AccountWeaponUsage
     defineParams(queryTable, infoMap, weaponUrl, iterator, table)
 
-def handleWeaponUsage(session):
-    """Retrieve weapon usage for characters. Builds characterUsesWeapon table."""
-    characters = session.query(Character).all()
-    for character in characters:
-        characterId = character.id
-        membershipId = character.membership_id
-        displayName = session.query(Account).filter_by(id=membershipId).first().display_name
-        kwargs = {"character_id" : characterId}
-        if not needsUpdate(CharacterUsesWeapon, kwargs, session):
-            print(f"Not updating CharacterUsesWeapon table for user: {displayName}")
-            continue
-        membershipType = session.query(Account).filter_by(id=membershipId).first().membership_type
-        stat_url = f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{membershipId}/{characterId}"
-        message = f"Fetching weapon usage stats for: {displayName}"
-        outFile = f"{displayName}_weapons.json"
-        data = jsonRequest(stat_url, outFile, message)
-        if data is None:
-            #TODO: Throw an error
-            print("")
-            continue
-        elif data['Response']['data'] == {}:
-            continue
-        weapons = data['Response']['data']['weapons']
-        for weapon in weapons:
-            weaponDict = {}
-            weaponDict['character_id'] = characterId
-            weaponDict['id'] = weapon['referenceId']
-            weaponValues = weapon['values']
-            weaponDict['kills'] = weaponValues['uniqueWeaponKills']['basic']['value']
-            weaponDict['precision_kills'] = weaponValues['uniqueWeaponPrecisionKills']['basic']['value']
-            weaponDict['precision_kill_percentage'] = weaponValues['uniqueWeaponKillsPrecisionKills']['basic']['value']
-            new_weapon_stats = CharacterUsesWeapon(**weaponDict)
-            
-            matches = session.query(exists().where(and_(CharacterUsesWeapon.id == new_weapon_stats.id, CharacterUsesWeapon.character_id == new_weapon_stats.character_id))).scalar()
-            if matches:
-                # We have to do some strange things to pass update statements. This creates a dynamic dictionary to update all fields.
-                session.query(CharacterUsesWeapon).filter_by(id=new_weapon_stats.id, character_id=new_weapon_stats.character_id).update({column: getattr(new_weapon_stats, column) for column in CharacterUsesWeapon.__table__.columns.keys()})
-            else:
-                session.add(new_weapon_stats)
-            session.commit()
-
 def handleMedals(session):
     """Retrieve aggregate activity stats for users. Builds aggregateStatsCharacter table."""
     accounts = session.query(Account).all()
