@@ -10,10 +10,8 @@ from sqlalchemy.sql.expression import literal_column
 from sqlalchemy.inspection import inspect
 from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, AccountWeaponUsage, CharacterActivityStats, AccountMedals, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, AccountActivityModeStats, LastUpdated
 from destinygotg import Session, loadConfig
-sys.path.append("./")
 import importlib, time, itertools
 from functools import partial
-#endpoints = importlib.import_module("Destiny-API-Frameworks.python.endpoints")
 
 GROUP_URL_START = "https://bungie.net/Platform"
 URL_START = "https://bungie.net/d1/Platform"
@@ -32,17 +30,18 @@ def timeit(func, args=None):
 
 def buildDB():
     """Main function to build the full database"""
+    start_time = time.clock()
     session = Session()
     #handleBungieTable()
-#    handleAccountTable()
+    #handleAccountTable()
     #handleAggregateTables()
     #handleCharacterTable()
     #handleWeaponUsageTable()
     #handleActivityStatsTable()
     #handleMedalTable()
     #handleAccountActivityModeStatsTable()
-    #handleActivityHistory()
-    #handleReferenceTables(session)
+    #handleReferenceTables()
+    print("--- %s seconds ---" % (time.clock() - start_time))
 
 #infoMap = {'attrs':{'attr1':'attr1Name', ...}
 #           ,'kwargs':{'kwargs1':'attr1', ...}
@@ -361,7 +360,7 @@ def handleAccountActivityModeStatsTable():
                 ,'kwargs' :{'id' : 'id'}
                 ,'url_params' :{'id' : 'id'
                                 ,'membershipType' : 'membershipType'}
-                ,'values' :{'getAllStats' : [['allTime'], ['basic', 'value']]}
+                ,'values' :{'getAllStats' : [[], ['basic', 'value']]}
                 ,'statics' :{'id' : 'id'
                             ,'mode' : f'{modeDict[mode]}_actual'}
                 ,'primary_keys' : ['id', 'mode']}
@@ -369,8 +368,9 @@ def handleAccountActivityModeStatsTable():
         iterator = ['Response', f'{modeDict[mode]}', 'allTime']
         defineParams(queryTable, infoMap, partialUrl, iterator, table)
 
-def handleReferenceTables(session):
+def handleReferenceTables():
     """Connects to the manifest.content database and builds the necessary reference tables."""
+    session = Session()
     def buildReferenceTable(tableName, table, statement, dictionary, condition=None):
         print(f"Building {tableName} reference table...")
         con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
@@ -383,10 +383,10 @@ def handleReferenceTables(session):
                 itemDict = {}
                 if not condition is None and condition(itemInfo):
                     continue
-                for (key,value) in dictionary.iteritems():
+                for (key,value) in dictionary.items():
                     itemDict[key] = itemInfo[value]
                 new_item_def = table(**itemDict)
-                upsert(table, new_item_def, session)
+                upsert(table, {}, new_item_def, session)
 
     # Classes
     classTable = ClassReference

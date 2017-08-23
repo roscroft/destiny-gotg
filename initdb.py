@@ -389,123 +389,82 @@ class AccountMedals(Base):
     medalsWinningScore = Column(Integer)
     medalsZoneCapturedBInitial = Column(Integer)
 
-#class CharacterStatStory(Base):
-#    __tablename__ = "characterStatStory"
-#
-#class CharacterStatStrike(Base):
-#    __tablename__ = "characterStatStrike"
-#
-#class CharacterStatRaid(Base):
-#    __tablename__ = "characterStatRaid"
-#
-#class CharacterStatAllPvP(Base):
-#    __tablename__ = "characterStatAllPvP"
-#
-#class CharacterStatPatrol(Base):
-#    __tablename__ = "characterStatPatrol"
-#
-#class CharacterStatAllPvE(Base):
-#    __tablename__ = "characterStatPvE"
-#
-#class CharacterStatPvPIntroduction(Base):
-#    __tablename__ = "characterStatPvPIntroduction"
-#
-#class CharacterStatThreeVsThree(Base):
-#    __tablename__ = "characterStatThreeVsThree"
-#
-#class CharacterStatControl(Base):
-#    __tablename__ = "characterStatControl"
-#
-#class CharacterStatLockdown(Base):
-#    __tablename__ = "characterStatLockdown"
-#
-#class CharacterStatTeam(Base):
-#    __tablename__ = "characterStatTeam"
-#
-#class CharacterStatFreeForAll(Base):
-#    __tablename__ = "characterStatFreeForAll"
-#
-#class CharacterStatTrialsOfOsiris(Base):
-#    __tablename__ = "characterStatTrialsOfOsiris"
-#
-#class CharacterStatDoubles(Base):
-#    __tablename__ = "characterStatDoubles"
-#
-#class CharacterStatNightfall(Base):
-#    __tablename__ = "characterStatNightfall"
-#
-#class CharacterStatHeroic(Base):
-#    __tablename__ = "characterStatHeroic"
-#
-#class CharacterStatAllStrikes(Base):
-#    __tablename__ = "characterStatAllStrikes"
-#
-#class CharacterStatIronBanner(Base):
-#    __tablename__ = "characterStatIronBanner"
-#
-#class CharacterStatAllArena(Base):
-#    __tablename__ = "characterStatAllArena"
-#
-#class CharacterStatArena(Base):
-#    __tablename__ = "characterStatArena"
-#
-#class CharacterStatAreneChallenge(Base):
-#    __tablename__ = "characterStatArenaChallenge"
-#
-#class CharacterStatElimination(Base):
-#    __tablename__ = "characterStatElimination"
-#
-#class CharacterStatRift(Base):
-#    __tablename__ = "characterStatRift"
-#
-#class CharacterStatAllMayhem(Base):
-#    __tablename__ = "characterStatAllMayhem"
-
 class AccountActivityModeStats(Base):
     __tablename__ = "accountActivityModeStats"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
     mode = Column(String, primary_key=True)
     abilityKills = Column(Integer)
+    activitiesCleared = Column(Integer)
     activitiesEntered = Column(Integer)
     activitiesWon = Column(Integer)
+    activityDuration = Column(Integer)
     allParticipantsCount = Column(Integer)
     allParticipantsScore = Column(Integer)
     allParticipantsTimePlayed = Column(Integer)
     assists = Column(Integer)
+    averageDeathDistance = Column(Float)
     averageKillDistance = Column(Float)
     averageLifespan = Column(Float)
-    averageDeathDistance = Column(Float)
     averageScorePerKill = Column(Float)
     averageScorePerLife = Column(Float)
     bestSingleGameKills = Column(Integer)
     bestSingleGameScore = Column(Integer)
+    capturedYourOwnKill = Column(Integer)
+    carrierKills = Column(Integer)
     closeCalls = Column(Integer)
     combatRating = Column(Float)
+    completionReason = Column(Integer)
+    courtOfOryxAttempts = Column(Integer)
+    courtOfOryxCompletions = Column(Integer)
+    courtOfOryxWinsTier1 = Column(Integer)
+    courtOfOryxWinsTier2 = Column(Integer)
+    courtOfOryxWinsTier3 = Column(Integer)
+    dailyMedalsEarned = Column(Integer)
     deaths = Column(Integer)
     defensiveKills = Column(Integer)
     dominationKills = Column(Integer)
+    dunkKills = Column(Integer)
+    fastestCompletion = Column(Integer)
+    fireTeamId = Column(Integer)
+    gatesHit = Column(Integer)
     highestCharacterLevel = Column(Integer)
     highestLightLevel = Column(Integer)
+    highestSandboxLevel = Column(Integer)
     kills = Column(Integer)
     killsDeathsAssists = Column(Float)
     killsDeathsRatio = Column(Float)
     longestKillDistance = Column(Integer)
     longestKillSpree = Column(Integer)
     longestSingleLife = Column(Integer)
+    lostTagToOpponent = Column(Integer)
     mostPrecisionKills = Column(Integer)
     objectivesCompleted = Column(Integer)
     offensiveKills = Column(Integer)
     orbsDropped = Column(Integer)
     orbsGathered = Column(Integer)
+    playerCount = Column(Integer)
     precisionKills = Column(Integer)
+    publicEventsCompleted = Column(Integer)
+    publicEventsJoined = Column(Integer)
+    raceCompletionMilliseconds = Column(Integer)
+    raceCompletionSeconds = Column(Integer)
+    recoveredOwnDeadTag = Column(Integer)
+    recoveredTeammateTags = Column(Integer)
     relicsCaptured = Column(Integer)
     remainingTimeAfterQuitSeconds = Column(Integer)
     resurrectionsPerformed = Column(Integer)
     resurrectionsReceived = Column(Integer)
     score = Column(Integer)
     secondsPlayed = Column(Integer)
+    slamDunks = Column(Integer)
+    sparksCaptured = Column(Integer)
+    standing = Column(Integer)
+    styleDunks = Column(Integer)
     suicides = Column(Integer)
+    tagCaptures = Column(Integer)
+    tagsCapturedPerTagLost = Column(Float)
+    team = Column(Integer)
     teamScore = Column(Integer)
     totalActivityDurationSeconds = Column(Integer)
     totalDeathDistance = Column(Integer)
@@ -530,36 +489,6 @@ class AccountActivityModeStats(Base):
     winLossRatio = Column(Float)
     zonesCaptured = Column(Integer)
     zonesNeutralized = Column(Integer)
-
-#class CharacterStatMayhemRumble(Base):
-#    __tablename__ = "characterStatMayhemRumble"
-#
-#class CharacterStatZoneControl(Base):
-#    __tablename__ = "characterStatZoneControl"
-#
-#class CharacterStatRacing(Base):
-#    __tablename__ = "characterStatRacing"
-#
-#class CharacterStatArenaElderChallenge(Base):
-#    __tablename__ = "characterStatArenaElderChallenge"
-#
-#class CharacterStatSupremacy(Base):
-#    __tablename__ = "characterStatSupremacy"
-#
-#class CharacterStatPrivateMatchesAll(Base):
-#    __tablename__ = "characterStatPrivateMatchesAll"
-#
-#class CharacterStatSupremacyRumble(Base):
-#    __tablename__ = "characterStatSupremacyRumble"
-#
-#class CharacterStatSupremacyClash(Base):
-#    __tablename__ = "characterStatSupremacyClash"
-#
-#class CharacterStatSupremacyInferno(Base):
-#    __tablename__ = "characterStatSupremacyInferno"
-#
-#class CharacterStatSupremacyMayhem(Base):
-#    __tablename__ = "characterStatSupremacyMayhem"
 
 class ActivityReference(Base):
     __tablename__ = 'activityReference'
