@@ -486,15 +486,11 @@ def jsonRequest(request_session, url, outFile, message=""):
 
 def upsert(table, primaryKeyMap, obj, session):
     first = session.query(table).filter_by(**primaryKeyMap).first()
-    add = False
     if first != None:
         session.query(table).filter_by(**primaryKeyMap).update({column: getattr(obj, column) for column in table.__table__.columns.keys()})
-    else:
-        add = True
-    if add:
-        return obj
-    else:
         return None
+    else:
+        return obj
 
 def needsUpdate(table, kwargs, session):
     now = datetime.now()

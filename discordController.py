@@ -327,7 +327,6 @@ def singleStatRequest(player, code, stat):
             num = num/act
             if message != "Activities Entered" and message != "Total Number of Medals" and message != "Total Medal Score":
                 message = f"{message} Medals per Game"
-            else:
     #em = discord.Embed(title = f"{author}{message}{result}", colour=0xADD8E6)
     em = f"```{message} for {name}: {num}```"
     return em
