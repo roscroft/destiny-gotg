@@ -373,6 +373,7 @@ def handleReferenceTables():
     session = Session()
     def buildReferenceTable(tableName, table, statement, dictionary, condition=None):
         print(f"Building {tableName} reference table...")
+        addList = []
         con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
         cur = con.cursor()
         with con:
@@ -383,20 +384,27 @@ def handleReferenceTables():
                 itemDict = {}
                 if not condition is None and condition(itemInfo):
                     continue
-                for (key,value) in dictionary.items():
+                for (key,value) in dictionary['info'].items():
                     itemDict[key] = itemInfo[value]
                 new_item_def = table(**itemDict)
-                upsert(table, {}, new_item_def, session)
+                inspection = inspect(new_item_def)
+                objectDict = inspection.dict
+                primaryKeyMap = {}
+                for key in dictionary['primary_keys']:
+                    primaryKeyMap[key] = objectDict[key]
+                addList.append(upsert(table, primaryKeyMap, new_item_def, session))
+        session.add_all(addList)
+        session.commit()
 
     # Classes
     classTable = ClassReference
-    classInfo = {'id':'classHash', 'class_name':'className'}
+    classInfo = {'info':{'id':'classHash', 'class_name':'className'}, 'primary_keys':{'id'}}
     classStatement = "SELECT * FROM DestinyClassDefinition"
     classDict = buildReferenceTable("class", classTable, classStatement, classInfo)
 
     # Weapons
     weaponTable = WeaponReference
-    weaponInfo = {'id':'itemHash', 'weapon_name':'itemName', 'weapon_type':'itemTypeName', 'weapon_rarity':'tierTypeName'}
+    weaponInfo = {'info':{'id':'itemHash', 'weapon_name':'itemName', 'weapon_type':'itemTypeName'}, 'weapon_rarity':'tierTypeName', 'primary_keys':{'id'}}
     weaponStatement = "SELECT * FROM DestinyInventoryItemDefinition"
     def weaponCondition(info):
         weapon_types = ['Rocket Launcher', 'Scout Rifle', 'Fusion Rifle', 'Sniper Rifle', 'Shotgun', 'Machine Gun', 'Pulse Rifle', 'Auto Rifle', 'Hand Cannon', 'Sidearm']
@@ -405,7 +413,7 @@ def handleReferenceTables():
 
     # Activities
     activityTable = ActivityReference
-    activityInfo = {'id':'activityHash', 'activity_name':'activityName', 'activity_type_hash':'activityTypeHash'}
+    activityInfo = {'info':{'id':'activityHash', 'activity_name':'activityName', 'activity_type_hash':'activityTypeHash'}, 'primary_keys':{'id'}}
     activityStatement = "SELECT * FROM DestinyActivityDefinition"
     def activityCondition(info):
         return not ("activityName" in info)
@@ -413,7 +421,7 @@ def handleReferenceTables():
 
     # Activity types
     activityTypeTable = ActivityTypeReference
-    activityTypeInfo = {'id':'activityTypeHash', 'activity_type_name':'activityTypeName'}
+    activityTypeInfo = {'info':{'id':'activityTypeHash', 'activity_type_name':'activityTypeName'}, 'primary_keys':{'id'}}
     activityTypeStatement = "SELECT * FROM DestinyActivityTypeDefinition"
     def activityTypeCondition(info):
         return not ("activityTypeName" in info)
@@ -421,7 +429,7 @@ def handleReferenceTables():
 
     # Buckets
     bucketTable = BucketReference
-    bucketInfo = {'id':'bucketHash', 'bucket_name':'bucketName'}
+    bucketInfo = {'info':{'id':'bucketHash', 'bucket_name':'bucketName'}, 'primary_keys':{'id'}}
     bucketStatement = "SELECT * FROM DestinyInventoryBucketDefinition"
     def bucketCondition(info): 
         return not ("bucketName" in info)
@@ -477,7 +485,6 @@ def jsonRequest(request_session, url, outFile, message=""):
         return None 
 
 def upsert(table, primaryKeyMap, obj, session):
-    add = False
     first = session.query(table).filter_by(**primaryKeyMap).first()
     add = False
     if first != None:
