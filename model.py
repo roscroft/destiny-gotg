@@ -24,7 +24,7 @@ def checkManifest():
 
 def getManifest():
     """Pulls the requested definitions into the manifest database"""
-    manifest_url = "http://www.bungie.net/Platform/Destiny/Manifest/"
+    manifest_url = "http://www.bungie.net/Platform/Destiny2/Manifest/"
     r = requests.get(manifest_url)
     manifest = r.json()
     mani_url = f"http://www.bungie.net/{manifest['Response']['mobileWorldContentPaths']['en']}"

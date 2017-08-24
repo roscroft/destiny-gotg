@@ -12,7 +12,7 @@ mpl.use('Agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt; plt.rcdefaults()
 
-#playerList = [item[0] for item in Session().query(Account.display_name).all()]
+playerList = [item[0] for item in Session().query(Account.display_name).all()]
 
 statDict = { "kd"           :(PvPAggregate, "killsDeathsRatio", "Kill/Death Ratio")
             ,"kda"          :(PvPAggregate, "killsDeathsAssists", "Kill/Assists/Death Ratio")
@@ -195,7 +195,7 @@ def runBot(engine):
         destName = nameMsg.content
         discordDict = {}
         discordDict['id'] = discordAuthor.id
-        discordDict['discord_name'] = discordAuthor.name
+        discordDict['discord_name'] = discName
         discordDict['membership_id'] = session.query(Account.id).filter(Account.display_name == destName).first()[0]
         new_discord_user = Discord(**discordDict)
         session.add(new_discord_user)
