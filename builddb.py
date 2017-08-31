@@ -15,6 +15,7 @@ from functools import partial
 
 URL_START = "https://bungie.net/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
+writeFiles = False
 
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -440,8 +441,9 @@ def jsonRequest(request_session, url, outFile, message=""):
         return None
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        # with open(f"JSON/{outFile}","w+") as f:
-        #     json.dump(data, f)
+        if writeFiles:
+            with open(f"JSON/{outFile}","w+") as f:
+                json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)
