@@ -14,7 +14,6 @@ import importlib, time, itertools
 from functools import partial
 
 URL_START = "https://bungie.net/Platform"
-OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
 
 def makeHeader():
@@ -142,7 +141,7 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
 def handleBungieTable():
     """Fills Bungie table with all users in the clan"""
     def requestInfo(currentPage):
-        #clanUrl = f"{GROUP_URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
+        clanUrl = f"{GROUP_URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
         # We need the new clan url member retriever endpoint, not out yet
         outFile = f"clanUser_p{currentPage}.json"
         message = f"Fetching page {currentPage} of clan users."
