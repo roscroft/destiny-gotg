@@ -14,6 +14,8 @@ engine = create_engine(f"sqlite:///{DBPATH}")#, echo=True)
 Session = sessionmaker(bind=engine)
 
 def main():
+    # Using the software development principle of "Only write what you need"
+
     """Run the application"""
     # Ensure that the program is running on python 3.6+
     if not verifyPythonVersion():

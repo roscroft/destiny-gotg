@@ -31,15 +31,15 @@ def buildDB():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    #handleBungieTable()
-    # handleAccountTable()
-    # handleAggregateTables()
-    # handleCharacterTable()
-    # handleWeaponUsageTable()
-    # handleActivityStatsTable()
-    # handleMedalTable()
-    # handleAccountActivityModeStatsTable()
-    # handleReferenceTables()
+    handleBungieTable()
+    handleAccountTable()
+    handleAggregateTables()
+    handleCharacterTable()
+    handleWeaponUsageTable()
+    handleActivityStatsTable()
+    handleMedalTable()
+    handleAccountActivityModeStatsTable()
+    handleReferenceTables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
 #infoMap = {'attrs':{'attr1':'attr1Name', ...}
@@ -49,7 +49,7 @@ def buildDB():
 #           ,'statics':{'static1':'attr1', ...}
 #           ,'primary_keys':{'keyName1':'attr1', ...}}
 
-def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument=None):
+def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
     """Does everything else"""
     addList = []
     #Actual request done here
@@ -73,7 +73,6 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
         if 'statics' in infoMap:
             insertDict = {**insertDict, **staticMap}
         #Create a new element for insertion using kwargs
-        #print(insertDict)
         insert_elem = table(**insertDict)
         inspection = inspect(insert_elem)
         objectDict = inspection.dict
@@ -82,13 +81,11 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
             primaryKeyMap[key] = objectDict[key]
         #Upsert the element
         addList.append(upsert(table, primaryKeyMap, insert_elem, session))
-    output = None
-    if instrument is not None:
-        #The only instrumentation we use so far is hasMore, but it's here if we need it for other things.
-        output = dynamicDictIndex(data, instrument)
-    return (addList, output)
+    #Get rid of the None elements - they've been updated already
+    addList = [item for item in addList if item is not None]
+    return addList
 
-def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=None, instrument=None):
+def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=None):
     """Does like everything"""
     #Build a single request session for the duration of the table creation
     request_session = requests.session()
@@ -129,54 +126,39 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
             else:
                 staticMap[key] = attrMap[value]
         if altInsert == None:
-            (addList, output) = requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument)
+            addList = requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         else:
-            (addList, output) = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument)
+            addList = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         totalAddList = totalAddList + addList
-    totalAddList = [item for item in totalAddList if item is not None]
     session.add_all(totalAddList)
     session.commit()
 
 #TODO: Update clan member url
 def handleBungieTable():
     """Fills Bungie table with all users in the clan"""
-    def requestInfo(currentPage):
-        clanUrl = f"{GROUP_URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage={currentPage}"
-        # We need the new clan url member retriever endpoint, not out yet
-        outFile = f"clanUser_p{currentPage}.json"
-        message = f"Fetching page {currentPage} of clan users."
-        return (clanUrl, outFile, message)
+    # Destiny 2 changes results per page to be 100. Because there is a max of 100 people in the clan, we don't need the extra stuff here anymore.
     session = Session()
     request_session = requests.Session()
-    totalAddList = []
-    currentPage = 1
-    queryTable = None
     infoMap = {'values' :{'id':[['bungieNetUserInfo', 'membershipId']]
-                         ,'id_2':[['membershipId']]
+                         ,'id_2':[['destinyUserInfo', 'membershipId']]
                          ,'bungie_name':[['bungieNetUserInfo', 'displayName']]
                          ,'bungie_name_2':[['destinyUserInfo', 'displayName']]
                          ,'membership_type':[['bungieNetUserInfo', 'membershipType']]
                          ,'membership_type_2':[['destinyUserInfo', 'membershipType']]}
               ,'primary_keys' :['id']}
-    clanUrl, outFile, message = requestInfo(currentPage)
+    clanUrl = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
+    outFile = "clanUsers.json"
+    message = "Fetching list of clan users."
     iterator = ['Response', 'results']
     table = Bungie
-    instrument = ['Response', 'hasMore']
-    (addList, output) = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table, instrument)
-    totalAddList = totalAddList + addList
-    while output is True:
-        currentPage += 1
-        clanUrl, outFile, message = requestInfo(currentPage)
-        (addList, output) = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, Bungie, instrument)
-        totalAddList = totalAddList + addList
-    totalAddList = [item for item in totalAddList if item is not None]
-    session.add_all(totalAddList)
+    addList = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table)
+    session.add_all(addList)
     session.commit()
 
 def handleAccountTable():
     """Retrieve JSONs for users, listing their Destiny accounts. Fills account table."""
     def accountUrl(id, membershipType):
-        return f"{GROUP_URL_START}/User/GetMembershipsById/{id}/{membershipType}"
+        return f"{URL_START}/User/GetMembershipsById/{id}/{membershipType}"
     queryTable = Bungie
     infoMap = {'attrs'  :{'id'             : 'id'
                          ,'name'           : 'bungie_name'
@@ -197,7 +179,7 @@ def handleAggregateTables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
     def aggregateStatsUrl(membershipType, id):
         return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
-    def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument=None):
+    def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
         def fillAndInsertDict(stats, table, statics):
             insertDict = {}
             if stats == None:
@@ -229,7 +211,8 @@ def handleAggregateTables():
                 mode = 'allPvE'
             stats = dynamicDictIndex(data, iterator+[mode, 'allTime'])
             addList.append(fillAndInsertDict(stats, table, staticMap))
-        return (addList, None)
+        addList = [item for item in addList if item is not None]
+        return addList
     
     queryTable = Account
     infoMap = {'attrs'  :{'id'             : 'id'
@@ -457,8 +440,8 @@ def jsonRequest(request_session, url, outFile, message=""):
         return None
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        #with open(f"JSON/{outFile}","w+") as f:
-        #    json.dump(data, f)
+        # with open(f"JSON/{outFile}","w+") as f:
+        #     json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)
