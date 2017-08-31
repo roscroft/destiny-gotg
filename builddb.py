@@ -15,7 +15,8 @@ from functools import partial
 
 URL_START = "https://bungie.net/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
-writeFiles = False
+# writeFiles = False
+writeFiles = True
 
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -52,6 +53,10 @@ def buildDB():
 
 def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
     """Does everything else"""
+    #Figure out if we need to update. We have kwargs and the table name, so just check LastUpdated for it.
+    toUpdate = needsUpdate(table, infoMap['kwargs'], session)
+    if not toUpdate:
+        return []
     addList = []
     #Actual request done here
     data = jsonRequest(request_session, url, outFile, message)
@@ -82,6 +87,15 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
             primaryKeyMap[key] = objectDict[key]
         #Upsert the element
         addList.append(upsert(table, primaryKeyMap, insert_elem, session))
+        #Upsert into LastUpdated
+        updateDict = {}
+        updateDict['id'] = primaryKeyMap['id']
+        # print(updateDict['id'])
+        updateDict['table_name'] = table.__tablename__
+        updateDict['last_updated'] = datetime.now()
+        update_elem = LastUpdated(**updateDict)
+        updatePrimaryKey = {'id' : updateDict['id']}
+        addList.append(upsert(LastUpdated, updatePrimaryKey, update_elem, session))
     #Get rid of the None elements - they've been updated already
     addList = [item for item in addList if item is not None]
     return addList
@@ -134,10 +148,10 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
     session.add_all(totalAddList)
     session.commit()
 
-#TODO: Update clan member url
 def handleBungieTable():
     """Fills Bungie table with all users in the clan"""
     # Destiny 2 changes results per page to be 100. Because there is a max of 100 people in the clan, we don't need the extra stuff here anymore.
+    # The Bungie table is going to match the account table for a while...
     session = Session()
     request_session = requests.Session()
     infoMap = {'values' :{'id':[['bungieNetUserInfo', 'membershipId']]
@@ -146,13 +160,20 @@ def handleBungieTable():
                          ,'bungie_name_2':[['destinyUserInfo', 'displayName']]
                          ,'membership_type':[['bungieNetUserInfo', 'membershipType']]
                          ,'membership_type_2':[['destinyUserInfo', 'membershipType']]}
+              ,'kwargs' :{'id' : 'id'}
               ,'primary_keys' :['id']}
+    # infoMap = {'values' :{'id':[['destinyUserInfo', 'membershipId']]
+    #                      ,'bungie_name':[['destinyUserInfo', 'displayName']]
+    #                      ,'membership_type':[['destinyUserInfo', 'membershipType']]}
+    #           ,'kwargs' :{'id' : 'id'}
+    #           ,'primary_keys' :['id']}
     clanUrl = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     outFile = "clanUsers.json"
     message = "Fetching list of clan users."
     iterator = ['Response', 'results']
     table = Bungie
     addList = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table)
+    print(addList)
     session.add_all(addList)
     session.commit()
 
