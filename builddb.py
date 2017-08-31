@@ -15,8 +15,8 @@ from functools import partial
 
 URL_START = "https://bungie.net/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
-# writeFiles = False
-writeFiles = True
+writeFiles = False
+# writeFiles = True
 
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -33,8 +33,8 @@ def buildDB():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    handleBungieTable()
-    handleAccountTable()
+    # handleBungieTable()
+    # handleAccountTable()
     handleAggregateTables()
     handleCharacterTable()
     handleWeaponUsageTable()
@@ -54,10 +54,10 @@ def buildDB():
 def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
     """Does everything else"""
     #Figure out if we need to update. We have kwargs and the table name, so just check LastUpdated for it.
+    addList = []
     toUpdate = needsUpdate(table, infoMap['kwargs'], session)
     if not toUpdate:
-        return []
-    addList = []
+        return addList
     #Actual request done here
     data = jsonRequest(request_session, url, outFile, message)
     if data is None:
@@ -80,11 +80,9 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
             insertDict = {**insertDict, **staticMap}
         #Create a new element for insertion using kwargs
         insert_elem = table(**insertDict)
-        inspection = inspect(insert_elem)
-        objectDict = inspection.dict
         primaryKeyMap = {}
         for key in infoMap['primary_keys']:
-            primaryKeyMap[key] = objectDict[key]
+            primaryKeyMap[key] = getattr(insert_elem, key)
         #Upsert the element
         addList.append(upsert(table, primaryKeyMap, insert_elem, session))
         #Upsert into LastUpdated
@@ -145,7 +143,14 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
         else:
             addList = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         totalAddList = totalAddList + addList
-    session.add_all(totalAddList)
+    zippedList = [(item.id, item.__tablename__, item) for item in totalAddList]
+    seen = set()
+    finalList = []
+    for id, tablename, item in zippedList:
+        if not ((id, tablename) in seen):
+            seen.add((id, tablename))
+            finalList.append(item)
+    session.add_all(finalList)
     session.commit()
 
 def handleBungieTable():
@@ -173,8 +178,15 @@ def handleBungieTable():
     iterator = ['Response', 'results']
     table = Bungie
     addList = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table)
-    print(addList)
-    session.add_all(addList)
+    zippedList = [(item.id, item.__tablename__, item) for item in addList]
+    seen = set()
+    finalList = []
+    for id, tablename, item in zippedList:
+        if not ((id, tablename) in seen):
+            seen.add((id, tablename))
+            finalList.append(item)
+    # addList = list(set(addList))
+    session.add_all(finalList)
     session.commit()
 
 def handleAccountTable():
@@ -203,6 +215,7 @@ def handleAggregateTables():
         return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
     def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
         def fillAndInsertDict(stats, table, statics):
+            addList = []
             insertDict = {}
             if stats == None:
                 return None
@@ -212,12 +225,22 @@ def handleAggregateTables():
                 insertDict[stat] = stats[stat]['basic']['value']
             insertDict = {**insertDict, **staticMap}
             insert_elem = table(**insertDict)
-            inspection = inspect(insert_elem)
-            objectDict = inspection.dict
             primaryKeyMap = {}
             for key in infoMap['primary_keys']:
                 primaryKeyMap[key] = objectDict[key]
-            return upsert(table, primaryKeyMap, insert_elem, session)
+            #Upsert the element
+            addList.append(upsert(table, primaryKeyMap, insert_elem, session))
+            #Upsert into LastUpdated
+            updateDict = {}
+            updateDict['id'] = primaryKeyMap['id']
+            # print(updateDict['id'])
+            updateDict['table_name'] = table.__tablename__
+            updateDict['last_updated'] = datetime.now()
+            update_elem = LastUpdated(**updateDict)
+            updatePrimaryKey = {'id' : updateDict['id']}
+            addList.append(upsert(LastUpdated, updatePrimaryKey, update_elem, session))
+            addList = [item for item in addList if item is not None]
+            return addList
         #Actual request done here
         data = jsonRequest(request_session, url, outFile, message)
         if data is None:
@@ -225,16 +248,16 @@ def handleAggregateTables():
             return ([], None)
         #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
         tables = [PvPAggregate, PvEAggregate]
-        addList = []
+        totalList = []
         for table in tables:
             if table == PvPAggregate:
                 mode = 'allPvP'
             elif table == PvEAggregate:
                 mode = 'allPvE'
             stats = dynamicDictIndex(data, iterator+[mode, 'allTime'])
-            addList.append(fillAndInsertDict(stats, table, staticMap))
-        addList = [item for item in addList if item is not None]
-        return addList
+            totalList = totalList + fillAndInsertDict(stats, table, staticMap)
+        print(type(totalList))
+        return totalList
     
     queryTable = Account
     infoMap = {'attrs'  :{'id'             : 'id'
