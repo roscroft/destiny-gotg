@@ -13,7 +13,7 @@ from destinygotg import Session, loadConfig
 import importlib, time, itertools
 from functools import partial
 
-URL_START = "https://bungie.net/Platform"
+GROUP_URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
 
@@ -32,7 +32,7 @@ def buildDB():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    #handleBungieTable()
+    # handleBungieTable()
     # handleAccountTable()
     # handleAggregateTables()
     # handleCharacterTable()
@@ -142,7 +142,7 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
 def handleBungieTable():
     """Fills Bungie table with all users in the clan"""
     def requestInfo(currentPage):
-        #clanUrl = f"{GROUP_URL_START}/Group/{os.environ['BUNGIE_CLANID']}/ClanMembers/?currentPage={currentPage}&platformType=2"
+        clanUrl = f"{GROUP_URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage={currentPage}"
         # We need the new clan url member retriever endpoint, not out yet
         outFile = f"clanUser_p{currentPage}.json"
         message = f"Fetching page {currentPage} of clan users."
@@ -153,7 +153,7 @@ def handleBungieTable():
     currentPage = 1
     queryTable = None
     infoMap = {'values' :{'id':[['bungieNetUserInfo', 'membershipId']]
-                         ,'id_2':[['membershipId']]
+                         ,'id_2':[['destinyUserInfo', 'membershipId']]
                          ,'bungie_name':[['bungieNetUserInfo', 'displayName']]
                          ,'bungie_name_2':[['destinyUserInfo', 'displayName']]
                          ,'membership_type':[['bungieNetUserInfo', 'membershipType']]
@@ -197,8 +197,8 @@ def handleAccountTable():
 def handleAggregateTables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
     def aggregateStatsUrl(membershipType, id):
-        #return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
-        return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
+        return f"{OLD_URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
+        # return f"{OLD_URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
     def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument=None):
         def fillAndInsertDict(stats, table, statics):
             insertDict = {}
@@ -250,7 +250,7 @@ def handleAggregateTables():
 
 def handleCharacterTable():
     def characterUrl(membershipId, membershipType):
-        return f"{URL_START}/Destiny/{membershipType}/Account/{membershipId}"
+        return f"{OLD_URL_START}/Destiny/{membershipType}/Account/{membershipId}"
     queryTable = Account
     infoMap = {'attrs' :{'membershipId' : 'id'
                         ,'name' : 'display_name'
@@ -272,7 +272,7 @@ def handleCharacterTable():
 def handleWeaponUsageTable():
     def weaponUrl(id, membershipType):
         #0 can be used instead of character ids
-        return f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
+        return f"{OLD_URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
@@ -292,7 +292,7 @@ def handleWeaponUsageTable():
 
 def handleActivityStatsTable():
     def activityUrl(id, membershipId, membershipType):
-        return f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
+        return f"{OLD_URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
     queryTable = Character
     infoMap = {'attrs' :{'id' : 'id'
                         ,'membershipId' : 'membership_id'
@@ -312,7 +312,7 @@ def handleActivityStatsTable():
 
 def handleMedalTable():
     def medalUrl(id, membershipType):
-        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
+        return f"{OLD_URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
@@ -329,7 +329,7 @@ def handleMedalTable():
 
 def handleAccountActivityModeStatsTable():
     def activityModeUrl(id, membershipType, mode):
-        return f"{URL_START}/Destiny/Stats/{membershipType}/{id}/0/?modes={mode}"
+        return f"{OLD_URL_START}/Destiny/Stats/{membershipType}/{id}/0/?modes={mode}"
     queryTable = Account
     modeDict = {2:'story', 3:'strike', 4:'raid', 5:'allPvP', 6:'patrol', 7:'allPvE', 8:'pvpIntroduction', 9:'threeVsThree', 10:'control'
                ,11 : 'lockdown', 12:'team', 13:'freeForAll', 14:'trialsOfOsiris', 15:'doubles', 16:'nightfall', 17:'heroic', 18:'allStrikes', 19:'ironBanner', 20:'allArena'
@@ -459,7 +459,7 @@ def jsonRequest(request_session, url, outFile, message=""):
         return None
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        #with open(f"JSON/{outFile}","w+") as f:
+        # with open(f"JSON/{outFile}","w+") as f:
         #    json.dump(data, f)
         return data
     else:
