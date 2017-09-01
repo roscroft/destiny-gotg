@@ -37,7 +37,7 @@ def buildDB():
     handleWeaponUsageTable()
     handleActivityStatsTable()
     handleMedalTable()
-    handleAccountActivityModeStatsTable()
+    # handleAccountActivityModeStatsTable()
     # handleReferenceTables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
@@ -123,9 +123,10 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
             addList = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         totalAddList = totalAddList + addList
         #Upsert into LastUpdated
-        updateId = attrMap[infoMap['kwargs']['id']]
-        updateItem = setLastUpdated(updateId, table, session)
-        totalAddList = totalAddList + [updateItem]
+        if table != AccountActivityModeStats:
+            updateId = attrMap[infoMap['kwargs']['id']]
+            updateItem = setLastUpdated(updateId, table, session)
+            totalAddList = totalAddList + [updateItem]
     totalAddList = [item for item in totalAddList if item is not None]
     finalList = removeDuplicates(totalAddList)
     session.add_all(finalList)
