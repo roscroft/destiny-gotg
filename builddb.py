@@ -222,7 +222,7 @@ def handleAggregateTables():
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'getAllStats' : [[],[]]}
+              ,'values' :{'' : [[],[]]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id']}
     iterator = ['Response', 'mergedAllCharacters', 'results']
@@ -285,7 +285,7 @@ def handleActivityStatsTable():
                              ,'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'activityHash' : [['activityHash']]
-                         ,'getAllStats' : [['values'], ['basic', 'value']]}
+                         ,'' : [['values'], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id', 'activityHash']}
     iterator = ['Response', 'data', 'activities']
@@ -302,7 +302,7 @@ def handleMedalTable():
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'getAllStats' : [[], ['basic', 'value']]}
+              ,'values' :{'' : [[], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id']}
     iterator = ['Response', 'mergedAllCharacters', 'merged', 'allTime']
@@ -325,7 +325,7 @@ def handleAccountActivityModeStatsTable():
                 ,'kwargs' :{'id' : 'id'}
                 ,'url_params' :{'id' : 'id'
                                 ,'membershipType' : 'membershipType'}
-                ,'values' :{'getAllStats' : [[], ['basic', 'value']]}
+                ,'values' :{'' : [[], ['basic', 'value']]}
                 ,'statics' :{'id' : 'id'
                             ,'mode' : f'{modeDict[mode]}_actual'}
                 ,'primary_keys' : ['id', 'mode']}
@@ -421,7 +421,7 @@ def buildDict(dct, valueMap):
             loopDict = dynamicDictIndex(dct, valList[0])
             if loopDict == None:
                 continue
-            if key == 'getAllStats':
+            if key == '':
                 for item in loopDict:
                     outDict[item] = dynamicDictIndex(loopDict, [item]+valList[1])
             else:
