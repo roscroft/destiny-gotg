@@ -11,6 +11,7 @@ import time, itertools
 from functools import partial
 
 URL_START = "https://bungie.net/Platform"
+OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
 writeFiles = False
 # writeFiles = True
@@ -180,6 +181,7 @@ def handleAggregateTables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
     def aggregateStatsUrl(membershipType, id):
         return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
+        # return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
     def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
         def fillAndInsertDict(stats, table, statics):
             addList = []
@@ -233,7 +235,7 @@ def handleAggregateTables():
 
 def handleCharacterTable():
     def characterUrl(membershipId, membershipType):
-        return f"{URL_START}/Destiny/{membershipType}/Account/{membershipId}"
+        return f"{OLD_URL_START}/Destiny/{membershipType}/Account/{membershipId}"
     queryTable = Account
     infoMap = {'attrs' :{'membershipId' : 'id'
                         ,'name' : 'display_name'
@@ -255,7 +257,7 @@ def handleCharacterTable():
 def handleWeaponUsageTable():
     def weaponUrl(id, membershipType):
         #0 can be used instead of character ids
-        return f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
+        return f"{OLD_URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
@@ -275,7 +277,7 @@ def handleWeaponUsageTable():
 
 def handleActivityStatsTable():
     def activityUrl(id, membershipId, membershipType):
-        return f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
+        return f"{OLD_URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
     queryTable = Character
     infoMap = {'attrs' :{'id' : 'id'
                         ,'membershipId' : 'membership_id'
@@ -295,7 +297,7 @@ def handleActivityStatsTable():
 
 def handleMedalTable():
     def medalUrl(id, membershipType):
-        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
+        return f"{OLD_URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
@@ -312,7 +314,7 @@ def handleMedalTable():
 
 def handleAccountActivityModeStatsTable():
     def activityModeUrl(id, membershipType, mode):
-        return f"{URL_START}/Destiny/Stats/{membershipType}/{id}/0/?modes={mode}"
+        return f"{OLD_URL_START}/Destiny/Stats/{membershipType}/{id}/0/?modes={mode}"
     queryTable = Account
     modeDict = {2:'story', 3:'strike', 4:'raid', 5:'allPvP', 6:'patrol', 7:'allPvE', 8:'pvpIntroduction', 9:'threeVsThree', 10:'control'
                ,11 : 'lockdown', 12:'team', 13:'freeForAll', 14:'trialsOfOsiris', 15:'doubles', 16:'nightfall', 17:'heroic', 18:'allStrikes', 19:'ironBanner', 20:'allArena'
