@@ -135,7 +135,7 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
         totalAddList = totalAddList + addList
         #Upsert into LastUpdated
         updateId = attrMap[infoMap['kwargs']['id']]
-        updateItem = setLastUpdated(updateId, table)
+        updateItem = setLastUpdated(updateId, table, session)
         totalAddList = totalAddList + [updateItem]
     totalAddList = [item for item in totalAddList if item is not None]
     finalList = removeDuplicates(totalAddList)
@@ -207,16 +207,6 @@ def handleAggregateTables():
                 primaryKeyMap[key] = insertDict[key]
             #Upsert the element
             addList.append(upsert(table, primaryKeyMap, insert_elem, session))
-            #Upsert into LastUpdated
-            updateId = primaryKeyMap
-            updateDict = {}
-            updateDict['id'] = primaryKeyMap['id']
-            # print(updateDict['id'])
-            updateDict['table_name'] = table.__tablename__
-            updateDict['last_updated'] = datetime.now()
-            update_elem = LastUpdated(**updateDict)
-            updatePrimaryKey = {'id' : updateDict['id']}
-            addList.append(upsert(LastUpdated, updatePrimaryKey, update_elem, session))
             addList = [item for item in addList if item is not None]
             return addList
         #Actual request done here
@@ -498,7 +488,7 @@ def removeDuplicates(addList):
             finalList.append(item)
     return finalList
 
-def setLastUpdated(updateId, table):
+def setLastUpdated(updateId, table, session):
     updateDict = {'id' : updateId, 'table_name' : table.__tablename__, 'last_updated' : datetime.now()}
     update_elem = LastUpdated(**updateDict)
     updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
