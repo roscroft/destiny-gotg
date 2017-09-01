@@ -134,22 +134,11 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
             addList = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         totalAddList = totalAddList + addList
         #Upsert into LastUpdated
-        updateDict = {}
-        updateDict['id'] = attrMap[infoMap['kwargs']['id']]
-        updateDict['table_name'] = table.__tablename__
-        updateDict['last_updated'] = datetime.now()
-        update_elem = LastUpdated(**updateDict)
-        updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
-        updateList = upsert(LastUpdated, updatePrimaryKey, update_elem, session)
-        totalAddList = totalAddList + [updateList]
+        updateId = attrMap[infoMap['kwargs']['id']]
+        updateItem = setLastUpdated(updateId, table)
+        totalAddList = totalAddList + [updateItem]
     totalAddList = [item for item in totalAddList if item is not None]
-    zippedList = [(item.id, item.__tablename__, item) for item in totalAddList]
-    seen = set()
-    finalList = []
-    for id, tablename, item in zippedList:
-        if not ((id, tablename) in seen):
-            seen.add((id, tablename))
-            finalList.append(item)
+    finalList = removeDuplicates(totalAddList)
     session.add_all(finalList)
     session.commit()
 
@@ -167,25 +156,13 @@ def handleBungieTable():
                          ,'membership_type_2':[['destinyUserInfo', 'membershipType']]}
               ,'kwargs' :{'id' : 'id'}
               ,'primary_keys' :['id']}
-    # infoMap = {'values' :{'id':[['destinyUserInfo', 'membershipId']]
-    #                      ,'bungie_name':[['destinyUserInfo', 'displayName']]
-    #                      ,'membership_type':[['destinyUserInfo', 'membershipType']]}
-    #           ,'kwargs' :{'id' : 'id'}
-    #           ,'primary_keys' :['id']}
     clanUrl = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     outFile = "clanUsers.json"
     message = "Fetching list of clan users."
     iterator = ['Response', 'results']
     table = Bungie
     addList = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table)
-    zippedList = [(item.id, item.__tablename__, item) for item in addList]
-    seen = set()
-    finalList = []
-    for id, tablename, item in zippedList:
-        if not ((id, tablename) in seen):
-            seen.add((id, tablename))
-            finalList.append(item)
-    # addList = list(set(addList))
+    finalList = removeDuplicates(addList)
     session.add_all(finalList)
     session.commit()
 
@@ -231,6 +208,7 @@ def handleAggregateTables():
             #Upsert the element
             addList.append(upsert(table, primaryKeyMap, insert_elem, session))
             #Upsert into LastUpdated
+            updateId = primaryKeyMap
             updateDict = {}
             updateDict['id'] = primaryKeyMap['id']
             # print(updateDict['id'])
@@ -509,6 +487,22 @@ def needsUpdate(kwargs, session):
         return daysSince >= UPDATE_DIFF
     except (AttributeError, TypeError):
         return True
+
+def removeDuplicates(addList):
+    zippedList = [(item.id, item.__tablename__, item) for item in addList]
+    seen = set()
+    finalList = []
+    for id, tablename, item in zippedList:
+        if not ((id, tablename) in seen):
+            seen.add((id, tablename))
+            finalList.append(item)
+    return finalList
+
+def setLastUpdated(updateId, table):
+    updateDict = {'id' : updateId, 'table_name' : table.__tablename__, 'last_updated' : datetime.now()}
+    update_elem = LastUpdated(**updateDict)
+    updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
+    return upsert(LastUpdated, updatePrimaryKey, update_elem, session)
 
 if __name__ == "__main__":
     # loadConfig for testing purposes
