@@ -33,15 +33,15 @@ def buildDB():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    # handleBungieTable()
-    # handleAccountTable()
+    handleBungieTable()
+    handleAccountTable()
     handleAggregateTables()
     handleCharacterTable()
     handleWeaponUsageTable()
     handleActivityStatsTable()
     handleMedalTable()
     handleAccountActivityModeStatsTable()
-    handleReferenceTables()
+    # handleReferenceTables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
 #infoMap = {'attrs':{'attr1':'attr1Name', ...}
@@ -55,19 +55,16 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
     """Does everything else"""
     #Figure out if we need to update. We have kwargs and the table name, so just check LastUpdated for it.
     addList = []
-    toUpdate = needsUpdate(table, infoMap['kwargs'], session)
-    if not toUpdate:
-        return addList
     #Actual request done here
     data = jsonRequest(request_session, url, outFile, message)
     if data is None:
         print("No data retrieved.")
-        return ([], None)
+        return []
     #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
     group = dynamicDictIndex(data, iterator)
     if group == None:
         print("No group found.")
-        return ([], None)
+        return []
     if type(group) == dict:
         group = [group]
     for elem in group:
@@ -85,15 +82,6 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
             primaryKeyMap[key] = getattr(insert_elem, key)
         #Upsert the element
         addList.append(upsert(table, primaryKeyMap, insert_elem, session))
-        #Upsert into LastUpdated
-        updateDict = {}
-        updateDict['id'] = primaryKeyMap['id']
-        # print(updateDict['id'])
-        updateDict['table_name'] = table.__tablename__
-        updateDict['last_updated'] = datetime.now()
-        update_elem = LastUpdated(**updateDict)
-        updatePrimaryKey = {'id' : updateDict['id']}
-        addList.append(upsert(LastUpdated, updatePrimaryKey, update_elem, session))
     #Get rid of the None elements - they've been updated already
     addList = [item for item in addList if item is not None]
     return addList
@@ -121,9 +109,7 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
         kwargs = {}
         for (key, value) in infoMap['kwargs'].items():
             kwargs[key] = attrMap[value]
-        if not needsUpdate(table, kwargs, session):
-            print(f"Not updating {table.__tablename__} table for user: {queriedMap['name']}")
-            continue
+        kwargs['table_name'] = table.__tablename__
         #urlParams are used to build the request URL.
         urlParams = {}
         for (key, value) in infoMap['url_params'].items():
@@ -138,11 +124,25 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
                 staticMap[key] = value[:-7]
             else:
                 staticMap[key] = attrMap[value]
-        if altInsert == None:
+        toUpdate = needsUpdate(kwargs, session)
+        if not toUpdate:
+            print(f"Not updating {table.__tablename__} table for user: {attrMap['name']}")
+            addList = []
+        elif altInsert == None:
             addList = requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         else:
             addList = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         totalAddList = totalAddList + addList
+        #Upsert into LastUpdated
+        updateDict = {}
+        updateDict['id'] = attrMap[infoMap['kwargs']['id']]
+        updateDict['table_name'] = table.__tablename__
+        updateDict['last_updated'] = datetime.now()
+        update_elem = LastUpdated(**updateDict)
+        updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
+        updateList = upsert(LastUpdated, updatePrimaryKey, update_elem, session)
+        totalAddList = totalAddList + [updateList]
+    totalAddList = [item for item in totalAddList if item is not None]
     zippedList = [(item.id, item.__tablename__, item) for item in totalAddList]
     seen = set()
     finalList = []
@@ -197,7 +197,7 @@ def handleAccountTable():
     infoMap = {'attrs'  :{'id'             : 'id'
                          ,'name'           : 'bungie_name'
                          ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'bungie_id' : 'id'}
+              ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'id'              : [['membershipId']]
@@ -212,13 +212,13 @@ def handleAccountTable():
 def handleAggregateTables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
     def aggregateStatsUrl(membershipType, id):
-        return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
+        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
     def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
         def fillAndInsertDict(stats, table, statics):
             addList = []
             insertDict = {}
             if stats == None:
-                return None
+                return []
             for stat in stats:
                 if 'pga' in stats[stat]:
                     insertDict[stat+'pg'] = stats[stat]['pga']['value']
@@ -227,7 +227,7 @@ def handleAggregateTables():
             insert_elem = table(**insertDict)
             primaryKeyMap = {}
             for key in infoMap['primary_keys']:
-                primaryKeyMap[key] = objectDict[key]
+                primaryKeyMap[key] = insertDict[key]
             #Upsert the element
             addList.append(upsert(table, primaryKeyMap, insert_elem, session))
             #Upsert into LastUpdated
@@ -245,7 +245,7 @@ def handleAggregateTables():
         data = jsonRequest(request_session, url, outFile, message)
         if data is None:
             print("No data retrieved.")
-            return ([], None)
+            return []
         #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
         tables = [PvPAggregate, PvEAggregate]
         totalList = []
@@ -256,7 +256,6 @@ def handleAggregateTables():
                 mode = 'allPvE'
             stats = dynamicDictIndex(data, iterator+[mode, 'allTime'])
             totalList = totalList + fillAndInsertDict(stats, table, staticMap)
-        print(type(totalList))
         return totalList
     
     queryTable = Account
@@ -276,12 +275,12 @@ def handleAggregateTables():
 
 def handleCharacterTable():
     def characterUrl(membershipId, membershipType):
-        return f"{URL_START}/Destiny2/{membershipType}/Account/{membershipId}"
+        return f"{URL_START}/Destiny/{membershipType}/Account/{membershipId}"
     queryTable = Account
     infoMap = {'attrs' :{'membershipId' : 'id'
                         ,'name' : 'display_name'
                         ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'membership_id' : 'membershipId'}
+              ,'kwargs' :{'id' : 'membershipId'}
               ,'url_params' :{'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'id' : [['characterBase', 'characterId']]
@@ -298,7 +297,7 @@ def handleCharacterTable():
 def handleWeaponUsageTable():
     def weaponUrl(id, membershipType):
         #0 can be used instead of character ids
-        return f"{URL_START}/Destiny2/Stats/UniqueWeapons/{membershipType}/{id}/0"
+        return f"{URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
@@ -318,7 +317,7 @@ def handleWeaponUsageTable():
 
 def handleActivityStatsTable():
     def activityUrl(id, membershipId, membershipType):
-        return f"{URL_START}/Destiny2/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
+        return f"{URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
     queryTable = Character
     infoMap = {'attrs' :{'id' : 'id'
                         ,'membershipId' : 'membership_id'
@@ -338,7 +337,7 @@ def handleActivityStatsTable():
 
 def handleMedalTable():
     def medalUrl(id, membershipType):
-        return f"{URL_START}/Destiny2/Stats/Account/{membershipType}/{id}/?Groups=Medals"
+        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
     queryTable = Account
     infoMap = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
@@ -355,7 +354,7 @@ def handleMedalTable():
 
 def handleAccountActivityModeStatsTable():
     def activityModeUrl(id, membershipType, mode):
-        return f"{URL_START}/Destiny2/Stats/{membershipType}/{id}/0/?modes={mode}"
+        return f"{URL_START}/Destiny/Stats/{membershipType}/{id}/0/?modes={mode}"
     queryTable = Account
     modeDict = {2:'story', 3:'strike', 4:'raid', 5:'allPvP', 6:'patrol', 7:'allPvE', 8:'pvpIntroduction', 9:'threeVsThree', 10:'control'
                ,11 : 'lockdown', 12:'team', 13:'freeForAll', 14:'trialsOfOsiris', 15:'doubles', 16:'nightfall', 17:'heroic', 18:'allStrikes', 19:'ironBanner', 20:'allArena'
@@ -500,13 +499,13 @@ def upsert(table, primaryKeyMap, obj, session):
         return None
     return obj
 
-def needsUpdate(table, kwargs, session):
+def needsUpdate(kwargs, session):
     now = datetime.now()
     try:
-        lastUpdate = session.query(table).filter_by(**kwargs).first().last_updated
+        lastUpdate = session.query(LastUpdated).filter_by(**kwargs).first().last_updated
         print("Fetching last update...")
         daysSince = (now - lastUpdate).days
-        #print (f"Days since update: {daysSince}")
+        # print (f"Days since update: {daysSince}")
         return daysSince >= UPDATE_DIFF
     except (AttributeError, TypeError):
         return True

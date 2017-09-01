@@ -13,7 +13,7 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt; plt.rcdefaults()
 from statDicts import statDict, medalDict
 
-#playerList = [item[0] for item in Session().query(Account.display_name).all()]
+playerList = [item[0] for item in Session().query(Account.display_name).all()]
 
 def runBot(engine):
     # The regular bot definition things
