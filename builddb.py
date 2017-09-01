@@ -104,14 +104,14 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
             else:
                 attrMap[key] = getattr(elem, value)
         #urlParams are used to build the request URL.
-        urlParams = buildValueDict('url_params', attrMap)
+        urlParams = buildValueDict(infoMap['url_params'], attrMap)
         url = urlFunction(**urlParams)
         outFile = f"{attrMap['name']}_{table.__tablename__}.json"
         message = f"Fetching {table.__tablename__} data for: {attrMap['name']}"
         #Statics actually need to get passed to the insert function so they can be put in the table.
-        staticMap = buildValueDict('statics', attrMap)
+        staticMap = buildValueDict(infoMap['statics'], attrMap)
         #Kwargs are used to check if the database needs updating for the current elem.
-        kwargs = buildValueDict('kwargs', attrMap)
+        kwargs = buildValueDict(infoMap['kwargs'], attrMap)
         kwargs['table_name'] = table.__tablename__
         toUpdate = needsUpdate(kwargs, session)
         if not toUpdate:
@@ -483,9 +483,9 @@ def setLastUpdated(updateId, table, session):
     updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
     return upsert(LastUpdated, updatePrimaryKey, update_elem, session)
 
-def buildValueDict(location, attrMap):
+def buildValueDict(targetMap, attrMap):
     retDict = {}
-    for (key, value) in infoMap[location].items():
+    for (key, value) in targetMap.items():
         if value.endswith('_actual'):
             retDict[key] = value[:-7]
         else:
