@@ -5,17 +5,16 @@ import os, sys
 import json, requests
 import sqlite3
 from datetime import datetime
-from sqlalchemy import exists, and_
-from sqlalchemy.sql.expression import literal_column
-from sqlalchemy.inspection import inspect
 from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, AccountWeaponUsage, CharacterActivityStats, AccountMedals, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, AccountActivityModeStats, LastUpdated
 from destinygotg import Session, loadConfig
-import importlib, time, itertools
+import time, itertools
 from functools import partial
 
-GROUP_URL_START = "https://bungie.net/Platform"
+URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
+writeFiles = False
+# writeFiles = True
 
 def makeHeader():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -32,13 +31,13 @@ def buildDB():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    # handleBungieTable()
-    # handleAccountTable()
-    # handleAggregateTables()
-    # handleCharacterTable()
-    # handleWeaponUsageTable()
-    # handleActivityStatsTable()
-    # handleMedalTable()
+    handleBungieTable()
+    handleAccountTable()
+    handleAggregateTables()
+    handleCharacterTable()
+    handleWeaponUsageTable()
+    handleActivityStatsTable()
+    handleMedalTable()
     # handleAccountActivityModeStatsTable()
     # handleReferenceTables()
     print("--- %s seconds ---" % (time.clock() - start_time))
@@ -50,19 +49,21 @@ def buildDB():
 #           ,'statics':{'static1':'attr1', ...}
 #           ,'primary_keys':{'keyName1':'attr1', ...}}
 
-def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument=None):
+def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
     """Does everything else"""
+    #Figure out if we need to update. We have kwargs and the table name, so just check LastUpdated for it.
     addList = []
     #Actual request done here
     data = jsonRequest(request_session, url, outFile, message)
     if data is None:
         print("No data retrieved.")
-        return ([], None)
+        return []
     #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
     group = dynamicDictIndex(data, iterator)
     if group == None:
-        print("No group found.")
-        return ([], None)
+        print("Nothing to insert.")
+        return []
+    #Sometimes we get arrays, other times we get dictionaries. Wrap the dicts in a list to avoid headache later.
     if type(group) == dict:
         group = [group]
     for elem in group:
@@ -74,22 +75,17 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
         if 'statics' in infoMap:
             insertDict = {**insertDict, **staticMap}
         #Create a new element for insertion using kwargs
-        #print(insertDict)
         insert_elem = table(**insertDict)
-        inspection = inspect(insert_elem)
-        objectDict = inspection.dict
         primaryKeyMap = {}
         for key in infoMap['primary_keys']:
-            primaryKeyMap[key] = objectDict[key]
+            primaryKeyMap[key] = getattr(insert_elem, key)
         #Upsert the element
         addList.append(upsert(table, primaryKeyMap, insert_elem, session))
-    output = None
-    if instrument is not None:
-        #The only instrumentation we use so far is hasMore, but it's here if we need it for other things.
-        output = dynamicDictIndex(data, instrument)
-    return (addList, output)
+    #Get rid of the None elements - they've been updated already
+    addList = [item for item in addList if item is not None]
+    return addList
 
-def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=None, instrument=None):
+def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=None):
     """Does like everything"""
     #Build a single request session for the duration of the table creation
     request_session = requests.session()
@@ -108,81 +104,68 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
                     attrMap[key] = getattr(session.query(Account).filter_by(id=attrMap['membershipId']).first(), value)
             else:
                 attrMap[key] = getattr(elem, value)
-        #Kwargs are used to check if the database needs updating for the current elem.
-        kwargs = {}
-        for (key, value) in infoMap['kwargs'].items():
-            kwargs[key] = attrMap[value]
-        if not needsUpdate(table, kwargs, session):
-            print(f"Not updating {table.__tablename__} table for user: {queriedMap['name']}")
-            continue
         #urlParams are used to build the request URL.
-        urlParams = {}
-        for (key, value) in infoMap['url_params'].items():
-            urlParams[key] = attrMap[value]
+        urlParams = buildValueDict(infoMap['url_params'], attrMap)
         url = urlFunction(**urlParams)
         outFile = f"{attrMap['name']}_{table.__tablename__}.json"
         message = f"Fetching {table.__tablename__} data for: {attrMap['name']}"
         #Statics actually need to get passed to the insert function so they can be put in the table.
-        staticMap = {}
-        for (key, value) in infoMap['statics'].items():
-            if value.endswith('_actual'):
-                staticMap[key] = value[:-7]
-            else:
-                staticMap[key] = attrMap[value]
-        if altInsert == None:
-            (addList, output) = requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument)
+        staticMap = buildValueDict(infoMap['statics'], attrMap)
+        #Kwargs are used to check if the database needs updating for the current elem.
+        kwargs = buildValueDict(infoMap['kwargs'], attrMap)
+        kwargs['table_name'] = table.__tablename__
+        toUpdate = needsUpdate(kwargs, session)
+        if not toUpdate:
+            print(f"Not updating {table.__tablename__} table for user: {attrMap['name']}")
+            addList = []
+        elif altInsert == None:
+            addList = requestAndInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         else:
-            (addList, output) = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument)
+            addList = altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table)
         totalAddList = totalAddList + addList
+        #Upsert into LastUpdated
+        if table != AccountActivityModeStats:
+            updateId = attrMap[infoMap['kwargs']['id']]
+            updateItem = setLastUpdated(updateId, table, session)
+            totalAddList = totalAddList + [updateItem]
     totalAddList = [item for item in totalAddList if item is not None]
-    session.add_all(totalAddList)
+    finalList = removeDuplicates(totalAddList)
+    session.add_all(finalList)
     session.commit()
 
-#TODO: Update clan member url
 def handleBungieTable():
     """Fills Bungie table with all users in the clan"""
-    def requestInfo(currentPage):
-        clanUrl = f"{GROUP_URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage={currentPage}"
-        # We need the new clan url member retriever endpoint, not out yet
-        outFile = f"clanUser_p{currentPage}.json"
-        message = f"Fetching page {currentPage} of clan users."
-        return (clanUrl, outFile, message)
+    # Destiny 2 changes results per page to be 100. Because there is a max of 100 people in the clan, we don't need the extra stuff here anymore.
+    # The Bungie table is going to match the account table for a while...
     session = Session()
     request_session = requests.Session()
-    totalAddList = []
-    currentPage = 1
-    queryTable = None
     infoMap = {'values' :{'id':[['bungieNetUserInfo', 'membershipId']]
                          ,'id_2':[['destinyUserInfo', 'membershipId']]
                          ,'bungie_name':[['bungieNetUserInfo', 'displayName']]
                          ,'bungie_name_2':[['destinyUserInfo', 'displayName']]
                          ,'membership_type':[['bungieNetUserInfo', 'membershipType']]
                          ,'membership_type_2':[['destinyUserInfo', 'membershipType']]}
+              ,'kwargs' :{'id' : 'id'}
               ,'primary_keys' :['id']}
-    clanUrl, outFile, message = requestInfo(currentPage)
+    clanUrl = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
+    outFile = "clanUsers.json"
+    message = "Fetching list of clan users."
     iterator = ['Response', 'results']
     table = Bungie
-    instrument = ['Response', 'hasMore']
-    (addList, output) = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table, instrument)
-    totalAddList = totalAddList + addList
-    while output is True:
-        currentPage += 1
-        clanUrl, outFile, message = requestInfo(currentPage)
-        (addList, output) = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, Bungie, instrument)
-        totalAddList = totalAddList + addList
-    totalAddList = [item for item in totalAddList if item is not None]
-    session.add_all(totalAddList)
+    addList = requestAndInsert(session, request_session, infoMap, {}, clanUrl, outFile, message, iterator, table)
+    finalList = removeDuplicates(addList)
+    session.add_all(finalList)
     session.commit()
 
 def handleAccountTable():
     """Retrieve JSONs for users, listing their Destiny accounts. Fills account table."""
     def accountUrl(id, membershipType):
-        return f"{GROUP_URL_START}/User/GetMembershipsById/{id}/{membershipType}"
+        return f"{URL_START}/User/GetMembershipsById/{id}/{membershipType}"
     queryTable = Bungie
     infoMap = {'attrs'  :{'id'             : 'id'
                          ,'name'           : 'bungie_name'
                          ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'bungie_id' : 'id'}
+              ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'id'              : [['membershipId']]
@@ -197,41 +180,43 @@ def handleAccountTable():
 def handleAggregateTables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
     def aggregateStatsUrl(membershipType, id):
-        return f"{OLD_URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
-        # return f"{OLD_URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
-    def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table, instrument=None):
+        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
+        # return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
+    def altInsert(session, request_session, infoMap, staticMap, url, outFile, message, iterator, table):
         def fillAndInsertDict(stats, table, statics):
+            addList = []
             insertDict = {}
             if stats == None:
-                return None
+                return []
             for stat in stats:
                 if 'pga' in stats[stat]:
                     insertDict[stat+'pg'] = stats[stat]['pga']['value']
                 insertDict[stat] = stats[stat]['basic']['value']
             insertDict = {**insertDict, **staticMap}
             insert_elem = table(**insertDict)
-            inspection = inspect(insert_elem)
-            objectDict = inspection.dict
             primaryKeyMap = {}
             for key in infoMap['primary_keys']:
-                primaryKeyMap[key] = objectDict[key]
-            return upsert(table, primaryKeyMap, insert_elem, session)
+                primaryKeyMap[key] = insertDict[key]
+            #Upsert the element
+            addList.append(upsert(table, primaryKeyMap, insert_elem, session))
+            addList = [item for item in addList if item is not None]
+            return addList
         #Actual request done here
         data = jsonRequest(request_session, url, outFile, message)
         if data is None:
             print("No data retrieved.")
-            return ([], None)
+            return []
         #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
         tables = [PvPAggregate, PvEAggregate]
-        addList = []
+        totalList = []
         for table in tables:
             if table == PvPAggregate:
                 mode = 'allPvP'
             elif table == PvEAggregate:
                 mode = 'allPvE'
             stats = dynamicDictIndex(data, iterator+[mode, 'allTime'])
-            addList.append(fillAndInsertDict(stats, table, staticMap))
-        return (addList, None)
+            totalList = totalList + fillAndInsertDict(stats, table, staticMap)
+        return totalList
     
     queryTable = Account
     infoMap = {'attrs'  :{'id'             : 'id'
@@ -240,7 +225,7 @@ def handleAggregateTables():
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'getAllStats' : [[],[]]}
+              ,'values' :{'' : [[],[]]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id']}
     iterator = ['Response', 'mergedAllCharacters', 'results']
@@ -255,7 +240,7 @@ def handleCharacterTable():
     infoMap = {'attrs' :{'membershipId' : 'id'
                         ,'name' : 'display_name'
                         ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'membership_id' : 'membershipId'}
+              ,'kwargs' :{'id' : 'membershipId'}
               ,'url_params' :{'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'id' : [['characterBase', 'characterId']]
@@ -303,7 +288,7 @@ def handleActivityStatsTable():
                              ,'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
               ,'values' :{'activityHash' : [['activityHash']]
-                         ,'getAllStats' : [['values'], ['basic', 'value']]}
+                         ,'' : [['values'], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id', 'activityHash']}
     iterator = ['Response', 'data', 'activities']
@@ -320,7 +305,7 @@ def handleMedalTable():
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'getAllStats' : [[], ['basic', 'value']]}
+              ,'values' :{'' : [[], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id']}
     iterator = ['Response', 'mergedAllCharacters', 'merged', 'allTime']
@@ -343,7 +328,7 @@ def handleAccountActivityModeStatsTable():
                 ,'kwargs' :{'id' : 'id'}
                 ,'url_params' :{'id' : 'id'
                                 ,'membershipType' : 'membershipType'}
-                ,'values' :{'getAllStats' : [[], ['basic', 'value']]}
+                ,'values' :{'' : [[], ['basic', 'value']]}
                 ,'statics' :{'id' : 'id'
                             ,'mode' : f'{modeDict[mode]}_actual'}
                 ,'primary_keys' : ['id', 'mode']}
@@ -439,7 +424,7 @@ def buildDict(dct, valueMap):
             loopDict = dynamicDictIndex(dct, valList[0])
             if loopDict == None:
                 continue
-            if key == 'getAllStats':
+            if key == '':
                 for item in loopDict:
                     outDict[item] = dynamicDictIndex(loopDict, [item]+valList[1])
             else:
@@ -459,8 +444,9 @@ def jsonRequest(request_session, url, outFile, message=""):
         return None
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        # with open(f"JSON/{outFile}","w+") as f:
-        #    json.dump(data, f)
+        if writeFiles:
+            with open(f"JSON/{outFile}","w+") as f:
+                json.dump(data, f)
         return data
     else:
         print("Error Status: " + error_stat)
@@ -473,16 +459,41 @@ def upsert(table, primaryKeyMap, obj, session):
         return None
     return obj
 
-def needsUpdate(table, kwargs, session):
+def needsUpdate(kwargs, session):
     now = datetime.now()
     try:
-        lastUpdate = session.query(table).filter_by(**kwargs).first().last_updated
+        lastUpdate = session.query(LastUpdated).filter_by(**kwargs).first().last_updated
         print("Fetching last update...")
         daysSince = (now - lastUpdate).days
-        #print (f"Days since update: {daysSince}")
+        # print (f"Days since update: {daysSince}")
         return daysSince >= UPDATE_DIFF
     except (AttributeError, TypeError):
         return True
+
+def removeDuplicates(addList):
+    zippedList = [(item.id, item.__tablename__, item) for item in addList]
+    seen = set()
+    finalList = []
+    for id, tablename, item in zippedList:
+        if not ((id, tablename) in seen):
+            seen.add((id, tablename))
+            finalList.append(item)
+    return finalList
+
+def setLastUpdated(updateId, table, session):
+    updateDict = {'id' : updateId, 'table_name' : table.__tablename__, 'last_updated' : datetime.now()}
+    update_elem = LastUpdated(**updateDict)
+    updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
+    return upsert(LastUpdated, updatePrimaryKey, update_elem, session)
+
+def buildValueDict(targetMap, attrMap):
+    retDict = {}
+    for (key, value) in targetMap.items():
+        if value.endswith('_actual'):
+            retDict[key] = value[:-7]
+        else:
+            retDict[key] = attrMap[value]
+    return retDict
 
 if __name__ == "__main__":
     # loadConfig for testing purposes

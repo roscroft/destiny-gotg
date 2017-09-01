@@ -538,17 +538,14 @@ class BucketReference(Base):
 class LastUpdated(Base):
     __tablename__ = 'lastUpdated'
     id = Column(Integer, primary_key=True)
-    table_name = Column(String(50))
+    table_name = Column(String(50), primary_key=True)
     last_updated = Column(DateTime)
 
 def initDB(engine):
     Base.metadata.bind = engine
-    #Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 if __name__ == "__main__":
     # loadConfig for testing purposes
-    APP_PATH = "/etc/destinygotg"
-
     loadConfig()
     initDB(engine)
