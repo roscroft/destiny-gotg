@@ -5,12 +5,9 @@ import os, sys
 import json, requests
 import sqlite3
 from datetime import datetime
-from sqlalchemy import exists, and_
-from sqlalchemy.sql.expression import literal_column
-from sqlalchemy.inspection import inspect
 from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, AccountWeaponUsage, CharacterActivityStats, AccountMedals, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, AccountActivityModeStats, LastUpdated
 from destinygotg import Session, loadConfig
-import importlib, time, itertools
+import time, itertools
 from functools import partial
 
 URL_START = "https://bungie.net/Platform"
@@ -63,8 +60,9 @@ def requestAndInsert(session, request_session, infoMap, staticMap, url, outFile,
     #dynamicDictIndex gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
     group = dynamicDictIndex(data, iterator)
     if group == None:
-        print("No group found.")
+        print("Nothing to insert.")
         return []
+    #Sometimes we get arrays, other times we get dictionaries. Wrap the dicts in a list to avoid headache later.
     if type(group) == dict:
         group = [group]
     for elem in group:
@@ -105,25 +103,16 @@ def defineParams(queryTable, infoMap, urlFunction, iterator, table, altInsert=No
                     attrMap[key] = getattr(session.query(Account).filter_by(id=attrMap['membershipId']).first(), value)
             else:
                 attrMap[key] = getattr(elem, value)
-        #Kwargs are used to check if the database needs updating for the current elem.
-        kwargs = {}
-        for (key, value) in infoMap['kwargs'].items():
-            kwargs[key] = attrMap[value]
-        kwargs['table_name'] = table.__tablename__
         #urlParams are used to build the request URL.
-        urlParams = {}
-        for (key, value) in infoMap['url_params'].items():
-            urlParams[key] = attrMap[value]
+        urlParams = buildValueDict('url_params', attrMap)
         url = urlFunction(**urlParams)
         outFile = f"{attrMap['name']}_{table.__tablename__}.json"
         message = f"Fetching {table.__tablename__} data for: {attrMap['name']}"
         #Statics actually need to get passed to the insert function so they can be put in the table.
-        staticMap = {}
-        for (key, value) in infoMap['statics'].items():
-            if value.endswith('_actual'):
-                staticMap[key] = value[:-7]
-            else:
-                staticMap[key] = attrMap[value]
+        staticMap = buildValueDict('statics', attrMap)
+        #Kwargs are used to check if the database needs updating for the current elem.
+        kwargs = buildValueDict('kwargs', attrMap)
+        kwargs['table_name'] = table.__tablename__
         toUpdate = needsUpdate(kwargs, session)
         if not toUpdate:
             print(f"Not updating {table.__tablename__} table for user: {attrMap['name']}")
@@ -493,6 +482,15 @@ def setLastUpdated(updateId, table, session):
     update_elem = LastUpdated(**updateDict)
     updatePrimaryKey = {'id' : updateDict['id'], 'table_name' : updateDict['table_name']}
     return upsert(LastUpdated, updatePrimaryKey, update_elem, session)
+
+def buildValueDict(location, attrMap):
+    retDict = {}
+    for (key, value) in infoMap[location].items():
+        if value.endswith('_actual'):
+            retDict[key] = value[:-7]
+        else:
+            retDict[key] = attrMap[value]
+    return retDict
 
 if __name__ == "__main__":
     # loadConfig for testing purposes
