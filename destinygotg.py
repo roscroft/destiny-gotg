@@ -18,37 +18,37 @@ def main():
 
     """Run the application"""
     # Ensure that the program is running on python 3.6+
-    if not verifyPythonVersion():
+    if not verify_python_version():
         print("This app requires python 3.6 or greater!")
         return
     # Make sure the APP_PATH directory exists
-    setAppPath()
+    set_app_path()
 
     # Ensure a correct config file exists
-    if not configExists():
-        generateConfig()
+    if not config_exists():
+        generate_config()
     
     # Load the config values into environment vars
-    loadConfig()
+    load_config()
     
-    if not model.checkManifest():
-        model.getManifest()
+    if not model.check_manifest():
+        model.get_manifest()
     
-    if not model.checkDB():
-        model.initDB(engine)
+    if not model.check_db():
+        model.init_db(engine)
     
-    model.initDB(engine)
-    model.buildDB()
+    model.init_db(engine)
+    model.build_db()
     
-    model.runDiscord(engine)
-    #runFlask()
+    model.run_discord(engine)
+    #run_flask()
 
-def setAppPath():
+def set_app_path():
     """Ensures the APP_PATH dir exists"""
     if not os.path.isdir(APP_PATH):
         os.mkdir(APP_PATH)
 
-def verifyPythonVersion():
+def verify_python_version():
     """Ensure the script is being run in python 3.6"""
     try:
         # use assert to throw an exception if
@@ -58,7 +58,7 @@ def verifyPythonVersion():
     except AssertionError:
         return False
 
-def generateConfig():
+def generate_config():
     """Generate and store a new config file"""
     # make sure the APP_PATH directory exists
     config = open(f"{APP_PATH}/config", "w+")
@@ -72,7 +72,7 @@ def generateConfig():
     config.write(f"MANIFEST_CONTENT:{APP_PATH}/manifest.content\n")
     config.close()
 
-def configExists():
+def config_exists():
     """Check if there are any missing fields, or if the file doesn't exist"""
     if os.path.exists(f"{APP_PATH}/config"):
         return True
@@ -81,14 +81,14 @@ def configExists():
         return False
     #TODO: Implement config file checker to see if it has all fields
 
-def loadConfig():
+def load_config():
     """Load configs from the config file"""
     config = open(f"{APP_PATH}/config", "r").readlines()
     for value in config:
         value = value.strip().split(":")
         os.environ[value[0]] = value[1]
 
-def runFlask():
+def run_flask():
     os.environ['FLASK_APP'] = "views/flask/app.py"
     os.system("flask run --host=0.0.0.0")
 

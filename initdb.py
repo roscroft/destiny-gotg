@@ -541,11 +541,11 @@ class LastUpdated(Base):
     table_name = Column(String(50), primary_key=True)
     last_updated = Column(DateTime)
 
-def initDB(engine):
+def init_db(engine):
     Base.metadata.bind = engine
     Base.metadata.create_all(engine)
 
 if __name__ == "__main__":
     # loadConfig for testing purposes
-    loadConfig()
-    initDB(engine)
+    load_config()
+    init_db(engine)
