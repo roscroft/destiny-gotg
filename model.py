@@ -43,4 +43,4 @@ def build_db():
     builddb.build_db()
 
 def run_discord(engine):
-    discordBot.runBot(engine)
+    discordBot.run_bot(engine)

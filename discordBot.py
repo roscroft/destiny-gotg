@@ -5,7 +5,7 @@ import discord
 import asyncio
 from datetime import datetime
 from destinygotg import Session, load_config
-from initdb import PvPAggregate, PvEAggregate, Base, Discord, Account, AccountMedals, Character, ClassReference
+from initdb import PvPAggregate, PvEAggregate, Base, Discord, Account, AccountMedals, Character, ClassReference, Bungie
 from sqlalchemy import exists, desc, func, and_
 from decimal import *
 import numpy as np
@@ -47,24 +47,30 @@ def run_bot(engine):
 
     @client.event
     async def register_user(discord_author):
-        def check_if_valid_user(user_name):
-            print(user_name)
-            return session.query(exists().where(Account.display_name == user_name)).scalar()
+        def check_if_valid_user(message):
+            print(message.content)
+            valid = session.query(exists().where(and_(Account.display_name == message.content, Account.membership_type == 2))).scalar()
+            print(valid)
+            return valid
         #Need to send a DM requesting the PSN name
         destination = discord_author
         disc_name = discord_author.name
-        await client.send_message(destination, disc_name+", please enter your PSN display name.")
-        name_msg = await client.wait_for_message(author=discord_author,check=check_if_valid_user(disc_name))
+        message = await client.send_message(destination, f"{disc_name}, please enter your PSN display name.")
+        valid = False 
+        while not valid:
+            name_msg = await client.wait_for_message(author=discord_author, channel=message.channel)
+            valid = check_if_valid_user(name_msg)
+            if not valid:
+                await client.send_message(destination, "Please enter your PSN display name, and nothing else.")
+        # Next line does the whole loop by itself
+        # name_msg = await client.wait_for_message(author=discord_author,check=check_if_valid_user)
         dest_name = name_msg.content
-        discord_dict = {}
-        discord_dict['id'] = discord_author.id
-        discord_dict['discord_name'] = disc_name
-        print(dest_name)
+        discord_dict = {'id' : discord_author.id, 'discord_name' : disc_name}
         discord_dict['membership_id'] = session.query(Account.id).filter(Account.display_name == dest_name).first()[0]
         new_discord_user = Discord(**discord_dict)
         session.add(new_discord_user)
         session.commit()
-        await client.send_message(destination, disc_name+", you have been successfully registered!")
+        await client.send_message(destination, f"{disc_name}, you have been successfully registered!")
         return dest_name
 
     @client.event
@@ -72,8 +78,8 @@ def run_bot(engine):
         if message.content.startswith('!timeleft'):
             output = time_left()
             await client.send_message(message.channel, output)
-        #elif message.content.startswith('!help'):
-        #    await client.send_message(message.channel, 'Commands: !timeleft, !stat.')
+        elif message.content.startswith('!help'):
+            await client.send_message(message.channel, 'See the #command-list channel for a list of commands.')
         elif message.content.startswith('Right Gary?'):
             await client.send_message(message.channel, 'Right.')
         elif message.content.startswith('Say goodbye'):
@@ -87,9 +93,9 @@ def run_bot(engine):
                 await query_database(channel, statement, connection)
             else:
                 await client.send_message(message.channel, "Permission denied!")
-        elif message.author.name == "Roscroft" and message.channel.is_private:
-            if not message.content == "Roscroft":
-                await client.send_message(discord.Object(id='322173351059521537'), message.content)
+        # elif message.author.name == "Roscroft" and message.channel.is_private:
+        #     if not message.content == "Roscroft":
+        #         await client.send_message(discord.Object(id='322173351059521537'), message.content)
         elif message.content.startswith('!channel-id'):
             print(message.channel.id)
         elif message.content.startswith("!stat"):
@@ -117,6 +123,9 @@ def run_bot(engine):
             await client.send_file(message.channel, './Figures/hist.png')
         elif message.content.startswith("!clanstat"):
             pass
+        elif message.content.startswith("!members"):
+            num_members = Session().query(func.count(Bungie.id)).first()[0]
+            await client.send_message(message.channel, num_members)
         elif message.content.startswith('!light'):
             player = await register_handler(message.author)
             data = light_level_request(player)
@@ -276,7 +285,7 @@ def clan_graph_request(player, code, stat):
     #objects = [" " if item != player else item for item in objects]
     values = [item[1] for item in data]
     
-    fig, ax = plt.subplots(figsize=(14,6))
+    fig, ax = plt.subplots(figsize=(16,6))
     ax.set_facecolor("#F3F3F3")
     index = np.arange(len(objects))
     plt.bar(index, values, alpha=0.4, color="gold", edgecolor="black", align='center')

@@ -18,6 +18,9 @@ sudo apt-get install python3-pip
 Because pip complains a lot:
 pip3 install --upgrade pip
 
+Getting the requests package:
+python3.6 -m pip install -U discord.py
+
 Getting the discord.py package for python3.6:
 python3.6 -m pip install -U discord.py
 

@@ -4,7 +4,7 @@ import sys
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from destinygotg import loadConfig
+from destinygotg import load_config
 
 Base = declarative_base()
 
