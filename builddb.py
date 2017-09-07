@@ -37,8 +37,8 @@ def build_db():
     session = Session()
     # handle_bungie_table()
     # handle_account_table()
+    handle_character_table()
     # handle_aggregate_tables()
-    # handle_character_table()
     # handle_weapon_usage_table()
     # handle_activity_stats_table()
     # handle_medal_table()
@@ -77,6 +77,7 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
             continue
         #build_dict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
         insert_dict = build_dict(elem, info_map['values'])
+        print(insert_dict)
         #Statics are pre-defined values - maybe the id from user.id in define_params
         if 'statics' in info_map:
             insert_dict = {**insert_dict, **static_map}
@@ -121,6 +122,7 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
         kwargs = build_value_dict(info_map['kwargs'], attr_map)
         kwargs['table_name'] = table.__tablename__
         to_update = needs_update(kwargs, session)
+        to_update = True
         if not to_update:
             print(f"Not updating {table.__tablename__} table for user: {attr_map['name']}")
             add_list = []
@@ -183,6 +185,31 @@ def handle_account_table():
     table = Account
     define_params(query_table, info_map, account_url, iterator, table)
 
+def handle_character_table():
+    def character_url(membershipId, membershipType):
+        return f"{URL_START}/Destiny2/{membershipType}/Profile/{membershipId}/?components=200"
+    query_table = Account
+    info_map = {'attrs' :{'membershipId' : 'id'
+                        ,'name' : 'display_name'
+                        ,'membershipType' : 'membership_type'}
+              ,'kwargs' :{'id' : 'membershipId'}
+              ,'url_params' :{'membershipId' : 'membershipId'
+                             ,'membershipType' : 'membershipType'}
+              ,'values' :{'id': [[], ['characterId']]
+                         ,'level': [[], ['characterLevel']]
+                         ,'class_hash': [[], ['classHash']]
+                         ,'class_type': [[], ['classType']]
+                         ,'last_played': [[], ['dateLastPlayed']]
+                         ,'light_level': [[], ['light']]
+                         ,'minutes_played': [[], ['minutesPlayedTotal']]
+                         ,'race_hash': [[], ['raceHash']]
+                         ,'race_type': [[], ['raceType']]}
+              ,'statics' :{'membership_id' : 'membershipId'}
+              ,'primary_keys' : ['id']}
+    iterator = ['Response', 'characters', 'data']
+    table = Character
+    define_params(query_table, info_map, character_url, iterator, table)
+
 def handle_aggregate_tables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
     def aggregate_stats_url(membershipType, id):
@@ -239,26 +266,6 @@ def handle_aggregate_tables():
     table = PvPAggregate
     define_params(query_table, info_map, aggregate_stats_url, iterator, table, alt_insert)
 
-def handle_character_table():
-    def character_url(membershipId, membershipType):
-        return f"{OLD_URL_START}/Destiny/{membershipType}/Account/{membershipId}"
-    query_table = Account
-    info_map = {'attrs' :{'membershipId' : 'id'
-                        ,'name' : 'display_name'
-                        ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'id' : 'membershipId'}
-              ,'url_params' :{'membershipId' : 'membershipId'
-                             ,'membershipType' : 'membershipType'}
-              ,'values' :{'id' : [['characterBase', 'characterId']]
-                         ,'minutes_played' : [['characterBase', 'minutesPlayedTotal']]
-                         ,'light_level' : [['characterBase', 'powerLevel']]
-                         ,'class_hash' : [['characterBase', 'classHash']]
-                         ,'grimoire' : [['characterBase', 'grimoireScore']]}
-              ,'statics' :{'membership_id' : 'membershipId'}
-              ,'primary_keys' : ['id']}
-    iterator = ['Response', 'data', 'characters']
-    table = Character
-    define_params(query_table, info_map, character_url, iterator, table)
 
 def handle_weapon_usage_table():
     def weapon_url(id, membershipType):

@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 APP_PATH = "/etc/destinygotg"
-DBPATH = f"{APP_PATH}/guardians.db"
+DBPATH = f"{APP_PATH}/guardians2.db"
 
 # Create the application-level engine and SessionMaker objects
 # Add echo=True to below line for SQL logging

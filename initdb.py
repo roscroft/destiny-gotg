@@ -22,6 +22,20 @@ class Account(Base):
     bungie_id = Column(String(50), ForeignKey('bungie.id'))
     bungie = relationship(Bungie)
 
+class Character(Base):
+    __tablename__ = 'character'
+    id = Column(Integer, primary_key=True)
+    membership_id = Column(Integer, ForeignKey('account.id'))
+    account = relationship(Account)
+    level = Column(Integer)
+    class_hash = Column(Integer)
+    class_type = Column(Integer)
+    last_played = Column(DateTime)
+    light_level = Column(Integer)
+    minutes_played = Column(Integer)
+    race_hash = Column(Integer)
+    race_type = Column(Integer)
+
 class Discord(Base):
     __tablename__ = 'discord'
     id = Column(Integer, primary_key=True)
@@ -234,16 +248,6 @@ class PvPAggregate(Base):
     weaponKillsSwordpg = Column(Float)
     zonesCapturedpg = Column(Float)
     zonesNeutralizedpg = Column(Float)
-
-class Character(Base):
-    __tablename__ = 'character'
-    id = Column(Integer, primary_key=True)
-    membership_id = Column(Integer, ForeignKey('account.id'))
-    account = relationship(Account)
-    minutes_played = Column(Integer)
-    light_level = Column(Integer)
-    class_hash = Column(Integer)
-    grimoire = Column(Integer)
 
 class AccountWeaponUsage(Base):
     __tablename__ = 'accountWeaponUsage'
