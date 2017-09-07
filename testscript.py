@@ -9,10 +9,12 @@ APP_PATH = "/etc/destinygotg"
 
 def testscript():
     # Specify a URL
-    destinyMembershipId = 4611686018467183775
+    destinyMembershipId = 4611686018456448671
+    characterId = 2305843009266030136
     membershipType = 2
     bungieId = 13340015
-    url = f"{URL_START}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=None"
+    # url = f"{URL_START}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=100"
+    url = f"{URL_START}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
     # url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     # Specify an outfile
     out_file = "testJSON.json"
@@ -25,6 +27,7 @@ def make_header():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
 
 def json_request(request_session, url, out_file):
+    print(url)
     headers = make_header()
     res = request_session.get(url, headers=headers)
     try:

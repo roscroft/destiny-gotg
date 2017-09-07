@@ -70,7 +70,7 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
     #Sometimes we get arrays, other times we get dictionaries. Wrap the dicts in a list to avoid headache later.
     # tableGenerator.table_generator(iterator, group)
     if type(group) == dict:
-        group = [group]
+        group = group.values()
     #gonna insert some hacky code in here to generate a table in initdb
     for elem in group:
         if elem == None:
@@ -78,6 +78,9 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         #build_dict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
         insert_dict = build_dict(elem, info_map['values'])
         print(insert_dict)
+        if table == Character:
+            #Hackily convert the dates. Not sure how else to do this.
+            insert_dict["last_played"] = datetime.strptime(insert_dict["last_played"], "%Y-%m-%dT%H:%M:%SZ")
         #Statics are pre-defined values - maybe the id from user.id in define_params
         if 'statics' in info_map:
             insert_dict = {**insert_dict, **static_map}
@@ -195,15 +198,15 @@ def handle_character_table():
               ,'kwargs' :{'id' : 'membershipId'}
               ,'url_params' :{'membershipId' : 'membershipId'
                              ,'membershipType' : 'membershipType'}
-              ,'values' :{'id': [[], ['characterId']]
-                         ,'level': [[], ['characterLevel']]
-                         ,'class_hash': [[], ['classHash']]
-                         ,'class_type': [[], ['classType']]
-                         ,'last_played': [[], ['dateLastPlayed']]
-                         ,'light_level': [[], ['light']]
-                         ,'minutes_played': [[], ['minutesPlayedTotal']]
-                         ,'race_hash': [[], ['raceHash']]
-                         ,'race_type': [[], ['raceType']]}
+              ,'values' :{'id': [['characterId']]
+                         ,'level': [['baseCharacterLevel']]
+                         ,'class_hash': [['classHash']]
+                         ,'class_type': [['classType']]
+                         ,'last_played': [['dateLastPlayed']]
+                         ,'light_level': [['light']]
+                         ,'minutes_played': [['minutesPlayedTotal']]
+                         ,'race_hash': [['raceHash']]
+                         ,'race_type': [['raceType']]}
               ,'statics' :{'membership_id' : 'membershipId'}
               ,'primary_keys' : ['id']}
     iterator = ['Response', 'characters', 'data']
