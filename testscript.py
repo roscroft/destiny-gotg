@@ -13,10 +13,14 @@ def testscript():
     characterId = 2305843009266030136
     membershipType = 2
     bungieId = 13340015
-    # url = f"{URL_START}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=100"
-    url = f"{URL_START}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
+    url_start = f"{URL_START}"
+    # url = "Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=100"
+    # url_end = "/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
+    # url_end = "/Destiny2/Stats/AggregateClanStats/1407546/"
+    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/Leaderboards"
     # url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     # Specify an outfile
+    url = url_start + url_end
     out_file = "testJSON.json"
     # Request a JSON
     request_session = requests.Session()
