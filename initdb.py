@@ -43,11 +43,11 @@ class Discord(Base):
     account = relationship(Account)
     discord_name = Column(String(50))
 
-class CharacterInstanceStats():
+class CharacterInstanceStats(Base):
     __tablename__ = "characterInstanceStats"
     id = Column(Integer, primary_key=True)
-    mode = Column(Integer, primary_key=True)
     instance_id = Column(Integer, primary_key=True)
+    mode = Column(Integer)
     reference_id = Column(Integer)
     is_private = Column(Boolean)
     period = Column(DateTime)
