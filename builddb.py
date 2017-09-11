@@ -35,8 +35,8 @@ def build_db():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    # handle_bungie_table()
-    # handle_account_table()
+    handle_bungie_table()
+    handle_account_table()
     handle_character_table()
     # handle_aggregate_tables()
     # handle_weapon_usage_table()
@@ -77,7 +77,7 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
             continue
         #build_dict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
         insert_dict = build_dict(elem, info_map['values'])
-        print(insert_dict)
+        # print(insert_dict)
         if table == Character:
             #Hackily convert the dates. Not sure how else to do this.
             insert_dict["last_played"] = datetime.strptime(insert_dict["last_played"], "%Y-%m-%dT%H:%M:%SZ")
@@ -125,7 +125,7 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
         kwargs = build_value_dict(info_map['kwargs'], attr_map)
         kwargs['table_name'] = table.__tablename__
         to_update = needs_update(kwargs, session)
-        to_update = True
+        # to_update = True
         if not to_update:
             print(f"Not updating {table.__tablename__} table for user: {attr_map['name']}")
             add_list = []
