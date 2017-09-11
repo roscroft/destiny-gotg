@@ -9,7 +9,7 @@ import sqlite3
 import requests
 import itertools
 from datetime import datetime
-from initdb import Base, Bungie, Account, PvPAggregate, PvEAggregate, Character, AccountWeaponUsage, CharacterActivityStats, AccountMedals, ActivityReference, ClassReference, WeaponReference, ActivityTypeReference, BucketReference, AccountActivityModeStats, LastUpdated
+from initdb import Base, Bungie, Account, Character, CharacterInstanceStats, LastUpdated
 from destinygotg import Session, load_config
 from functools import partial
 import tableGenerator
@@ -17,8 +17,8 @@ import tableGenerator
 URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
-# write_files = False
-write_files = True
+write_files = False
+# write_files = True
 
 def make_header():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -35,9 +35,10 @@ def build_db():
     """Main function to build the full database"""
     start_time = time.clock()
     session = Session()
-    handle_bungie_table()
-    handle_account_table()
-    handle_character_table()
+    # handle_bungie_table()
+    # handle_account_table()
+    # handle_character_table()
+    handle_character_activity_table()
     # handle_aggregate_tables()
     # handle_weapon_usage_table()
     # handle_activity_stats_table()
@@ -111,7 +112,7 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
                 try: 
                     attr_map[key] = getattr(elem, value)
                 except AttributeError:
-                    attr_map[key] = getattr(session.query(Account).filter_by(id=attr_map['membershipId']).first(), value)
+                    attr_map[key] = getattr(session.query(Account).filter_by(id=attr_map['membership_id']).first(), value)
             else:
                 attr_map[key] = getattr(elem, value)
         #url_params are used to build the request URL.
@@ -125,7 +126,7 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
         kwargs = build_value_dict(info_map['kwargs'], attr_map)
         kwargs['table_name'] = table.__tablename__
         to_update = needs_update(kwargs, session)
-        # to_update = True
+        to_update = True
         if not to_update:
             print(f"Not updating {table.__tablename__} table for user: {attr_map['name']}")
             add_list = []
@@ -135,10 +136,9 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
             add_list = alt_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table)
         total_add_list = total_add_list + add_list
         #Upsert into LastUpdated
-        if table != AccountActivityModeStats:
-            update_id = attr_map[info_map['kwargs']['id']]
-            update_item = set_last_updated(update_id, table, session)
-            total_add_list = total_add_list + [update_item]
+        update_id = attr_map[info_map['kwargs']['id']]
+        update_item = set_last_updated(update_id, table, session)
+        total_add_list = total_add_list + [update_item]
     total_add_list = [item for item in total_add_list if item is not None]
     final_list = remove_duplicates(total_add_list)
     session.add_all(final_list)
@@ -170,15 +170,15 @@ def handle_bungie_table():
 
 def handle_account_table():
     """Retrieve JSONs for users, listing their Destiny accounts. Fills account table."""
-    def account_url(id, membershipType):
-        return f"{URL_START}/User/GetMembershipsById/{id}/{membershipType}"
+    def account_url(id, membership_type):
+        return f"{URL_START}/User/GetMembershipsById/{id}/{membership_type}"
     query_table = Bungie
     info_map = {'attrs'  :{'id'             : 'id'
                          ,'name'           : 'bungie_name'
-                         ,'membershipType' : 'membership_type'}
+                         ,'membership_type' : 'membership_type'}
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
-                             ,'membershipType' : 'membershipType'}
+                             ,'membership_type' : 'membership_type'}
               ,'values' :{'id'              : [['membershipId']]
                          ,'membership_type' : [['membershipType']]
                          ,'display_name'    : [['displayName']]}
@@ -189,15 +189,15 @@ def handle_account_table():
     define_params(query_table, info_map, account_url, iterator, table)
 
 def handle_character_table():
-    def character_url(membershipId, membershipType):
-        return f"{URL_START}/Destiny2/{membershipType}/Profile/{membershipId}/?components=200"
+    def character_url(membership_id, membership_type):
+        return f"{URL_START}/Destiny2/{membership_type}/Profile/{membership_id}/?components=200"
     query_table = Account
-    info_map = {'attrs' :{'membershipId' : 'id'
+    info_map = {'attrs' :{'membership_id' : 'id'
                         ,'name' : 'display_name'
-                        ,'membershipType' : 'membership_type'}
-              ,'kwargs' :{'id' : 'membershipId'}
-              ,'url_params' :{'membershipId' : 'membershipId'
-                             ,'membershipType' : 'membershipType'}
+                        ,'membership_type' : 'membership_type'}
+              ,'kwargs' :{'id' : 'membership_id'}
+              ,'url_params' :{'membership_id' : 'membership_id'
+                             ,'membership_type' : 'membership_type'}
               ,'values' :{'id': [['characterId']]
                          ,'level': [['baseCharacterLevel']]
                          ,'class_hash': [['classHash']]
@@ -207,17 +207,45 @@ def handle_character_table():
                          ,'minutes_played': [['minutesPlayedTotal']]
                          ,'race_hash': [['raceHash']]
                          ,'race_type': [['raceType']]}
-              ,'statics' :{'membership_id' : 'membershipId'}
+              ,'statics' :{'membership_id' : 'membership_id'}
               ,'primary_keys' : ['id']}
     iterator = ['Response', 'characters', 'data']
     table = Character
     define_params(query_table, info_map, character_url, iterator, table)
 
+def handle_character_activity_table():
+    def activity_mode_url(membership_type, membership_id, id, mode):
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/Activities/?mode={mode}"
+    query_table = Character
+    mode_dict = {2:'story', 3:'strike', 5:'allPvP', 6:'patrol', 7:'allPvE', 10:'control', 12:'team', 16:'nightfall', 
+            17:'heroic', 18:'allStrikes', 31:'supremacy', 37:'survival', 38:'countdown', 40:'social'}
+    iterator = ['Response', 'activities']
+    table = CharacterInstanceStats
+    for code, name in mode_dict.items():
+        info_map = {'attrs':{'id':'id'
+                            ,'membership_id':'membership_id'
+                            ,'name':'display_name'
+                            ,'membership_type':'membership_type'}
+                ,'kwargs':{'id':'id'}
+                ,'url_params':{'id':'id'
+                                ,'membership_type':'membership_type'
+                                ,'membership_id':'membership_id'}
+                ,'values':{'instance_id':[['activityDetails', 'instanceId']]
+                            ,'is_private':[['activityDetails', 'isPrivate']]
+                            ,'mode':[['activityDetails', 'mode']]
+                            ,'reference_id':[['activityDetails', 'referenceId']]
+                            ,'period':[['period']]
+                            ,'':[['values'], ['basic', 'value']]}
+                ,'statics':{'id':'id'}
+                ,'primary_keys':['id', 'mode', 'instance_id']}
+        partial_url = partial(activity_mode_url, mode=name)
+        define_params(query_table, info_map, partial_url, iterator, table)
+
 def handle_aggregate_tables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
-    def aggregate_stats_url(membershipType, id):
-        return f"{URL_START}/Destiny/Stats/Account/{membershipType}/{id}"
-        # return f"{URL_START}/Destiny2/{membershipType}/Account/{id}/Stats/"
+    def aggregate_stats_url(membership_type, id):
+        return f"{URL_START}/Destiny/Stats/Account/{membership_type}/{id}"
+        # return f"{URL_START}/Destiny2/{membership_type}/Account/{id}/Stats/"
     def alt_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table):
         def fill_and_insert_dict(stats, table, statics):
             add_list = []
@@ -257,10 +285,10 @@ def handle_aggregate_tables():
     query_table = Account
     info_map = {'attrs'  :{'id'             : 'id'
                          ,'name'           : 'display_name'
-                         ,'membershipType' : 'membership_type'}
+                         ,'membership_type' : 'membership_type'}
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id'             : 'id'
-                             ,'membershipType' : 'membershipType'}
+                             ,'membership_type' : 'membership_type'}
               ,'values' :{'' : [[],[]]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id']}
@@ -271,16 +299,16 @@ def handle_aggregate_tables():
 
 
 def handle_weapon_usage_table():
-    def weapon_url(id, membershipType):
+    def weapon_url(id, membership_type):
         #0 can be used instead of character ids
-        return f"{OLD_URL_START}/Destiny/Stats/UniqueWeapons/{membershipType}/{id}/0"
+        return f"{OLD_URL_START}/Destiny/Stats/UniqueWeapons/{membership_type}/{id}/0"
     query_table = Account
     info_map = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
-                        ,'membershipType' : 'membership_type'}
+                        ,'membership_type' : 'membership_type'}
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
-                             ,'membershipType' : 'membershipType'}
+                             ,'membership_type' : 'membership_type'}
               ,'values' :{'weaponHash' : [['referenceId']]
                          ,'kills' : [['values', 'uniqueWeaponKills', 'basic', 'value']]
                          ,'precision_kills' : [['values', 'uniqueWeaponPrecisionKills', 'basic', 'value']]
@@ -292,17 +320,17 @@ def handle_weapon_usage_table():
     define_params(query_table, info_map, weapon_url, iterator, table)
 
 def handle_activity_stats_table():
-    def activity_url(id, membershipId, membershipType):
-        return f"{OLD_URL_START}/Destiny/Stats/AggregateActivityStats/{membershipType}/{membershipId}/{id}/"
+    def activity_url(id, membership_id, membership_type):
+        return f"{OLD_URL_START}/Destiny/Stats/AggregateActivityStats/{membership_type}/{membership_id}/{id}/"
     query_table = Character
     info_map = {'attrs' :{'id' : 'id'
-                        ,'membershipId' : 'membership_id'
+                        ,'membership_id' : 'membership_id'
                         ,'name' : 'display_name'
-                        ,'membershipType' : 'membership_type'}
+                        ,'membership_type' : 'membership_type'}
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
-                             ,'membershipId' : 'membershipId'
-                             ,'membershipType' : 'membershipType'}
+                             ,'membership_id' : 'membership_id'
+                             ,'membership_type' : 'membership_type'}
               ,'values' :{'activityHash' : [['activityHash']]
                          ,'' : [['values'], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}
@@ -312,15 +340,15 @@ def handle_activity_stats_table():
     define_params(query_table, info_map, activity_url, iterator, table)
 
 def handle_medal_table():
-    def medal_url(id, membershipType):
-        return f"{OLD_URL_START}/Destiny/Stats/Account/{membershipType}/{id}/?Groups=Medals"
+    def medal_url(id, membership_type):
+        return f"{OLD_URL_START}/Destiny/Stats/Account/{membership_type}/{id}/?Groups=Medals"
     query_table = Account
     info_map = {'attrs' :{'id' : 'id'
                         ,'name' : 'display_name'
-                        ,'membershipType' : 'membership_type'}
+                        ,'membership_type' : 'membership_type'}
               ,'kwargs' :{'id' : 'id'}
               ,'url_params' :{'id' : 'id'
-                             ,'membershipType' : 'membershipType'}
+                             ,'membership_type' : 'membership_type'}
               ,'values' :{'' : [[], ['basic', 'value']]}
               ,'statics' :{'id' : 'id'}
               ,'primary_keys' : ['id']}
@@ -329,8 +357,8 @@ def handle_medal_table():
     define_params(query_table, info_map, medal_url, iterator, table)
 
 def handle_account_activity_mode_stats_table():
-    def activity_mode_url(id, membershipType, mode):
-        return f"{OLD_URL_START}/Destiny/Stats/{membershipType}/{id}/0/?modes={mode}"
+    def activity_mode_url(id, membership_type, mode):
+        return f"{OLD_URL_START}/Destiny/Stats/{membership_type}/{id}/0/?modes={mode}"
     query_table = Account
     mode_dict = {2:'story', 3:'strike', 4:'raid', 5:'allPvP', 6:'patrol', 7:'allPvE', 8:'pvpIntroduction', 9:'threeVsThree', 10:'control'
                ,11 : 'lockdown', 12:'team', 13:'freeForAll', 14:'trialsOfOsiris', 15:'doubles', 16:'nightfall', 17:'heroic', 18:'allStrikes', 19:'ironBanner', 20:'allArena'
@@ -340,10 +368,10 @@ def handle_account_activity_mode_stats_table():
     for mode in range(2,37):
         info_map = {'attrs' :{'id' : 'id'
                             ,'name' : 'display_name'
-                            ,'membershipType' : 'membership_type'}
+                            ,'membership_type' : 'membership_type'}
                 ,'kwargs' :{'id' : 'id'}
                 ,'url_params' :{'id' : 'id'
-                                ,'membershipType' : 'membershipType'}
+                                ,'membership_type' : 'membership_type'}
                 ,'values' :{'' : [[], ['basic', 'value']]}
                 ,'statics' :{'id' : 'id'
                             ,'mode' : f'{modeDict[mode]}_actual'}

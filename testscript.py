@@ -17,7 +17,8 @@ def testscript():
     # url = "Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=100"
     # url_end = "/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
     # url_end = "/Destiny2/Stats/AggregateClanStats/1407546/"
-    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/Leaderboards"
+    # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/Leaderboards"
+    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/?mode=story"
     # url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     # Specify an outfile
     url = url_start + url_end
