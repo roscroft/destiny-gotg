@@ -14,12 +14,12 @@ def testscript():
     membershipType = 2
     bungieId = 13340015
     url_start = f"{URL_START}"
-    # url = "Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=100"
+    # url_end = f"/Destiny2/{membershipType}/Profile/{destinyMembershipId}/?components=200"
     # url_end = "/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
     # url_end = "/Destiny2/Stats/AggregateClanStats/1407546/"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/"
-    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats"
-    # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/?mode=control"
+    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?periodType=daily"
+    # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/?mode=None"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/AggregateActivityStats/"
     # url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     # Specify an outfile

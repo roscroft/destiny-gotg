@@ -38,7 +38,7 @@ def build_db():
     # handle_bungie_table()
     # handle_account_table()
     # handle_character_table()
-    handle_character_activity_table()
+    handle_character_instance_table()
     # handle_aggregate_tables()
     # handle_weapon_usage_table()
     # handle_activity_stats_table()
@@ -69,15 +69,23 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         print("Nothing to insert.")
         return []
     #Sometimes we get arrays, other times we get dictionaries. Wrap the dicts in a list to avoid headache later.
-    # tableGenerator.table_generator(iterator, group)
     if type(group) == dict:
-        group = group.values()
-    #gonna insert some hacky code in here to generate a table in initdb
+        group = group.items()
+
     for elem in group:
         if elem == None:
             continue
         #build_dict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
-        insert_dict = build_dict(elem, info_map['values'])
+        if type(elem) == tuple:
+            # We're in a dict, so we need to add info to the insert dict from the key and the value
+            # This isn't great code, but so far the only time I actually need the key is for activity modes
+            tuple_key_info = {'mode':elem[0]}
+            # This is as normal
+            tuple_value_info = build_dict(elem[1], info_map['values'])
+            # Combine the dicts
+            insert_dict = {**tuple_key_info, **tuple_value_info}
+        else:
+            insert_dict = build_dict(elem, info_map['values'])
         #Handle Bungie's weird time format
         for key in insert_dict.keys():
             if key == "last_played" or key == "period":
@@ -216,12 +224,36 @@ def handle_character_table():
     table = Character
     define_params(query_table, info_map, character_url, iterator, table)
 
-def handle_character_activity_table():
+# def handle_character_instance_table():
+#     def activity_url(membership_type, membership_id, id):
+#         return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/Activities/?mode=None"
+#     query_table = Character
+#     iterator = ['Response', 'activities']
+#     table = CharacterInstanceStats
+#     info_map = {'attrs':{'id':'id'
+#                         ,'membership_id':'membership_id'
+#                         ,'name':'display_name'
+#                         ,'membership_type':'membership_type'}
+#             ,'kwargs':{'id':'id'}
+#             ,'url_params':{'id':'id'
+#                             ,'membership_type':'membership_type'
+#                             ,'membership_id':'membership_id'}
+#             ,'values':{'instance_id':[['activityDetails', 'instanceId']]
+#                         ,'is_private':[['activityDetails', 'isPrivate']]
+#                         ,'mode':[['activityDetails', 'mode']]
+#                         ,'reference_id':[['activityDetails', 'referenceId']]
+#                         ,'period':[['period']]
+#                         ,'':[['values'], ['basic', 'value']]}
+#             ,'statics':{'id':'id'}
+#             ,'primary_keys':['id', 'mode', 'instance_id']}
+#     define_params(query_table, info_map, activity_url, iterator, table)
+
+def handle_character_total_table():
     def activity_url(membership_type, membership_id, id):
-        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/Activities/?mode=None"
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?mode=allPvP"
     query_table = Character
     iterator = ['Response', 'activities']
-    table = CharacterInstanceStats
+    table = CharacterTotalStats
     info_map = {'attrs':{'id':'id'
                         ,'membership_id':'membership_id'
                         ,'name':'display_name'

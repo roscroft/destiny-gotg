@@ -70,553 +70,69 @@ class CharacterInstanceStats(Base):
     teamScore = Column(Integer)
     timePlayedSeconds = Column(Integer)
 
-class CharacterPvPStats(Base):
-
-"abilityKills": {
-"basic": {
-"displayValue": "22",
-"value": 22.0
-},
-"pga": {
-"displayValue": "7.3",
-"value": 7.333333333333333
-},
-"statId": "abilityKills"
-},
-"activitiesEntered": {
-"basic": {
-"displayValue": "3",
-"value": 3.0
-},
-"statId": "activitiesEntered"
-},
-"activitiesWon": {
-"basic": {
-"displayValue": "2",
-"value": 2.0
-},
-"statId": "activitiesWon"
-},
-"allParticipantsCount": {
-"basic": {
-"displayValue": "24",
-"value": 24.0
-},
-"statId": "allParticipantsCount"
-},
-"allParticipantsScore": {
-"basic": {
-"displayValue": "313",
-"value": 313.0
-},
-"statId": "allParticipantsScore"
-},
-"allParticipantsTimePlayed": {
-"basic": {
-"displayValue": "3h 40m",
-"value": 13200.0
-},
-"statId": "allParticipantsTimePlayed"
-},
-"assists": {
-"basic": {
-"displayValue": "19",
-"value": 19.0
-},
-"pga": {
-"displayValue": "6.3",
-"value": 6.333333333333333
-},
-"statId": "assists"
-},
-"averageDeathDistance": {
-"basic": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "averageDeathDistance"
-},
-"averageKillDistance": {
-"basic": {
-"displayValue": "10.2",
-"value": 10.235294117647058
-},
-"statId": "averageKillDistance"
-},
-"averageLifespan": {
-"basic": {
-"displayValue": "0m 53s",
-"value": 53.58064516129032
-},
-"statId": "averageLifespan"
-},
-"averageScorePerKill": {
-"basic": {
-"displayValue": "1",
-"value": 1.2745098039215685
-},
-"statId": "averageScorePerKill"
-},
-"averageScorePerLife": {
-"basic": {
-"displayValue": "2",
-"value": 2.096774193548387
-},
-"statId": "averageScorePerLife"
-},
-"bestSingleGameKills": {
-"basic": {
-"displayValue": "20",
-"value": 20.0
-},
-"statId": "bestSingleGameKills"
-},
-"bestSingleGameScore": {
-"basic": {
-"displayValue": "31",
-"value": 31.0
-},
-"statId": "bestSingleGameScore"
-},
-"combatRating": {
-"basic": {
-"displayValue": "165.03",
-"value": 165.03395891077585
-},
-"statId": "combatRating"
-},
-"deaths": {
-"basic": {
-"displayValue": "30",
-"value": 30.0
-},
-"pga": {
-"displayValue": "10.0",
-"value": 10.0
-},
-"statId": "deaths"
-},
-"fastestCompletionMs": {
-"basic": {
-"displayValue": "8:59.600",
-"value": 539600.0
-},
-"statId": "fastestCompletionMs"
-},
-"highestCharacterLevel": {
-"basic": {
-"displayValue": "20",
-"value": 20.0
-},
-"statId": "highestCharacterLevel"
-},
-"highestLightLevel": {
-"basic": {
-"displayValue": "257",
-"value": 257.0
-},
-"statId": "highestLightLevel"
-},
-"kills": {
-"basic": {
-"displayValue": "51",
-"value": 51.0
-},
-"pga": {
-"displayValue": "17.0",
-"value": 17.0
-},
-"statId": "kills"
-},
-"killsDeathsAssists": {
-"basic": {
-"displayValue": "2.02",
-"value": 2.0166666666666666
-},
-"statId": "killsDeathsAssists"
-},
-"killsDeathsRatio": {
-"basic": {
-"displayValue": "1.70",
-"value": 1.7
-},
-"statId": "killsDeathsRatio"
-},
-"longestKillDistance": {
-"basic": {
-"displayValue": "39.0",
-"value": 39.0
-},
-"statId": "longestKillDistance"
-},
-"longestKillSpree": {
-"basic": {
-"displayValue": "5",
-"value": 5.0
-},
-"statId": "longestKillSpree"
-},
-"longestSingleLife": {
-"basic": {
-"displayValue": "1m 51s",
-"value": 111.0
-},
-"statId": "longestSingleLife"
-},
-"mostPrecisionKills": {
-"basic": {
-"displayValue": "3",
-"value": 3.0
-},
-"statId": "mostPrecisionKills"
-},
-"objectivesCompleted": {
-"basic": {
-"displayValue": "31",
-"value": 31.0
-},
-"pga": {
-"displayValue": "10.3",
-"value": 10.333333333333334
-},
-"statId": "objectivesCompleted"
-},
-"orbsDropped": {
-"basic": {
-"displayValue": "3",
-"value": 3.0
-},
-"pga": {
-"displayValue": "1.0",
-"value": 1.0
-},
-"statId": "orbsDropped"
-},
-"orbsGathered": {
-"basic": {
-"displayValue": "2",
-"value": 2.0
-},
-"pga": {
-"displayValue": "0.7",
-"value": 0.6666666666666666
-},
-"statId": "orbsGathered"
-},
-"precisionKills": {
-"basic": {
-"displayValue": "5",
-"value": 5.0
-},
-"pga": {
-"displayValue": "1.7",
-"value": 1.6666666666666667
-},
-"statId": "precisionKills"
-},
-"remainingTimeAfterQuitSeconds": {
-"basic": {
-"displayValue": "0m 0s",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0m 0s",
-"value": 0.0
-},
-"statId": "remainingTimeAfterQuitSeconds"
-},
-"resurrectionsPerformed": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "resurrectionsPerformed"
-},
-"resurrectionsReceived": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "resurrectionsReceived"
-},
-"score": {
-"basic": {
-"displayValue": "65",
-"value": 65.0
-},
-"pga": {
-"displayValue": "22",
-"value": 21.666666666666668
-},
-"statId": "score"
-},
-"secondsPlayed": {
-"basic": {
-"displayValue": "27m 41s",
-"value": 1661.0
-},
-"pga": {
-"displayValue": "9m 13s",
-"value": 553.6666666666666
-},
-"statId": "secondsPlayed"
-},
-"suicides": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "suicides"
-},
-"teamScore": {
-"basic": {
-"displayValue": "180",
-"value": 180.0
-},
-"pga": {
-"displayValue": "60",
-"value": 60.0
-},
-"statId": "teamScore"
-},
-"totalActivityDurationSeconds": {
-"basic": {
-"displayValue": "27m 47s",
-"value": 1667.0
-},
-"pga": {
-"displayValue": "9m 15s",
-"value": 555.6666666666666
-},
-"statId": "totalActivityDurationSeconds"
-},
-"totalDeathDistance": {
-"basic": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "totalDeathDistance"
-},
-"totalKillDistance": {
-"basic": {
-"displayValue": "522.0",
-"value": 522.0
-},
-"statId": "totalKillDistance"
-},
-"weaponBestType": {
-"basic": {
-"displayValue": "Pulse Rifle",
-"value": 2.0
-},
-"statId": "weaponBestType"
-},
-"weaponKillsAbility": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsAbility"
-},
-"weaponKillsAutoRifle": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsAutoRifle"
-},
-"weaponKillsFusionRifle": {
-"basic": {
-"displayValue": "9",
-"value": 9.0
-},
-"pga": {
-"displayValue": "3.0",
-"value": 3.0
-},
-"statId": "weaponKillsFusionRifle"
-},
-"weaponKillsGrenade": {
-"basic": {
-"displayValue": "2",
-"value": 2.0
-},
-"pga": {
-"displayValue": "0.7",
-"value": 0.6666666666666666
-},
-"statId": "weaponKillsGrenade"
-},
-"weaponKillsHandCannon": {
-"basic": {
-"displayValue": "8",
-"value": 8.0
-},
-"pga": {
-"displayValue": "2.7",
-"value": 2.6666666666666665
-},
-"statId": "weaponKillsHandCannon"
-},
-"weaponKillsMachinegun": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsMachinegun"
-},
-"weaponKillsMelee": {
-"basic": {
-"displayValue": "13",
-"value": 13.0
-},
-"pga": {
-"displayValue": "4.3",
-"value": 4.333333333333333
-},
-"statId": "weaponKillsMelee"
-},
-"weaponKillsPulseRifle": {
-"basic": {
-"displayValue": "11",
-"value": 11.0
-},
-"pga": {
-"displayValue": "3.7",
-"value": 3.6666666666666665
-},
-"statId": "weaponKillsPulseRifle"
-},
-"weaponKillsRelic": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsRelic"
-},
-"weaponKillsRocketLauncher": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsRocketLauncher"
-},
-"weaponKillsScoutRifle": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsScoutRifle"
-},
-"weaponKillsShotgun": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsShotgun"
-},
-"weaponKillsSideArm": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsSideArm"
-},
-"weaponKillsSniper": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsSniper"
-},
-"weaponKillsSubmachinegun": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsSubmachinegun"
-},
-"weaponKillsSuper": {
-"basic": {
-"displayValue": "7",
-"value": 7.0
-},
-"pga": {
-"displayValue": "2.3",
-"value": 2.3333333333333335
-},
-"statId": "weaponKillsSuper"
-},
-"weaponKillsSword": {
-"basic": {
-"displayValue": "0",
-"value": 0.0
-},
-"pga": {
-"displayValue": "0.0",
-"value": 0.0
-},
-"statId": "weaponKillsSword"
-},
-"winLossRatio": {
-"basic": {
-"displayValue": "2.00",
-"value": 2.0
-},
-"statId": "winLossRatio"
-}
+class CharacterTotalStats(Base):
+    __tablename__ = "characterTotalStats"
+    id = Column(Integer, primary_key=True)
+    mode = Column(Integer)
+    abilityKills = Column(Integer)
+    activitiesEntered = Column(Integer)
+    activitiesWon = Column(Integer)
+    allParticipantsCount = Column(Integer)
+    allParticipantsScore = Column(Integer)
+    allParticipantsTimePlayed = Column(Integer)
+    assists = Column(Integer)
+    averageDeathDistance = Column(Integer)
+    averageKillDistance = Column(Integer)
+    averageLifespan = Column(Integer)
+    averageScorePerKill = Column(Integer)
+    averageScorePerLife = Column(Integer)
+    bestSingleGameKills = Column(Integer)
+    bestSingleGameScore = Column(Integer)
+    combatRating = Column(Integer)
+    deaths = Column(Integer)
+    fastestCompletionMs = Column(Integer)
+    highestCharacterLevel = Column(Integer)
+    highestLightLevel = Column(Integer)
+    kills = Column(Integer)
+    killsDeathsAssists = Column(Integer)
+    killsDeathsRatio = Column(Integer)
+    longestKillDistance = Column(Integer)
+    longestKillSpree = Column(Integer)
+    longestSingleLife = Column(Integer)
+    mostPrecisionKills = Column(Integer)
+    objectivesCompleted = Column(Integer)
+    orbsDropped = Column(Integer)
+    orbsGathered = Column(Integer)
+    precisionKills = Column(Integer)
+    remainingTimeAfterQuitSeconds = Column(Integer)
+    resurrectionsPerformed = Column(Integer)
+    resurrectionsReceived = Column(Integer)
+    score = Column(Integer)
+    secondsPlayed = Column(Integer)
+    suicides = Column(Integer)
+    teamScore = Column(Integer)
+    totalActivityDurationSeconds = Column(Integer)
+    totalDeathDistance = Column(Integer)
+    totalKillDistance = Column(Integer)
+    weaponBestType = Column(Integer)
+    weaponKillsAbility = Column(Integer)
+    weaponKillsAutoRifle = Column(Integer)
+    weaponKillsFusionRifle = Column(Integer)
+    weaponKillsGrenade = Column(Integer)
+    weaponKillsHandCannon = Column(Integer)
+    weaponKillsMachinegun = Column(Integer)
+    weaponKillsMelee = Column(Integer)
+    weaponKillsPulseRifle = Column(Integer)
+    weaponKillsRelic = Column(Integer)
+    weaponKillsRocketLauncher = Column(Integer)
+    weaponKillsScoutRifle = Column(Integer)
+    weaponKillsShotgun = Column(Integer)
+    weaponKillsSideArm = Column(Integer)
+    weaponKillsSniper = Column(Integer)
+    weaponKillsSubmachinegun = Column(Integer)
+    weaponKillsSuper = Column(Integer)
+    weaponKillsSword = Column(Integer)
+    winLossRatio = Column(Integer)
 
 # class PvEAggregate(Base):
 #     __tablename__ = 'pveAggregate'
