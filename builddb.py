@@ -9,7 +9,7 @@ import sqlite3
 import requests
 import itertools
 from datetime import datetime
-from initdb import Base, Bungie, Account, Character, CharacterInstanceStats, LastUpdated
+from initdb import Base, Bungie, Account, Character, CharacterTotalStats, LastUpdated
 from destinygotg import Session, load_config
 from functools import partial
 import tableGenerator
@@ -37,8 +37,8 @@ def build_db():
     session = Session()
     # handle_bungie_table()
     # handle_account_table()
-    # handle_character_table()
-    handle_character_instance_table()
+    handle_character_table()
+    handle_character_total_table()
     # handle_aggregate_tables()
     # handle_weapon_usage_table()
     # handle_activity_stats_table()
@@ -78,8 +78,9 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         #build_dict uses a nifty dynamic dictionary indexing function that allows us to grab info from multiply-nested fields in the dict
         if type(elem) == tuple:
             # We're in a dict, so we need to add info to the insert dict from the key and the value
-            # This isn't great code, but so far the only time I actually need the key is for activity modes
-            tuple_key_info = {'mode':elem[0]}
+            tuple_key_info = {}
+            if table == CharacterTotalStats:
+                tuple_key_info = {'mode':elem[0]}
             # This is as normal
             tuple_value_info = build_dict(elem[1], info_map['values'])
             # Combine the dicts
@@ -118,13 +119,10 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
         #Attrs are the attributes associated with the elem. User.id or user.membership_type, for example. AKA fields in the database.
         attr_map = {}
         for (key, value) in info_map['attrs'].items():
-            if query_table == Character:
-                try: 
-                    attr_map[key] = getattr(elem, value)
-                except AttributeError:
-                    attr_map[key] = getattr(session.query(Account).filter_by(id=attr_map['membership_id']).first(), value)
-            else:
+            try: 
                 attr_map[key] = getattr(elem, value)
+            except AttributeError:
+                attr_map[key] = getattr(session.query(Account).filter_by(id=attr_map['membership_id']).first(), value)
         #url_params are used to build the request URL.
         url_params = build_value_dict(info_map['url_params'], attr_map)
         url = url_function(**url_params)
@@ -158,7 +156,6 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
 def handle_bungie_table():
     """Fills Bungie table with all users in the clan"""
     # Destiny 2 changes results per page to be 100. Because there is a max of 100 people in the clan, we don't need the extra stuff here anymore.
-    # The Bungie table is going to match the account table for a while...
     session = Session()
     request_session = requests.Session()
     info_map = {'values' :{'id':[['bungieNetUserInfo', 'membershipId']]
@@ -224,6 +221,30 @@ def handle_character_table():
     table = Character
     define_params(query_table, info_map, character_url, iterator, table)
 
+def handle_character_total_table():
+    def activity_url(membership_type, membership_id, id):
+        return f"{URL_START}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?periodType=daily"
+    query_table = Character
+    iterator = ['Response']
+    table = CharacterTotalStats
+    info_map = {'attrs':{'id':'id'
+                        ,'membership_id':'membership_id'
+                        ,'name':'display_name'
+                        ,'membership_type':'membership_type'}
+            ,'kwargs':{'id':'id'}
+            ,'url_params':{'id':'id'
+                            ,'membership_type':'membership_type'
+                            ,'membership_id':'membership_id'}
+            ,'values':{'instance_id':[['activityDetails', 'instanceId']]
+                        ,'is_private':[['activityDetails', 'isPrivate']]
+                        ,'mode':[['activityDetails', 'mode']]
+                        ,'reference_id':[['activityDetails', 'referenceId']]
+                        ,'period':[['period']]
+                        ,'':[['values'], ['basic', 'value']]}
+            ,'statics':{'id':'id'}
+            ,'primary_keys':['id', 'mode', 'instance_id']}
+    define_params(query_table, info_map, activity_url, iterator, table)
+
 # def handle_character_instance_table():
 #     def activity_url(membership_type, membership_id, id):
 #         return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/Activities/?mode=None"
@@ -247,30 +268,6 @@ def handle_character_table():
 #             ,'statics':{'id':'id'}
 #             ,'primary_keys':['id', 'mode', 'instance_id']}
 #     define_params(query_table, info_map, activity_url, iterator, table)
-
-def handle_character_total_table():
-    def activity_url(membership_type, membership_id, id):
-        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?mode=allPvP"
-    query_table = Character
-    iterator = ['Response', 'activities']
-    table = CharacterTotalStats
-    info_map = {'attrs':{'id':'id'
-                        ,'membership_id':'membership_id'
-                        ,'name':'display_name'
-                        ,'membership_type':'membership_type'}
-            ,'kwargs':{'id':'id'}
-            ,'url_params':{'id':'id'
-                            ,'membership_type':'membership_type'
-                            ,'membership_id':'membership_id'}
-            ,'values':{'instance_id':[['activityDetails', 'instanceId']]
-                        ,'is_private':[['activityDetails', 'isPrivate']]
-                        ,'mode':[['activityDetails', 'mode']]
-                        ,'reference_id':[['activityDetails', 'referenceId']]
-                        ,'period':[['period']]
-                        ,'':[['values'], ['basic', 'value']]}
-            ,'statics':{'id':'id'}
-            ,'primary_keys':['id', 'mode', 'instance_id']}
-    define_params(query_table, info_map, activity_url, iterator, table)
 
 def handle_aggregate_tables():
     """Fills pvpAggregate and pveAggregate with aggregate stats."""
@@ -514,7 +511,7 @@ def json_request(request_session, url, out_file, message=""):
     #print(res.text)
     try:
         data = res.json()
-    except json.decoder.JSONDecode_error:
+    except json.decoder.JSONDecodeError:
         print(res.text)
         return None
     error_stat = data['ErrorStatus']
