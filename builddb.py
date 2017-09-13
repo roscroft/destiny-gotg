@@ -37,7 +37,7 @@ def build_db():
     session = Session()
     # handle_bungie_table()
     # handle_account_table()
-    handle_character_table()
+    # handle_character_table()
     handle_character_total_table()
     # handle_aggregate_tables()
     # handle_weapon_usage_table()
@@ -223,7 +223,7 @@ def handle_character_table():
 
 def handle_character_total_table():
     def activity_url(membership_type, membership_id, id):
-        return f"{URL_START}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?periodType=daily"
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/"
     query_table = Character
     iterator = ['Response']
     table = CharacterTotalStats
@@ -239,7 +239,6 @@ def handle_character_total_table():
                         ,'is_private':[['activityDetails', 'isPrivate']]
                         ,'mode':[['activityDetails', 'mode']]
                         ,'reference_id':[['activityDetails', 'referenceId']]
-                        ,'period':[['period']]
                         ,'':[['values'], ['basic', 'value']]}
             ,'statics':{'id':'id'}
             ,'primary_keys':['id', 'mode', 'instance_id']}

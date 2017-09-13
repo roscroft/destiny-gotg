@@ -47,7 +47,6 @@ class CharacterTotalStats(Base):
     __tablename__ = "characterTotalStats"
     id = Column(Integer, primary_key=True)
     mode = Column(String)
-    period = Column(DateTime)
     abilityKills = Column(Integer)
     activitiesEntered = Column(Integer)
     activitiesWon = Column(Integer)
