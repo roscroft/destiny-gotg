@@ -1,0 +1,4 @@
+1. Implement character weapon usage data pull (?groups=2)
+2. Implement character medal data pull when fixed (?groups=3)
+3. Implement character unique weapon usage data pull (?groups=103)
+4. Build Account tables from character tables (activities, weapons, medals, unique weapons)
