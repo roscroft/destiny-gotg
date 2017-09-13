@@ -39,11 +39,8 @@ def build_db():
     # handle_account_table()
     # handle_character_table()
     handle_character_total_table()
-    # handle_aggregate_tables()
     # handle_weapon_usage_table()
-    # handle_activity_stats_table()
     # handle_medal_table()
-    # handle_account_activity_mode_stats_table()
     # handle_reference_tables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
@@ -236,92 +233,10 @@ def handle_character_total_table():
             ,'url_params':{'id':'id'
                             ,'membership_type':'membership_type'
                             ,'membership_id':'membership_id'}
-            ,'values':{'':[['allTime'], ['basic', 'value']]
-                      ,'':[['allTime'], ['pga', 'value']]}
+            ,'values':{'':[['allTime'], ['basic', 'value']]}
             ,'statics':{'id':'id'}
             ,'primary_keys':['id', 'mode']}
     define_params(query_table, info_map, activity_url, iterator, table)
-
-# def handle_character_instance_table():
-#     def activity_url(membership_type, membership_id, id):
-#         return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/Activities/?mode=None"
-#     query_table = Character
-#     iterator = ['Response', 'activities']
-#     table = CharacterInstanceStats
-#     info_map = {'attrs':{'id':'id'
-#                         ,'membership_id':'membership_id'
-#                         ,'name':'display_name'
-#                         ,'membership_type':'membership_type'}
-#             ,'kwargs':{'id':'id'}
-#             ,'url_params':{'id':'id'
-#                             ,'membership_type':'membership_type'
-#                             ,'membership_id':'membership_id'}
-#             ,'values':{'instance_id':[['activityDetails', 'instanceId']]
-#                         ,'is_private':[['activityDetails', 'isPrivate']]
-#                         ,'mode':[['activityDetails', 'mode']]
-#                         ,'reference_id':[['activityDetails', 'referenceId']]
-#                         ,'period':[['period']]
-#                         ,'':[['values'], ['basic', 'value']]}
-#             ,'statics':{'id':'id'}
-#             ,'primary_keys':['id', 'mode', 'instance_id']}
-#     define_params(query_table, info_map, activity_url, iterator, table)
-
-def handle_aggregate_tables():
-    """Fills pvpAggregate and pveAggregate with aggregate stats."""
-    def aggregate_stats_url(membership_type, id):
-        return f"{URL_START}/Destiny/Stats/Account/{membership_type}/{id}"
-        # return f"{URL_START}/Destiny2/{membership_type}/Account/{id}/Stats/"
-    def alt_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table):
-        def fill_and_insert_dict(stats, table, statics):
-            add_list = []
-            insert_dict = {}
-            if stats == None:
-                return []
-            for stat in stats:
-                if 'pga' in stats[stat]:
-                    insert_dict[stat+'pg'] = stats[stat]['pga']['value']
-                insert_dict[stat] = stats[stat]['basic']['value']
-            insert_dict = {**insert_dict, **static_map}
-            insert_elem = table(**insert_dict)
-            primary_key_map = {}
-            for key in info_map['primary_keys']:
-                primary_key_map[key] = insert_dict[key]
-            #Upsert the element
-            add_list.append(upsert(table, primary_key_map, insert_elem, session))
-            add_list = [item for item in add_list if item is not None]
-            return add_list
-        #Actual request done here
-        data = json_request(request_session, url, out_file, message)
-        if data is None:
-            print("No data retrieved.")
-            return []
-        #dynamic_dict_index gives us the specific iterator in the json we'll be using - could be games, characters, weapons, etc.
-        tables = [PvPAggregate, PvEAggregate]
-        total_list = []
-        for table in tables:
-            if table == PvPAggregate:
-                mode = 'allPvP'
-            elif table == PvEAggregate:
-                mode = 'allPvE'
-            stats = dynamic_dict_index(data, iterator+[mode, 'allTime'])
-            total_list = total_list + fill_and_insert_dict(stats, table, static_map)
-        return total_list
-    
-    query_table = Account
-    info_map = {'attrs'  :{'id'             : 'id'
-                         ,'name'           : 'display_name'
-                         ,'membership_type' : 'membership_type'}
-              ,'kwargs' :{'id' : 'id'}
-              ,'url_params' :{'id'             : 'id'
-                             ,'membership_type' : 'membership_type'}
-              ,'values' :{'' : [[],[]]}
-              ,'statics' :{'id' : 'id'}
-              ,'primary_keys' : ['id']}
-    iterator = ['Response', 'mergedAllCharacters', 'results']
-    query_table = Account
-    table = PvPAggregate
-    define_params(query_table, info_map, aggregate_stats_url, iterator, table, alt_insert)
-
 
 def handle_weapon_usage_table():
     def weapon_url(id, membership_type):
@@ -344,26 +259,6 @@ def handle_weapon_usage_table():
     table = AccountWeaponUsage
     define_params(query_table, info_map, weapon_url, iterator, table)
 
-def handle_activity_stats_table():
-    def activity_url(id, membership_id, membership_type):
-        return f"{OLD_URL_START}/Destiny/Stats/AggregateActivityStats/{membership_type}/{membership_id}/{id}/"
-    query_table = Character
-    info_map = {'attrs' :{'id' : 'id'
-                        ,'membership_id' : 'membership_id'
-                        ,'name' : 'display_name'
-                        ,'membership_type' : 'membership_type'}
-              ,'kwargs' :{'id' : 'id'}
-              ,'url_params' :{'id' : 'id'
-                             ,'membership_id' : 'membership_id'
-                             ,'membership_type' : 'membership_type'}
-              ,'values' :{'activityHash' : [['activityHash']]
-                         ,'' : [['values'], ['basic', 'value']]}
-              ,'statics' :{'id' : 'id'}
-              ,'primary_keys' : ['id', 'activityHash']}
-    iterator = ['Response', 'data', 'activities']
-    table = CharacterActivityStats
-    define_params(query_table, info_map, activity_url, iterator, table)
-
 def handle_medal_table():
     def medal_url(id, membership_type):
         return f"{OLD_URL_START}/Destiny/Stats/Account/{membership_type}/{id}/?Groups=Medals"
@@ -380,30 +275,6 @@ def handle_medal_table():
     iterator = ['Response', 'mergedAllCharacters', 'merged', 'allTime']
     table = AccountMedals
     define_params(query_table, info_map, medal_url, iterator, table)
-
-def handle_account_activity_mode_stats_table():
-    def activity_mode_url(id, membership_type, mode):
-        return f"{OLD_URL_START}/Destiny/Stats/{membership_type}/{id}/0/?modes={mode}"
-    query_table = Account
-    mode_dict = {2:'story', 3:'strike', 4:'raid', 5:'allPvP', 6:'patrol', 7:'allPvE', 8:'pvpIntroduction', 9:'threeVsThree', 10:'control'
-               ,11 : 'lockdown', 12:'team', 13:'freeForAll', 14:'trialsOfOsiris', 15:'doubles', 16:'nightfall', 17:'heroic', 18:'allStrikes', 19:'ironBanner', 20:'allArena'
-               ,21 : 'arena', 22:'arenaChallenge', 23:'elimination', 24:'rift', 25:'allMayhem', 26:'mayhemClash', 27:'mayhemRumble', 28:'zoneControl', 29:'racing', 30:'arenaElderChallenge'
-               ,31 : 'supremacy', 32:'privateMatchesAll', 33:'supremacyRumble', 34:'supremacyClash', 35:'supremacyInferno', 36:'supremacyMayhem'}
-    table = AccountActivityModeStats
-    for mode in range(2,37):
-        info_map = {'attrs' :{'id' : 'id'
-                            ,'name' : 'display_name'
-                            ,'membership_type' : 'membership_type'}
-                ,'kwargs' :{'id' : 'id'}
-                ,'url_params' :{'id' : 'id'
-                                ,'membership_type' : 'membership_type'}
-                ,'values' :{'' : [[], ['basic', 'value']]}
-                ,'statics' :{'id' : 'id'
-                            ,'mode' : f'{modeDict[mode]}_actual'}
-                ,'primary_keys' : ['id', 'mode']}
-        partial_url = partial(activity_mode_url, mode=mode)
-        iterator = ['Response', f'{mode_dict[mode]}', 'allTime']
-        define_params(query_table, info_map, partial_url, iterator, table)
 
 def handle_reference_tables():
     """Connects to the manifest.content database and builds the necessary reference tables."""
@@ -498,7 +369,7 @@ def build_dict(dct, value_map):
                     out_dict[item] = dynamic_dict_index(loop_dict, [item]+val_list[1])
                 for item in loop_dict:
                     if 'pga' in item:
-                        out_dict[item+'pg'] = dynamic_dict_index(loop_dict, [item]+val_list[1])
+                        out_dict[item+'pg'] = dynamic_dict_index(loop_dict, [item]+['pga', 'value'])
             else:
                 out_dict[key] = dynamic_dict_index(loop_dict, val_list[1])
     return out_dict
