@@ -46,8 +46,9 @@ class Discord(Base):
 class CharacterTotalStats(Base):
     __tablename__ = "characterTotalStats"
     id = Column(Integer, primary_key=True)
-    mode = Column(String)
+    mode = Column(String, primary_key=True)
     abilityKills = Column(Integer)
+    activitiesCleared = Column(Integer)
     activitiesEntered = Column(Integer)
     activitiesWon = Column(Integer)
     allParticipantsCount = Column(Integer)
@@ -76,6 +77,7 @@ class CharacterTotalStats(Base):
     objectivesCompleted = Column(Integer)
     orbsDropped = Column(Integer)
     orbsGathered = Column(Integer)
+    publicEventsCompleted = Column(Integer)
     precisionKills = Column(Integer)
     remainingTimeAfterQuitSeconds = Column(Integer)
     resurrectionsPerformed = Column(Integer)

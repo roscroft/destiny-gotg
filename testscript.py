@@ -18,7 +18,7 @@ def testscript():
     # url_end = "/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
     # url_end = "/Destiny2/Stats/AggregateClanStats/1407546/"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/"
-    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?periodType=daily"
+    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/?mode=None"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/AggregateActivityStats/"
     # url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"

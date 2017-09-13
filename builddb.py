@@ -81,10 +81,12 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
             tuple_key_info = {}
             if table == CharacterTotalStats:
                 tuple_key_info = {'mode':elem[0]}
-            # This is as normal
-            tuple_value_info = build_dict(elem[1], info_map['values'])
-            # Combine the dicts
-            insert_dict = {**tuple_key_info, **tuple_value_info}
+                # This is as normal
+                tuple_value_info = build_dict(elem[1], info_map['values'])
+                # Combine the dicts
+                insert_dict = {**tuple_key_info, **tuple_value_info}
+            else:
+                insert_dict = build_dict(elem[1], info_map['values'])
         else:
             insert_dict = build_dict(elem, info_map['values'])
         #Handle Bungie's weird time format
@@ -96,7 +98,6 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         if 'statics' in info_map:
             insert_dict = {**insert_dict, **static_map}
         #Create a new element for insertion using kwargs
-        # print(insert_dict)
         insert_elem = table(**insert_dict)
         primary_key_map = {}
         for key in info_map['primary_keys']:
@@ -235,13 +236,10 @@ def handle_character_total_table():
             ,'url_params':{'id':'id'
                             ,'membership_type':'membership_type'
                             ,'membership_id':'membership_id'}
-            ,'values':{'instance_id':[['activityDetails', 'instanceId']]
-                        ,'is_private':[['activityDetails', 'isPrivate']]
-                        ,'mode':[['activityDetails', 'mode']]
-                        ,'reference_id':[['activityDetails', 'referenceId']]
-                        ,'':[['values'], ['basic', 'value']]}
+            ,'values':{'':[['allTime'], ['basic', 'value']]
+                      ,'':[['allTime'], ['pga', 'value']]}
             ,'statics':{'id':'id'}
-            ,'primary_keys':['id', 'mode', 'instance_id']}
+            ,'primary_keys':['id', 'mode']}
     define_params(query_table, info_map, activity_url, iterator, table)
 
 # def handle_character_instance_table():
@@ -498,6 +496,9 @@ def build_dict(dct, value_map):
             if key == '':
                 for item in loop_dict:
                     out_dict[item] = dynamic_dict_index(loop_dict, [item]+val_list[1])
+                for item in loop_dict:
+                    if 'pga' in item:
+                        out_dict[item+'pg'] = dynamic_dict_index(loop_dict, [item]+val_list[1])
             else:
                 out_dict[key] = dynamic_dict_index(loop_dict, val_list[1])
     return out_dict
