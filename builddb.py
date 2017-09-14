@@ -9,10 +9,10 @@ import sqlite3
 import requests
 import itertools
 from datetime import datetime
-from initdb import Base, Bungie, Account, Character, CharacterTotalStats, LastUpdated
+from initdb import Base, Bungie, Account, Character, CharacterTotalStats, CharacterWeaponStats, LastUpdated
 from destinygotg import Session, load_config
 from functools import partial
-import tableGenerator
+from sqlalchemy import func
 
 URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
@@ -34,12 +34,13 @@ def timeit(func, args=None):
 def build_db():
     """Main function to build the full database"""
     start_time = time.clock()
-    session = Session()
     # handle_bungie_table()
     # handle_account_table()
     # handle_character_table()
-    handle_character_total_table()
-    # handle_weapon_usage_table()
+    handle_account_updates()
+    # handle_character_total_table()
+    # handle_weapon_stats_table()
+    # handle_exotic_weapon_table()
     # handle_medal_table()
     # handle_reference_tables()
     print("--- %s seconds ---" % (time.clock() - start_time))
@@ -76,7 +77,7 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         if type(elem) == tuple:
             # We're in a dict, so we need to add info to the insert dict from the key and the value
             tuple_key_info = {}
-            if table == CharacterTotalStats:
+            if table == CharacterTotalStats or table == CharacterWeaponStats:
                 tuple_key_info = {'mode':elem[0]}
                 # This is as normal
                 tuple_value_info = build_dict(elem[1], info_map['values'])
@@ -136,10 +137,7 @@ def define_params(query_table, info_map, url_function, iterator, table, alt_inse
         if not to_update:
             print(f"Not updating {table.__tablename__} table for user: {attr_map['name']}")
             add_list = []
-        elif alt_insert == None:
-            add_list = request_and_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table)
-        else:
-            add_list = alt_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table)
+        add_list = request_and_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table)
         total_add_list = total_add_list + add_list
         #Upsert into LastUpdated
         update_id = attr_map[info_map['kwargs']['id']]
@@ -223,8 +221,6 @@ def handle_character_total_table():
     def activity_url(membership_type, membership_id, id):
         return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/"
     query_table = Character
-    iterator = ['Response']
-    table = CharacterTotalStats
     info_map = {'attrs':{'id':'id'
                         ,'membership_id':'membership_id'
                         ,'name':'display_name'
@@ -236,27 +232,46 @@ def handle_character_total_table():
             ,'values':{'':[['allTime'], ['basic', 'value']]}
             ,'statics':{'id':'id'}
             ,'primary_keys':['id', 'mode']}
+    iterator = ['Response']
+    table = CharacterTotalStats
     define_params(query_table, info_map, activity_url, iterator, table)
 
-def handle_weapon_usage_table():
-    def weapon_url(id, membership_type):
-        #0 can be used instead of character ids
-        return f"{OLD_URL_START}/Destiny/Stats/UniqueWeapons/{membership_type}/{id}/0"
-    query_table = Account
-    info_map = {'attrs' :{'id' : 'id'
-                        ,'name' : 'display_name'
-                        ,'membership_type' : 'membership_type'}
-              ,'kwargs' :{'id' : 'id'}
-              ,'url_params' :{'id' : 'id'
-                             ,'membership_type' : 'membership_type'}
-              ,'values' :{'weaponHash' : [['referenceId']]
-                         ,'kills' : [['values', 'uniqueWeaponKills', 'basic', 'value']]
-                         ,'precision_kills' : [['values', 'uniqueWeaponPrecisionKills', 'basic', 'value']]
-                         ,'precision_kill_percentage' : [['values', 'uniqueWeaponKillsPrecisionKills', 'basic', 'value']]}
-              ,'statics' :{'id' : 'id'}
-              ,'primary_keys' : ['id', 'weaponHash']}
-    iterator = ['Response', 'data', 'weapons']
-    table = AccountWeaponUsage
+def handle_weapon_stats_table():
+    def weapon_url(membership_type, membership_id, id):
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=2"
+    query_table = Character
+    info_map = {'attrs':{'id':'id'
+                        ,'membership_id':'membership_id'
+                        ,'name':'display_name'
+                        ,'membership_type':'membership_type'}
+            ,'kwargs':{'id':'id'}
+            ,'url_params':{'id':'id'
+                            ,'membership_type':'membership_type'
+                            ,'membership_id':'membership_id'}
+            ,'values':{'':[['allTime'], ['basic', 'value']]}
+            ,'statics':{'id':'id'}
+            ,'primary_keys':['id', 'mode']}
+    iterator = ['Response']
+    table = CharacterWeaponStats
+    define_params(query_table, info_map, weapon_url, iterator, table)
+
+def handle_exotic_weapon_table():
+    def weapon_url(membership_type, membership_id, id):
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=103"
+    query_table = Character
+    info_map = {'attrs':{'id':'id'
+                        ,'membership_id':'membership_id'
+                        ,'name':'display_name'
+                        ,'membership_type':'membership_type'}
+            ,'kwargs':{'id':'id'}
+            ,'url_params':{'id':'id'
+                            ,'membership_type':'membership_type'
+                            ,'membership_id':'membership_id'}
+            ,'values':{'':[['allTime'], ['basic', 'value']]}
+            ,'statics':{'id':'id'}
+            ,'primary_keys':['id', 'mode']}
+    iterator = ['Response']
+    table = CharacterExoticStats
     define_params(query_table, info_map, weapon_url, iterator, table)
 
 def handle_medal_table():
@@ -276,6 +291,19 @@ def handle_medal_table():
     table = AccountMedals
     define_params(query_table, info_map, medal_url, iterator, table)
 
+def handle_account_updates():
+    # Need to add records for max_light_level and minutes_played
+    # First, grab all account records
+    session = Session()
+    table = Account
+    elems = session.query(table).all()
+    add_list = []
+    for elem in elems:
+        max_light = session.query(func.max(Character.light_level)).join(Account).filter(Character.membership_id == elem.id).first()[0]
+        minutes_played = session.query(func.sum(Character.minutes_played)).join(Account).filter(Character.membership_id == elem.id).first()[0]
+        session.query(Account).filter(Account.id == elem.id).update({'max_light': max_light, 'total_minutes_played': minutes_played})
+    session.commit()
+    
 def handle_reference_tables():
     """Connects to the manifest.content database and builds the necessary reference tables."""
     session = Session()
