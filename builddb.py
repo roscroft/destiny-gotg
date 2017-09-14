@@ -9,7 +9,7 @@ import sqlite3
 import requests
 import itertools
 from datetime import datetime
-from initdb import Base, Bungie, Account, Character, CharacterTotalStats, CharacterWeaponStats, LastUpdated
+from initdb import Base, Bungie, Account, Character, CharacterTotalStats, CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats, LastUpdated
 from destinygotg import Session, load_config
 from functools import partial
 from sqlalchemy import func
@@ -37,11 +37,12 @@ def build_db():
     # handle_bungie_table()
     # handle_account_table()
     # handle_character_table()
-    handle_account_updates()
+    # handle_account_updates()
     # handle_character_total_table()
     # handle_weapon_stats_table()
     # handle_exotic_weapon_table()
     # handle_medal_table()
+    handle_filling_account_tables()
     # handle_reference_tables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
@@ -303,6 +304,25 @@ def handle_account_updates():
         minutes_played = session.query(func.sum(Character.minutes_played)).join(Account).filter(Character.membership_id == elem.id).first()[0]
         session.query(Account).filter(Account.id == elem.id).update({'max_light': max_light, 'total_minutes_played': minutes_played})
     session.commit()
+
+def handle_filling_account_tables():
+    # At a high level:
+    # 1. Anything that is an integer needs to summed, and
+    # 2. Anything that is a float needs to be averaged.
+    # In fact, let's just ignore anything that is a float, and recalculate those at out convenience.
+    # Every stat group has an activitiesEntered column we can use for per game stats.
+    session = Session()
+    tableList = [CharacterTotalStats, CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats]
+    for table in tableList:
+        elems = session.query(Account).all()
+        for elem in elems:
+            update_dict = {}
+            columns = table.__table__.columns.keys()
+            for column in columns:
+                col = [column]
+                if not column.endswith("pg"):
+                    update_dict[column] = session.query(func.sum(getattr(table, column))).join(Character).join(Account).filter(Character.membership_id == elem.id).first()[0]
+            # print(update_dict)
     
 def handle_reference_tables():
     """Connects to the manifest.content database and builds the necessary reference tables."""
