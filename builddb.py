@@ -13,7 +13,6 @@ from initdb import Base, Bungie, Account, Character, CharacterTotalStats, Charac
 from destinygotg import Session, load_config
 from functools import partial
 from sqlalchemy import func
-from sqlalchemy import Float
 from sqlalchemy.inspection import inspect
 
 URL_START = "https://bungie.net/Platform"
@@ -323,15 +322,45 @@ def handle_filling_account_tables():
     for source_table, dest_table in table_list:
         elems = session.query(Account).all()
         for elem in elems:
+            print(f"Updating {dest_table.__tablename__} table for {elem.display_name}.")
             for mode in mode_list:
                 update_dict = {}
                 all_columns = source_table.__table__.columns
-                columns = [(column.key, column.type) for column in all_columns]
+                columns = [(column.key, str(column.type)) for column in all_columns]
                 # Handle the averages later
-                basics = [column[0] for column in columns if not column[1] == Float and column[0] is not "id" and column[0] is not "mode"]
+                basics = [column[0] for column in columns if not column[1] == "FLOAT" and column[0] is not "id" and column[0] is not "mode"]
+                pgas = [column[0] for column in columns if column[1] == "FLOAT"]
                 for column in basics:
                     col = [column]
                     value = session.query(func.sum(*(getattr(source_table, column) for column in col))).join(Character).filter(Character.membership_id == elem.id, source_table.mode == mode).first()[0]
+                    update_dict[column] = value
+                for column in pgas:
+                    try:
+                        deaths = update_dict["deaths"]
+                        if deaths == 0:
+                            deaths = 1
+                        kills = update_dict["kills"]
+                        activities = update_dict["activitiesEntered"]
+                        if column == "killsDeathsRatio":
+                            value = (kills*1.0)/deaths
+                        elif column == "killsDeathsAssists":
+                            value = (kills*1.0 + update_dict["assists"])/deaths
+                        elif column == "averageDeathDistance":
+                            value = (update_dict["totalDeathDistance"]*1.0)/deaths
+                        elif column == "averageKillDistance":
+                            value = (update_dict["totalKillDistance"]*1.0)/kills
+                        elif column == "averageLifespan":
+                            value = (update_dict["secondsPlayed"]*1.0)/deaths
+                        elif column == "averageScorePerKill":
+                            value = (update_dict["score"]*1.0)/kills
+                        elif column == "averageScorePerLife":
+                            value = (update_dict["score"]*1.0)/deaths
+                        elif column.startswith("weaponKillsPrecisionKills"):
+                            value = (update_dict[f"weaponPrecisionKills{column[25:]}"]*1.0)/update_dict[f"weaponKills{column[25:]}"]
+                        elif column.endswith("pg"):
+                            value = (update_dict[column[:-2]]*1.0)/update_dict["activitiesEntered"]
+                    except (KeyError, TypeError):
+                        value = None
                     update_dict[column] = value
                 update_dict["id"] = elem.id
                 update_dict["mode"] = mode
