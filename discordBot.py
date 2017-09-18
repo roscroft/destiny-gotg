@@ -78,12 +78,16 @@ def run_bot(engine):
         if message.content.startswith('!timeleft'):
             output = time_left()
             await client.send_message(message.channel, output)
+
         elif message.content.startswith('!help'):
             await client.send_message(message.channel, 'See the #command-list channel for a list of commands.')
+
         elif message.content.startswith('Right Gary?'):
             await client.send_message(message.channel, 'Right.')
+
         elif message.content.startswith('Say goodbye'):
             await client.send_message(message.channel, 'beep boop')
+
         elif message.content.startswith('!sql'):
             role_list = [role.name for role in message.author.roles]
             if "@administrator" in role_list and "bot developer" in role_list:
@@ -93,11 +97,14 @@ def run_bot(engine):
                 await query_database(channel, statement, connection)
             else:
                 await client.send_message(message.channel, "Permission denied!")
+
         # elif message.author.name == "Roscroft" and message.channel.is_private:
         #     if not message.content == "Roscroft":
         #         await client.send_message(discord.Object(id='322173351059521537'), message.content)
+
         elif message.content.startswith('!channel-id'):
             print(message.channel.id)
+
         elif message.content.startswith("!stat"):
             player = await register_handler(message.author)
             content = message.content
@@ -115,17 +122,21 @@ def run_bot(engine):
                 await client.send_message(message.channel, embed=output)
             else:
                 await client.send_message(message.channel, "```Invalid stat request.```")
+
         elif message.content.startswith("!clangraph"):
             content = message.content
             player = await register_handler(message.author)
             valid, authplayer, code, stat = validate_clan_stat(player, content)
             output = clan_graph_request(authplayer, code, stat)
             await client.send_file(message.channel, './Figures/hist.png')
+
         elif message.content.startswith("!clanstat"):
             pass
+
         elif message.content.startswith("!members"):
             num_members = Session().query(func.count(Bungie.id)).first()[0]
             await client.send_message(message.channel, num_members)
+
         elif message.content.startswith('!light'):
             player = await register_handler(message.author)
             data = light_level_request(player)
@@ -136,6 +147,12 @@ def run_bot(engine):
 
     client.run(os.environ['DISCORD_APIKEY'])
     
+def parse_request(player, content):
+    
+
+
+
+
 # Stat number codes - 0: Not a stat, 1: PvP/PvE aggregate, 2: Medal
 def validate(player, content):
     stat_list = content.split(" ")[1:]
