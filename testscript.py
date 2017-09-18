@@ -18,7 +18,7 @@ def testscript():
     # url_end = "/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=3"
     # url_end = "/Destiny2/Stats/AggregateClanStats/1407546/"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/"
-    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=103"
+    url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/?groups=2"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats/?groups=2"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/?mode=None"
     # url_end = f"/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/AggregateActivityStats/"

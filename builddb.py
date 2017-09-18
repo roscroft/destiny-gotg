@@ -9,16 +9,18 @@ import sqlite3
 import requests
 import itertools
 from datetime import datetime
-from initdb import Base, Bungie, Account, Character, CharacterTotalStats, CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats, LastUpdated
+from initdb import Base, Bungie, Account, Character, CharacterTotalStats, CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats, AccountTotalStats, AccountWeaponStats, AccountExoticWeaponStats, AccountMedalStats, LastUpdated
 from destinygotg import Session, load_config
 from functools import partial
 from sqlalchemy import func
+from sqlalchemy import Float
+from sqlalchemy.inspection import inspect
 
 URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
-write_files = False
-# write_files = True
+# write_files = False
+write_files = True
 
 def make_header():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -34,12 +36,12 @@ def timeit(func, args=None):
 def build_db():
     """Main function to build the full database"""
     start_time = time.clock()
-    # handle_bungie_table()
-    # handle_account_table()
-    # handle_character_table()
-    # handle_account_updates()
-    # handle_character_total_table()
-    # handle_weapon_stats_table()
+    handle_bungie_table()
+    handle_account_table()
+    handle_character_table()
+    handle_account_updates()
+    handle_character_total_table()
+    handle_weapon_stats_table()
     # handle_exotic_weapon_table()
     # handle_medal_table()
     handle_filling_account_tables()
@@ -302,7 +304,9 @@ def handle_account_updates():
     for elem in elems:
         max_light = session.query(func.max(Character.light_level)).join(Account).filter(Character.membership_id == elem.id).first()[0]
         minutes_played = session.query(func.sum(Character.minutes_played)).join(Account).filter(Character.membership_id == elem.id).first()[0]
-        session.query(Account).filter(Account.id == elem.id).update({'max_light': max_light, 'total_minutes_played': minutes_played})
+        most_recently_played = session.query(func.max(Character.last_played)).join(Account).filter(Character.membership_id == elem.id).first()[0]
+        session.query(Account).filter(Account.id == elem.id).update({'max_light': max_light, 
+            'total_minutes_played': minutes_played, 'most_recently_played': most_recently_played})
     session.commit()
 
 def handle_filling_account_tables():
@@ -312,18 +316,41 @@ def handle_filling_account_tables():
     # In fact, let's just ignore anything that is a float, and recalculate those at out convenience.
     # Every stat group has an activitiesEntered column we can use for per game stats.
     session = Session()
-    tableList = [CharacterTotalStats, CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats]
-    for table in tableList:
+    table_list = [(CharacterTotalStats, AccountTotalStats), (CharacterWeaponStats, AccountWeaponStats)]
+                 #, (CharacterMedalStats, AccountMedalStats)]
+    mode_list = ["allPvP", "allStrikes", "story", "patrol"]
+    add_list = []
+    for source_table, dest_table in table_list:
         elems = session.query(Account).all()
         for elem in elems:
-            update_dict = {}
-            columns = table.__table__.columns.keys()
-            for column in columns:
-                col = [column]
-                if not column.endswith("pg"):
-                    update_dict[column] = session.query(func.sum(getattr(table, column))).join(Character).join(Account).filter(Character.membership_id == elem.id).first()[0]
-            # print(update_dict)
-    
+            for mode in mode_list:
+                update_dict = {}
+                all_columns = source_table.__table__.columns
+                columns = [(column.key, column.type) for column in all_columns]
+                # Handle the averages later
+                basics = [column[0] for column in columns if not column[1] == Float and column[0] is not "id" and column[0] is not "mode"]
+                for column in basics:
+                    col = [column]
+                    value = session.query(func.sum(*(getattr(source_table, column) for column in col))).join(Character).filter(Character.membership_id == elem.id, source_table.mode == mode).first()[0]
+                    update_dict[column] = value
+                update_dict["id"] = elem.id
+                update_dict["mode"] = mode
+                insert_elem = dest_table(**update_dict)
+                primary_key_map = {}
+                primary_key_list = [key.name for key in inspect(source_table).primary_key]
+                for key in primary_key_list:
+                    primary_key_map[key] = getattr(insert_elem, key)
+                #Upsert the element
+                add_list.append(upsert(dest_table, primary_key_map, insert_elem, session))
+    session.add_all(add_list)
+    session.commit()
+
+# def handle_filling_account_table_averages():
+#     session = Session()
+#     table_list = [AccountTotalStats, AccountWeaponStats]
+#     for table in table_list:
+
+
 def handle_reference_tables():
     """Connects to the manifest.content database and builds the necessary reference tables."""
     session = Session()
