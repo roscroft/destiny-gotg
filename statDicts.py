@@ -36,7 +36,7 @@ def return_info(request, player):
             print "Use 'vs' without quotes to compare stats with others."
             return None
         elif not valid_player_list:
-            print "One or more of the players you listed is not in the clan, or is not spelled properly."
+            print "One or more of the players you listed is not in the clan, or is not spelled proPerly."
             return None
     return_dict = {}
     return_dict["mode"] = mode_dict[c_mode]
@@ -53,8 +53,7 @@ mode_dict = {"pvp": "allPvP"
             ,"story": "story"
             ,"patrol": "patrol"}
 
-stat_dict = {"akills": {"table": AccountTotalStats, "column": "abilityKills", "message": "Total Number of Ability Kills"}
-            ,"clears": {"table": AccountTotalStats, "column": "activitiesCleared", "message": "Total Activities Cleared"}
+stat_dict = {"clears": {"table": AccountTotalStats, "column": "activitiesCleared", "message": "Total Activities Cleared"}
             ,"games": {"table": AccountTotalStats, "column": "activitiesEntered", "message": "Total Activities Entered"}
             ,"wins": {"table": AccountTotalStats, "column": "activitiesWon", "message": "Total Activities Won"}
             ,"adventures": {"table": AccountTotalStats, "column": "adventuresCompleted", "message": "Total Activities Won"}
@@ -65,8 +64,8 @@ stat_dict = {"akills": {"table": AccountTotalStats, "column": "abilityKills", "m
             ,"avgdeathdist": {"table": AccountTotalStats, "column": "averageDeathDistance", "message": "Average Death Distance"}
             ,"avgkilldist": {"table": AccountTotalStats, "column": "averageKillDistance", "message": "Average Kill Distance"}
             ,"avglife": {"table": AccountTotalStats, "column": "averageLifespan", "message": "Average Lifespan"}
-            ,"scoreperkill": {"table": AccountTotalStats, "column": "averageScorePerKill", "message": "Average Score per Kill"}
-            ,"scoreperlife": {"table": AccountTotalStats, "column": "averageScorePerLife", "message": "Average Score per Life"}
+            ,"scorePerkill": {"table": AccountTotalStats, "column": "averageScorePerKill", "message": "Average Score Per Kill"}
+            ,"scorePerlife": {"table": AccountTotalStats, "column": "averageScorePerLife", "message": "Average Score Per Life"}
             ,"bgk": {"table": AccountTotalStats, "column": "bestSingleGameKills", "message": "Best Single Game Kills"}
             ,"bgs": {"table": AccountTotalStats, "column": "bestSingleGameScore", "message": "Best Single Game Score"}
             ,"cbr": {"table": AccountTotalStats, "column": "combatRating", "message": "Combat Rating"}
@@ -88,7 +87,7 @@ stat_dict = {"akills": {"table": AccountTotalStats, "column": "abilityKills", "m
             ,"publics": {"table": AccountTotalStats, "column": "publicEventsCompleted", "message": "Public Events Completed"}
             ,"precisions": {"table": AccountTotalStats, "column": "precisionKills", "message": "Total Precision Kills"}
             ,"timeleft": {"table": AccountTotalStats, "column": "remainingTimeAfterQuitSeconds", "message": "Time Left After Quitting (s)"}
-            ,"resperformed": {"table": AccountTotalStats, "column": "resurrectionsPerformed", "message": "Total Resurrections Performed"}
+            ,"resPerformed": {"table": AccountTotalStats, "column": "resurrectionsPerformed", "message": "Total Resurrections Performed"}
             ,"resreceived": {"table": AccountTotalStats, "column": "resurrectionsReceived", "message": "Total Resurrections Received"}
             ,"score": {"table": AccountTotalStats, "column": "score", "message": "Total Score"}
             ,"time": {"table": AccountTotalStats, "column": "secondsPlayed", "message": "Time Played (s)"}
@@ -98,91 +97,130 @@ stat_dict = {"akills": {"table": AccountTotalStats, "column": "abilityKills", "m
             ,"deathdist": {"table": AccountTotalStats, "column": "totalDeathDistance", "message": "Total Death Distance"}
             ,"killdist": {"table": AccountTotalStats, "column": "totalKillDistance", "message": "Total Kill Distance"}
             ,"bestweapon": {"table": AccountTotalStats, "column": "weaponBestType", "message": "Best Weapon Type"}
-            ,"akills2": {"table": AccountTotalStats, "column": "weaponKillsAbility", "message": "Total Ability Kills"}
-            ,"arkills": {"table": AccountTotalStats, "column": "weaponKillsAutoRifle", "message": "Assault Rifle Kills"}
-            ,"frkills": {"table": AccountTotalStats, "column": "weaponKillsFusionRifle", "message": "Fusion Rifle Kills"}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsGrenade", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsGrenadeLauncher", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsHandCannon", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsMachinegun", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsMelee", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsPulseRifle", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsRelic", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsRocketLauncher", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsScoutRifle", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsShotgun", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSideArm", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSniper", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSubmachinegun", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSuper", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSword", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "winLossRatio", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "abilityKillspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "assistspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "deathspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "killspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "objectivesCompletedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "orbsDroppedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "orbsGatheredpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "precisionKillspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "publicEventsCompletedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "publicEventsJoinedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "remainingTimeAfterQuitSecondspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "resurrectionsPerformedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "resurrectionsReceivedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "scorepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "secondsPlayedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "suicidespg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "teamScorepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "totalActivityDurationSecondspg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsAutoRiflepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsHandCannonpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsFusionRiflepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsGrenadepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsGrenadeLauncherpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsMachinegunpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsMeleepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsPulseRiflepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsRelicpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsRocketLauncherpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsScoutRiflepg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsShotgunpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSideArmpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSniperpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSubmachinegunpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSuperpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "weaponKillsSwordpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "zonesCapturedpg", "message": " "}
-            ," ": {"table": AccountTotalStats, "column": "zonesNeutralizedpg", "message": " "}
+            ,"wlr": {"table": AccountTotalStats, "column": "winLossRatio", "message": "Win Loss Ratio"}
+            ,"akillspg": {"table": AccountTotalStats, "column": "abilityKillspg", "message": "Ability Kills Per Game"}
+            ,"apg": {"table": AccountTotalStats, "column": "assistspg", "message": "Assists Per Game"}
+            ,"dpg": {"table": AccountTotalStats, "column": "deathspg", "message": "Deaths Per Game"}
+            ,"kpg": {"table": AccountTotalStats, "column": "killspg", "message": "Kills Per Game"}
+            ,"objpg": {"table": AccountTotalStats, "column": "objectivesCompletedpg", "message": "Objectives Completed Per Game"}
+            ,"odpg": {"table": AccountTotalStats, "column": "orbsDroppedpg", "message": "Orbs Dropped Per Game"}
+            ,"ogpg": {"table": AccountTotalStats, "column": "orbsGatheredpg", "message": "Orbs Gathered Per Game"}
+            ,"pkpg": {"table": AccountTotalStats, "column": "precisionKillspg", "message": "Precision Kills Per Game"}
+            ,"pecpg": {"table": AccountTotalStats, "column": "publicEventsCompletedpg", "message": "Public Events Completed Per Game"}
+            ,"pejpg": {"table": AccountTotalStats, "column": "publicEventsJoinedpg", "message": "Public Events Joined Per Game"}
+            ,"timeleftpg": {"table": AccountTotalStats, "column": "remainingTimeAfterQuitSecondspg", "message": "Time Left After Quitting (s) Per Game"}
+            ,"resppg": {"table": AccountTotalStats, "column": "resurrectionsPerformedpg", "message": "Resurrections Performed Per Game"}
+            ,"resrpg": {"table": AccountTotalStats, "column": "resurrectionsReceivedpg", "message": "Resurrections Received Per Game"}
+            ,"scpg": {"table": AccountTotalStats, "column": "scorepg", "message": "Score Per Game"}
+            ,"timepg": {"table": AccountTotalStats, "column": "secondsPlayedpg", "message": "Seconds Played Per Game"}
+            ,"spg": {"table": AccountTotalStats, "column": "suicidespg", "message": "Suicides Per Game"}
+            ,"tscpg": {"table": AccountTotalStats, "column": "teamScorepg", "message": "Team Score Per Game"}
+            ,"acttimepergame": {"table": AccountTotalStats, "column": "totalActivityDurationSecondspg", "message": "Total Activity Time (s) Per Game"}
+            ,"zcpg": {"table": AccountTotalStats, "column": "zonesCapturedpg", "message": "Zones Captured Per Game"}
+            ,"znpg": {"table": AccountTotalStats, "column": "zonesNeutralizedpg", "message": "Zones Neutralized Per Game"}
+            ,"akills": {"table": AccountWeaponStats, "column": "weaponKillsAbility", "message": ""}
+            ,"arkills": {"table": AccountWeaponStats, "column": "weaponKillsAutoRifle", "message": ""}
+            ,"frkills": {"table": AccountWeaponStats, "column": "weaponKillsFusionRifle", "message": ""}
+            ,"gkills": {"table": AccountWeaponStats, "column": "weaponKillsGrenade", "message": ""}
+            ,"glkills": {"table": AccountWeaponStats, "column": "weaponKillsGrenadeLauncher", "message": ""}
+            ,"hckills": {"table": AccountWeaponStats, "column": "weaponKillsHandCannon", "message": ""}
+            ,"mgkills": {"table": AccountWeaponStats, "column": "weaponKillsMachinegun", "message": ""}
+            ,"mkills": {"table": AccountWeaponStats, "column": "weaponKillsMelee", "message": ""}
+            ,"arpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsAutoRifle", "message": ""}
+            ,"frpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsFusionRifle", "message": ""}
+            ,"gpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsGrenade", "message": ""}
+            ,"glpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsGrenadeLauncher", "message": ""}
+            ,"hcpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsHandCannon", "message": ""}
+            ,"mgpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsMachinegun", "message": ""}
+            ,"mpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsMelee", "message": ""}
+            ,"prpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsPulseRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsRelic", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsRocketLauncher", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsScoutRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsShotgun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSideArm", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSniper", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSubmachinegun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSuper", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPulseRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRelic", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRocketLauncher", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsScoutRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsShotgun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSideArm", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSniper", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSubmachinegun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSuper", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSword", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsAutoRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsFusionRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenade", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadeLauncher", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsHandCannon", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMachinegun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMelee", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsPulseRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRelic", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRocketLauncher", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsScoutRifle", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsShotgun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSideArm", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSniper", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSubmachinegun", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSuper", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsAbilitypg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsAutoRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsFusionRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsGrenadepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsGrenadeLauncherpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsHandCannonpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsMachinegunpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsMeleepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPulseRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRelicpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRocketLauncherpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsScoutRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsShotgunpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSideArmpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSniperpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSubmachinegunpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSuperpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSwordpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsAutoRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsFusionRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadeLauncherpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsHandCannonpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMachinegunpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMeleepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsPulseRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRelicpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRocketLauncherpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsScoutRiflepg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsShotgunpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSideArmpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSniperpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSubmachinegunpg", "message": ""}
+            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSuperpg", "message": ""}
 
-stat_dict = {"kd": (AccountTotalStats, "killsDeathsRatio", "Kill/Death Ratio")
-            ,"kda": (AccountTotalStats, "killsDeathsAssists", "Kill/Assists/Death Ratio")
-            ,"wl": (AccountTotalStats, "winLossRatio", "Win/Loss Ratio")
-            ,"bgs": (AccountTotalStats, "bestSingleGameScore", "Best Single Game Score")
-            ,"lks": (AccountTotalStats, "longestKillSpree", "Longest Kill Spree")
-            ,"suicides": (AccountTotalStats, "suicides", "Total Number of Suicides")
-            ,"suicidespg": (AccountTotalStats, "suicidespg", "Suicides per Game")
-            ,"mk": (AccountTotalStats, "bestSingleGameKills", "Best Single Game Kills")
-            ,"kills": (AccountTotalStats, "kills", "Total Number of Kills")
-            ,"killspg": (AccountTotalStats, "killspg", "Kills per Game")
-            ,"deaths": (AccountTotalStats, "deaths", "Total Number of Deaths")
-            ,"deathspg": (AccountTotalStats, "deathspg", "Deaths per Game")
-            ,"assists": (AccountTotalStats, "assists", "Total Number of Assists")
-            ,"assistspg": (AccountTotalStats, "assistspg", "Assists Per Game")
-            ,"cr": (AccountTotalStats, "combatRating", "Combat Rating")
-            ,"pkills": (AccountTotalStats, "precisionKills", "Total Number of Precision Kills")
-            ,"score": (AccountTotalStats, "score", "Total score")
-            ,"scorepg": (AccountTotalStats, "scorepg", "Score per Game")
-            ,"crucibletime": (AccountTotalStats, "secondsPlayed", "Total Seconds in the Crucible")
-            ,"akillspg": (AccountTotalStats, "abilityKillspg", "Ability Kills per Game")
-            ,"mkills": (AccountTotalStats, "weaponKillsMelee", "Total Number of Melee Kills")
-            ,"mkillspg": (AccountTotalStats, "weaponKillsMeleepg", "Melee Kills per Game")
-            ,"gkills": (AccountTotalStats, "weaponKillsGrenade", "Total Number of Grenade Kills")
-            ,"gkillspg": (AccountTotalStats, "weaponKillsGrenadepg", "Grenade Kills per Game")
-            ,"games": (AccountTotalStats, "activitiesEntered", "Total Number of Activities Entered")
-            ,"wins": (AccountTotalStats, "activitiesWon", "Total Number of Activities Won")
-            ,"lsl": (AccountTotalStats, "longestSingleLife", "Longest Single Life")
-            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # medal_dict = { "activities": (AccountMedalStats, "activitiesEntered", "Activities Entered")
 #              ,"totalmedals": (AccountMedalStats, "allMedalsEarned", "Total Number of Medals")
@@ -204,7 +242,7 @@ stat_dict = {"kd": (AccountTotalStats, "killsDeathsRatio", "Kill/Death Ratio")
 #              ,"lonewolf": (AccountMedalStats, "medalsActivityCompleteLonewolf", "Lone Wolf")
 #              ,"saboteur": (AccountMedalStats, "medalsActivityCompleteSalvageMostCancels", "Saboteur")
 #              ,"shutout": (AccountMedalStats, "medalsActivityCompleteSalvageShutout", "Shutout")
-#              ,"perfectrunner": (AccountMedalStats, "medalsActivityCompleteSingularityPerfectRunner", "Perfect Runner")
+#              ,"Perfectrunner": (AccountMedalStats, "medalsActivityCompleteSingularityPerfectRunner", "Perfect Runner")
 #              ,"decisivevictory": (AccountMedalStats, "medalsActivityCompleteVictoryBlowout", "Decisive Victory")
 #              ,"victory": (AccountMedalStats, "medalsActivityCompleteVictory", "Victory")
 #              ,"trialbyfire": (AccountMedalStats, "medalsActivityCompleteVictoryElimination", "Trial by Fire")
@@ -245,7 +283,7 @@ stat_dict = {"kd": (AccountTotalStats, "killsDeathsRatio", "Kill/Death Ratio")
 #              ,"tripledown": (AccountMedalStats, "medalsKillMulti3", "Triple Down")
 #              ,"breaker": (AccountMedalStats, "medalsKillMulti4", "Breaker")
 #              ,"slayer": (AccountMedalStats, "medalsKillMulti5", "Slayer")
-#              ,"reaper": (AccountMedalStats, "medalsKillMulti6", "Reaper")
+#              ,"reaPer": (AccountMedalStats, "medalsKillMulti6", "ReaPer")
 #              ,"seventhcolumn": (AccountMedalStats, "medalsKillMulti7", "Seventh Column")
 #              ,"postmortem": (AccountMedalStats, "medalsKillPostmortem", "Postmortem")
 #              ,"merciless": (AccountMedalStats, "medalsKillSpree1", "Merciless")
@@ -293,7 +331,7 @@ stat_dict = {"kd": (AccountTotalStats, "killsDeathsRatio", "Kill/Death Ratio")
 #              ,"scoutshonor": (AccountMedalStats, "medalsWeaponScoutRifleKillSpree", "Scout's Honor")
 #              ,"buckshotbruiser": (AccountMedalStats, "medalsWeaponShotgunKillSpree", "Buckshot Bruiser")
 #              ,"sidekick": (AccountMedalStats, "medalsWeaponSidearmKillSpree", "Sidekick")
-#              ,"marksman": (AccountMedalStats, "medalsWeaponSniperRifleHeadshotSpree", "Marksman")
+#              ,"marksman": (AccountMedalStats, "medalsWeaponSniPerRifleHeadshotSpree", "Marksman")
 #              ,"swordatagunfight": (AccountMedalStats, "medalsWeaponSwordKillSpree", "Sword at a Gun Fight")
 #              ,"nailinthecoffin": (AccountMedalStats, "medalsWinningScore", "Nail in the Coffin")
 #              ,"bline": (AccountMedalStats, "medalsZoneCapturedBInitial", "B-Line")
