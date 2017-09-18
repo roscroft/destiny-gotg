@@ -36,12 +36,12 @@ def timeit(func, args=None):
 def build_db():
     """Main function to build the full database"""
     start_time = time.clock()
-    handle_bungie_table()
-    handle_account_table()
-    handle_character_table()
-    handle_account_updates()
-    handle_character_total_table()
-    handle_weapon_stats_table()
+    # handle_bungie_table()
+    # handle_account_table()
+    # handle_character_table()
+    # handle_account_updates()
+    # handle_character_total_table()
+    # handle_weapon_stats_table()
     # handle_exotic_weapon_table()
     # handle_medal_table()
     handle_filling_account_tables()
@@ -342,6 +342,7 @@ def handle_filling_account_tables():
                     primary_key_map[key] = getattr(insert_elem, key)
                 #Upsert the element
                 add_list.append(upsert(dest_table, primary_key_map, insert_elem, session))
+    add_list = [item for item in add_list if item is not None]
     session.add_all(add_list)
     session.commit()
 
