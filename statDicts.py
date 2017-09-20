@@ -1,52 +1,5 @@
 from initdb import AccountTotalStats, AccountWeaponStats
 
-def check_players(player_list):
-    players_are_valid = [True if player in all_players else False for player in player_list]
-    return all(players_are_valid)
-
-def return_info(request, player):
-    #Table name, primary keys (id and mode), column name(s), player name(s), message
-    #TODO: update this with other modes
-    info = request.split(" ")
-    command = info[0]
-    c_mode = info[1]
-    c_stat = info[2]
-    multi = False
-    if len(info) > 3:
-        multi = True
-        vs = info[3]
-        player_list = info[4:]
-    valid_command = c_command in command_dict.keys()
-    valid_mode = c_mode in mode_dict.keys()
-    valid_stat = c_stat in stat_dict.keys()
-    if multi:
-        valid_vs = vs == "vs"
-        valid_player_list = check_players(player_list)
-    if not valid_command:
-        print "Invalid command. Try !help for a list of possible commands."
-        return None
-    elif not valid_mode:
-        print f"Invalid mode. Available modes are {mode_dict.keys()}."
-        return None
-    elif not valid_stat:
-        print "Invalid stat. See the #command-list channel for a list of valid stats."
-        return None
-    if multi:
-        elif not valid_vs:
-            print "Use 'vs' without quotes to compare stats with others."
-            return None
-        elif not valid_player_list:
-            print "One or more of the players you listed is not in the clan, or is not spelled proPerly."
-            return None
-    return_dict = {}
-    return_dict["mode"] = mode_dict[c_mode]
-    return_dict["table"] = stat_dict[c_stat][table]
-    return_dict["column"] = stat_dict[c_stat][column]
-    return_dict["message"] = stat_dict[c_stat][message]
-    return_dict["players"] = [player]
-    if multi:
-        return_dict["players"] = players + player_list
-    return return_dict
 
 mode_dict = {"pvp": "allPvP"
             ,"strike": "allStrikes"
@@ -134,93 +87,75 @@ stat_dict = {"clears": {"table": AccountTotalStats, "column": "activitiesCleared
             ,"mgpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsMachinegun", "message": ""}
             ,"mpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsMelee", "message": ""}
             ,"prpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsPulseRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsRelic", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsRocketLauncher", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsScoutRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsShotgun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSideArm", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSniper", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSubmachinegun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSuper", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPulseRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRelic", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRocketLauncher", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsScoutRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsShotgun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSideArm", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSniper", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSubmachinegun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSuper", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSword", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsAutoRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsFusionRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenade", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadeLauncher", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsHandCannon", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMachinegun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMelee", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsPulseRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRelic", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRocketLauncher", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsScoutRifle", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsShotgun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSideArm", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSniper", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSubmachinegun", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSuper", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsAbilitypg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsAutoRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsFusionRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsGrenadepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsGrenadeLauncherpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsHandCannonpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsMachinegunpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsMeleepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsPulseRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRelicpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsRocketLauncherpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsScoutRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsShotgunpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSideArmpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSniperpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSubmachinegunpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSuperpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponKillsSwordpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsAutoRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsFusionRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadeLauncherpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsHandCannonpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMachinegunpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMeleepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsPulseRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRelicpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRocketLauncherpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsScoutRiflepg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsShotgunpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSideArmpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSniperpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSubmachinegunpg", "message": ""}
-            ,"": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSuperpg", "message": ""}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            ,"rpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsRelic", "message": ""}
+            ,"rlpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsRocketLauncher", "message": ""}
+            ,"srpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsScoutRifle", "message": ""}
+            ,"shpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsShotgun", "message": ""}
+            ,"sapkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSideArm", "message": ""}
+            ,"snpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSniper", "message": ""}
+            ,"smgpkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSubmachinegun", "message": ""}
+            ,"supkillpct": {"table": AccountWeaponStats, "column": "weaponKillsPrecisionKillsSuper", "message": ""}
+            ,"prkills": {"table": AccountWeaponStats, "column": "weaponKillsPulseRifle", "message": ""}
+            ,"rkills": {"table": AccountWeaponStats, "column": "weaponKillsRelic", "message": ""}
+            ,"rlkills": {"table": AccountWeaponStats, "column": "weaponKillsRocketLauncher", "message": ""}
+            ,"srkills": {"table": AccountWeaponStats, "column": "weaponKillsScoutRifle", "message": ""}
+            ,"shkills": {"table": AccountWeaponStats, "column": "weaponKillsShotgun", "message": ""}
+            ,"sakills": {"table": AccountWeaponStats, "column": "weaponKillsSideArm", "message": ""}
+            ,"snkills": {"table": AccountWeaponStats, "column": "weaponKillsSniper", "message": ""}
+            ,"smgkills": {"table": AccountWeaponStats, "column": "weaponKillsSubmachinegun", "message": ""}
+            ,"sukills": {"table": AccountWeaponStats, "column": "weaponKillsSuper", "message": ""}
+            ,"swkills": {"table": AccountWeaponStats, "column": "weaponKillsSword", "message": ""}
+            ,"arpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsAutoRifle", "message": ""}
+            ,"frpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsFusionRifle", "message": ""}
+            ,"gpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenade", "message": ""}
+            ,"glpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadeLauncher", "message": ""}
+            ,"hcpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsHandCannon", "message": ""}
+            ,"mgpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMachinegun", "message": ""}
+            ,"mpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMelee", "message": ""}
+            ,"prpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsPulseRifle", "message": ""}
+            ,"rpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRelic", "message": ""}
+            ,"rlpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRocketLauncher", "message": ""}
+            ,"srpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsScoutRifle", "message": ""}
+            ,"shpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsShotgun", "message": ""}
+            ,"sapkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSideArm", "message": ""}
+            ,"snpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSniper", "message": ""}
+            ,"smgpkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSubmachinegun", "message": ""}
+            ,"supkills": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSuper", "message": ""}
+            ,"akpg": {"table": AccountWeaponStats, "column": "weaponKillsAbilitypg", "message": ""}
+            ,"arkpg": {"table": AccountWeaponStats, "column": "weaponKillsAutoRiflepg", "message": ""}
+            ,"frkpg": {"table": AccountWeaponStats, "column": "weaponKillsFusionRiflepg", "message": ""}
+            ,"gkpg": {"table": AccountWeaponStats, "column": "weaponKillsGrenadepg", "message": ""}
+            ,"glkpg": {"table": AccountWeaponStats, "column": "weaponKillsGrenadeLauncherpg", "message": ""}
+            ,"hckpg": {"table": AccountWeaponStats, "column": "weaponKillsHandCannonpg", "message": ""}
+            ,"mgkpg": {"table": AccountWeaponStats, "column": "weaponKillsMachinegunpg", "message": ""}
+            ,"mkpg": {"table": AccountWeaponStats, "column": "weaponKillsMeleepg", "message": ""}
+            ,"prkpg": {"table": AccountWeaponStats, "column": "weaponKillsPulseRiflepg", "message": ""}
+            ,"rkpg": {"table": AccountWeaponStats, "column": "weaponKillsRelicpg", "message": ""}
+            ,"rlkpg": {"table": AccountWeaponStats, "column": "weaponKillsRocketLauncherpg", "message": ""}
+            ,"srkpg": {"table": AccountWeaponStats, "column": "weaponKillsScoutRiflepg", "message": ""}
+            ,"shkpg": {"table": AccountWeaponStats, "column": "weaponKillsShotgunpg", "message": ""}
+            ,"sakpg": {"table": AccountWeaponStats, "column": "weaponKillsSideArmpg", "message": ""}
+            ,"snkpg": {"table": AccountWeaponStats, "column": "weaponKillsSniperpg", "message": ""}
+            ,"smgkpg": {"table": AccountWeaponStats, "column": "weaponKillsSubmachinegunpg", "message": ""}
+            ,"sukpg": {"table": AccountWeaponStats, "column": "weaponKillsSuperpg", "message": ""}
+            ,"swkpg": {"table": AccountWeaponStats, "column": "weaponKillsSwordpg", "message": ""}
+            ,"arpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsAutoRiflepg", "message": ""}
+            ,"frpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsFusionRiflepg", "message": ""}
+            ,"gpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadepg", "message": ""}
+            ,"glpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsGrenadeLauncherpg", "message": ""}
+            ,"hcpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsHandCannonpg", "message": ""}
+            ,"mgpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMachinegunpg", "message": ""}
+            ,"mpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsMeleepg", "message": ""}
+            ,"prpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsPulseRiflepg", "message": ""}
+            ,"rpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRelicpg", "message": ""}
+            ,"rlpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsRocketLauncherpg", "message": ""}
+            ,"srpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsScoutRiflepg", "message": ""}
+            ,"shpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsShotgunpg", "message": ""}
+            ,"sapkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSideArmpg", "message": ""}
+            ,"snpkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSniperpg", "message": ""}
+            ,"smpgkp": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSubmachinegunpg", "message": ""}
+            ,"supkpg": {"table": AccountWeaponStats, "column": "weaponPrecisionKillsSuperpg", "message": ""}
+            }
 
 # medal_dict = { "activities": (AccountMedalStats, "activitiesEntered", "Activities Entered")
 #              ,"totalmedals": (AccountMedalStats, "allMedalsEarned", "Total Number of Medals")

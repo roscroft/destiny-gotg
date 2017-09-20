@@ -43,7 +43,7 @@ def build_db():
     # handle_weapon_stats_table()
     # handle_exotic_weapon_table()
     # handle_medal_table()
-    handle_filling_account_tables()
+    # handle_filling_account_tables()
     # handle_reference_tables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
