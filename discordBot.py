@@ -110,14 +110,17 @@ def run_bot(engine):
         elif message.content.startswith("!stat"):
             player = await register_handler(message.author)
             content = message.content
-            return_dict = validate(content, player)
-            data, msg, players = stat_request(return_dict)
-            if len(data) == 1:
-                output = single_stat_format(data, msg, players)
-                await client.send_message(message.channel, output)
+            return_dict, error_msg = validate(content, player)
+            if return_dict == None:
+                await client.send_message(message.channel, error_msg)
             else:
-                output = multi_stat_format(data, msg)
-                await client.send_message(message.channel, embed=output)
+                data, msg, players = stat_request(return_dict)
+                if len(data) == 1:
+                    output = single_stat_format(data, msg, players)
+                    await client.send_message(message.channel, output)
+                else:
+                    output = multi_stat_format(data, msg)
+                    await client.send_message(message.channel, embed=output)
             #if message.channel.id is not '342754108534554624':
            #     await client.send_message(message.channel, "Please use the #stat channel for stat requests.")
             #else:
@@ -126,12 +129,6 @@ def run_bot(engine):
             #     output = single_stat_request(player, code, stat)
             #     #await client.send_message(discord.Object(id='342754108534554624'), output)
             #     await client.send_message(message.channel, output)# embed=output)
-            # elif valid and len(players) > 0:
-            #     players.append(player)
-            #     output = multi_stat_request(players, code, stat)
-            #     await client.send_message(message.channel, embed=output)
-            # else:
-            #     await client.send_message(message.channel, "```Invalid stat request.```")
 
         elif message.content.startswith("!clangraph"):
             player = await register_handler(message.author)
@@ -140,10 +137,13 @@ def run_bot(engine):
             content = message.content
             content += " vs "
             content += " ".join(all_players)
-            return_dict = validate(content, player)
-            data, msg, players = stat_request(return_dict)
-            clan_graph_request(data, msg)
-            await client.send_file(message.channel, './Figures/hist.png')
+            return_dict, error_msg = validate(content, player)
+            if return_dict == None:
+                await client.send_message(message.channel, error_msg)
+            else:
+                data, msg, players = stat_request(return_dict)
+                clan_graph_request(data, msg)
+                await client.send_file(message.channel, './Figures/hist.png')
 
         elif message.content.startswith("!clanstat"):
             pass
@@ -164,22 +164,26 @@ def run_bot(engine):
     
 def check_players(player_list):
     player_list = [p.replace("%", " ") for p in player_list]
-    all_players = [item[0] for item in Session().query(Account.display_name).all()]
-    players_are_valid = [True if player in all_players else False for player in player_list]
+    all_players = [item[0].lower() for item in Session().query(Account.display_name).all()]
+    players_are_valid = [True if player.lower() in all_players else False for player in player_list]
     return all(players_are_valid)
 
 def validate(request, player):
     #Table name, primary keys (id and mode), column name(s), player name(s), message
     #TODO: update this with other modes
     info = request.split(" ")
-    command = info[0]
-    c_mode = info[1]
-    c_stat = info[2]
-    multi = False
-    if len(info) > 3:
-        multi = True
-        vs = info[3]
-        player_list = info[4:]
+    try:
+        command = info[0]
+        c_mode = info[1]
+        c_stat = info[2]
+        multi = False
+        if len(info) > 3:
+            multi = True
+            vs = info[3]
+            player_list = info[4:]
+    except IndexError:
+        error = "Improperly formatted request. Please see the #command-list channel."
+        return None, error
     # valid_command = c_command in command_dict.keys()
     valid_command = True
     valid_mode = c_mode in mode_dict.keys()
@@ -188,21 +192,21 @@ def validate(request, player):
         valid_vs = vs == "vs"
         valid_player_list = check_players(player_list)
     if not valid_command:
-        print("Invalid command. Try !help for a list of possible commands.")
-        return None
+        error = "Invalid command. Try !help for a list of possible commands."
+        return None, error
     elif not valid_mode:
-        print(f"Invalid mode. Available modes are {mode_dict.keys()}.")
-        return None
+        error = f"Invalid mode. Available modes are {mode_dict.keys()}."
+        return None, error
     elif not valid_stat:
-        print("Invalid stat. See the #command-list channel for a list of valid stats.")
-        return None
+        error = "Invalid stat. See the #command-list channel for a list of valid stats."
+        return None, error
     if multi:
         if not valid_vs:
-            print("Use 'vs' without quotes to compare stats with others.")
-            return None
+            error = "Use 'vs' without quotes to compare stats with others."
+            return None, error
         elif not valid_player_list:
-            print("One or more of the players you listed is not in the clan, or is not spelled properly.")
-            return None
+            error = "One or more of the players you listed is not in the clan, or is not spelled properly."
+            return None, error
     return_dict = {}
     return_dict["mode"] = mode_dict[c_mode]
     return_dict["table"] = stat_dict[c_stat]["table"]
@@ -211,7 +215,7 @@ def validate(request, player):
     return_dict["players"] = [player]
     if multi:
         return_dict["players"] = return_dict["players"] + player_list
-    return return_dict
+    return return_dict, ""
 
 def stat_request(request_dict):
     mode = request_dict["mode"]
