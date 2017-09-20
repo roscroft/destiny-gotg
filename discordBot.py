@@ -108,9 +108,9 @@ def run_bot(engine):
             player = await register_handler(message.author)
             content = message.content
             return_dict = validate(content, player)
-            data, msg = stat_request(return_dict)
+            data, msg, players = stat_request(return_dict)
             if len(data) == 1:
-                output = single_stat_format(data, msg)
+                output = single_stat_format(data, msg, players)
                 await client.send_message(message.channel, output)
             else:
                 output = multi_stat_format(data, msg)
@@ -221,10 +221,10 @@ def stat_request(request_dict):
     res = session.query(*(getattr(table, col) for col in [column]), Account.display_name).join(Account).filter(Account.display_name.in_(players), table.mode == mode).all()
     data = [(item[1], truncate_decimals(item[0])) for item in res if item[0] is not None]
     data = sorted(data, key=lambda x: x[1], reverse=True)
-    return (data, message)
+    return (data, message, players)
 
-def single_stat_format(data, message):
-    em = f"```{message} for {players[0]}: {data[0][1]}```"
+def single_stat_format(data, message, players):
+    return f"```{message} for {players[0]}: {data[0][1]}```"
 
 def multi_stat_format(data, message):
     em = discord.Embed(title = f"{message}", colour=0xADD8E6)
