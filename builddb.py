@@ -35,15 +35,15 @@ def timeit(func, args=None):
 def build_db():
     """Main function to build the full database"""
     start_time = time.clock()
-    handle_bungie_table()
-    handle_account_table()
-    handle_character_table()
-    handle_account_updates()
-    handle_character_total_table()
-    handle_weapon_stats_table()
+    # handle_bungie_table()
+    # handle_account_table()
+    # handle_character_table()
+    # handle_account_updates()
+    # handle_character_total_table()
+    # handle_weapon_stats_table()
     # handle_exotic_weapon_table()
     # handle_medal_table()
-    handle_filling_account_tables()
+    # handle_filling_account_tables()
     # handle_reference_tables()
     print("--- %s seconds ---" % (time.clock() - start_time))
 
@@ -315,7 +315,8 @@ def handle_filling_account_tables():
     # In fact, let's just ignore anything that is a float, and recalculate those at out convenience.
     # Every stat group has an activitiesEntered column we can use for per game stats.
     session = Session()
-    table_list = [(CharacterTotalStats, AccountTotalStats), (CharacterWeaponStats, AccountWeaponStats)]
+    table_list = [(CharacterTotalStats, AccountTotalStats),
+                  (CharacterWeaponStats, AccountWeaponStats)]
                  #, (CharacterMedalStats, AccountMedalStats)]
     mode_list = ["allPvP", "allStrikes", "story", "patrol"]
     add_list = []
@@ -336,11 +337,14 @@ def handle_filling_account_tables():
                     update_dict[column] = value
                 for column in pgas:
                     try:
-                        deaths = update_dict["deaths"]
-                        if deaths == 0:
-                            deaths = 1
-                        kills = update_dict["kills"]
+                        if source_table == CharacterTotalStats:
+                            deaths = update_dict["deaths"]
+                            if deaths == 0:
+                                deaths = 1
+                            kills = update_dict["kills"]
                         activities = update_dict["activitiesEntered"]
+                        if activities == 0:
+                            activities = 1
                         if column == "killsDeathsRatio":
                             value = (kills*1.0)/deaths
                         elif column == "killsDeathsAssists":
@@ -356,10 +360,15 @@ def handle_filling_account_tables():
                         elif column == "averageScorePerLife":
                             value = (update_dict["score"]*1.0)/deaths
                         elif column.startswith("weaponKillsPrecisionKills"):
-                            value = (update_dict[f"weaponPrecisionKills{column[25:]}"]*1.0)/update_dict[f"weaponKills{column[25:]}"]
+                            weapon = f"{column[25:]}"
+                            weaponKills = update_dict[f"weaponKills{weapon}"]
+                            if weaponKills == 0:
+                                weaponKills = 1
+                            weaponPrecisionKills = update_dict[f"weaponPrecisionKills{weapon}"]
+                            value = (weaponPrecisionKills*1.0)/weaponKills
                         elif column.endswith("pg"):
                             value = (update_dict[column[:-2]]*1.0)/update_dict["activitiesEntered"]
-                    except (KeyError, TypeError):
+                    except TypeError:
                         value = None
                     update_dict[column] = value
                 update_dict["id"] = elem.id

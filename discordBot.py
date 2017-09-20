@@ -47,8 +47,11 @@ def run_bot(engine):
     @client.event
     async def register_user(discord_author):
         def check_if_valid_user(message):
-            print(message.content)
-            valid = session.query(exists().where(and_(Account.display_name == message.content, Account.membership_type == 2))).scalar()
+            player = message.content
+            print(player)
+            # valid = session.query(exists().where(and_(Account.display_name == message.content, Account.membership_type == 2))).scalar()
+            all_players = [item[0].lower() for item in Session().query(Account.display_name).all()]
+            valid = player.lower() in all_players
             print(valid)
             return valid
         #Need to send a DM requesting the PSN name
@@ -138,7 +141,7 @@ def run_bot(engine):
             content += " vs "
             content += " ".join(all_players)
             return_dict = validate(content, player)
-            data, msg = stat_request(return_dict)
+            data, msg, players = stat_request(return_dict)
             clan_graph_request(data, msg)
             await client.send_file(message.channel, './Figures/hist.png')
 

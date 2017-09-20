@@ -37,7 +37,8 @@ stat_dict = {"clears": {"table": AccountTotalStats, "column": "activitiesCleared
             ,"obj": {"table": AccountTotalStats, "column": "objectivesCompleted", "message": "Objectives Completed"}
             ,"orbdrop": {"table": AccountTotalStats, "column": "orbsDropped", "message": "Total Orbs Dropped"}
             ,"orbgather": {"table": AccountTotalStats, "column": "orbsGathered", "message": "Total Orbs Gathered"}
-            ,"publics": {"table": AccountTotalStats, "column": "publicEventsCompleted", "message": "Public Events Completed"}
+            ,"pubevc": {"table": AccountTotalStats, "column": "publicEventsCompleted", "message": "Public Events Completed"}
+            ,"pubevj": {"table": AccountTotalStats, "column": "publicEventsJointed", "message": "Public Events Joined"}
             ,"precisions": {"table": AccountTotalStats, "column": "precisionKills", "message": "Total Precision Kills"}
             ,"timeleft": {"table": AccountTotalStats, "column": "remainingTimeAfterQuitSeconds", "message": "Time Left After Quitting (s)"}
             ,"resPerformed": {"table": AccountTotalStats, "column": "resurrectionsPerformed", "message": "Total Resurrections Performed"}
@@ -51,6 +52,8 @@ stat_dict = {"clears": {"table": AccountTotalStats, "column": "activitiesCleared
             ,"killdist": {"table": AccountTotalStats, "column": "totalKillDistance", "message": "Total Kill Distance"}
             ,"bestweapon": {"table": AccountTotalStats, "column": "weaponBestType", "message": "Best Weapon Type"}
             ,"wlr": {"table": AccountTotalStats, "column": "winLossRatio", "message": "Win Loss Ratio"}
+            ,"zonecap": {"table": AccountTotalStats, "column": "zonesCaptured", "message": "Zones Captured"}
+            ,"zoneneut": {"table": AccountTotalStats, "column": "zonesNeutralized", "message": "Zones Neutralized"}
             ,"akillspg": {"table": AccountTotalStats, "column": "abilityKillspg", "message": "Ability Kills Per Game"}
             ,"apg": {"table": AccountTotalStats, "column": "assistspg", "message": "Assists Per Game"}
             ,"dpg": {"table": AccountTotalStats, "column": "deathspg", "message": "Deaths Per Game"}
