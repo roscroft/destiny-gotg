@@ -4,7 +4,7 @@ import sys
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from destinygotg import load_config
+from destinygotg import Engine
 
 Base = declarative_base()
 
@@ -430,11 +430,8 @@ class LastUpdated(Base):
     table_name = Column(String(50), primary_key=True)
     last_updated = Column(DateTime)
 
-def init_db(engine):
-    Base.metadata.bind = engine
-    Base.metadata.create_all(engine)
-
-if __name__ == "__main__":
-    # loadConfig for testing purposes
-    load_config()
-    init_db(engine)
+def init_db(opts):
+    Base.metadata.bind = Engine
+    if opts["clean"]:
+        Base.metadata.drop_all(Engine)
+    Base.metadata.create_all(Engine)

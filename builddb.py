@@ -7,10 +7,9 @@ import json
 import time
 import sqlite3
 import requests
-import itertools
 from datetime import datetime
+from destinygotg import Session
 from initdb import Base, Bungie, Account, Character, CharacterTotalStats, CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats, AccountTotalStats, AccountWeaponStats, AccountExoticWeaponStats, AccountMedalStats, LastUpdated
-from destinygotg import Session, load_config
 from functools import partial
 from sqlalchemy import func
 from sqlalchemy.inspection import inspect
@@ -18,8 +17,8 @@ from sqlalchemy.inspection import inspect
 URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
-# write_files = False
-write_files = True
+write_files = False
+# write_files = True
 
 def make_header():
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
@@ -32,19 +31,43 @@ def timeit(func, args=None):
         func(args)
     print("--- %s seconds ---" % (time.clock() - start_time))
 
-def build_db():
+def build_db(opts):
     """Main function to build the full database"""
     start_time = time.clock()
-    # handle_bungie_table()
-    # handle_account_table()
-    # handle_character_table()
-    # handle_account_updates()
-    # handle_character_total_table()
-    # handle_weapon_stats_table()
-    # handle_exotic_weapon_table()
-    # handle_medal_table()
-    # handle_filling_account_tables()
-    # handle_reference_tables()
+    if opts["write"]:
+        write_files = True
+    if opts["update"] or opts["clean"]:
+        handle_bungie_table()
+        handle_account_table()
+        handle_character_table()
+        handle_account_updates()
+        handle_character_total_table()
+        handle_weapon_stats_table()
+        handle_exotic_weapon_table()
+        handle_medal_table()
+        handle_filling_account_tables()
+        handle_reference_tables()
+    else:
+        if opts["bungie"]:
+            handle_bungie_table()
+        if opts["account"]:
+            handle_account_table()
+        if opts["character"]:
+            handle_character_table()
+        if opts["account2"]:
+            handle_account_updates()
+        if opts["stats"]:
+            handle_character_total_table()
+        if opts["weapons"]:
+            handle_weapon_stats_table()
+        if opts["exotics"]:
+            handle_exotic_weapon_table()
+        if opts["medals"]:
+            handle_medal_table()
+        if opts["accountstats"]:
+            handle_filling_account_tables()
+        if opts["refs"]:
+            handle_reference_tables
     print("--- %s seconds ---" % (time.clock() - start_time))
 
 #info_map = {'attrs':{'attr1':'attr1Name', ...}
@@ -273,7 +296,7 @@ def handle_exotic_weapon_table():
             ,'statics':{'id':'id'}
             ,'primary_keys':['id', 'mode']}
     iterator = ['Response']
-    table = CharacterExoticStats
+    table = CharacterExoticWeaponStats
     define_params(query_table, info_map, weapon_url, iterator, table)
 
 def handle_medal_table():
@@ -551,12 +574,3 @@ def build_value_dict(target_map, attr_map):
         else:
             ret_dict[key] = attr_map[value]
     return ret_dict
-
-if __name__ == "__main__":
-    # load_config for testing purposes
-    APP_PATH = "/etc/destinygotg"
-    load_config()
-    import time
-    start_time = time.time()
-    build_db()
-    print("--- %s seconds ---" % (time.time() - start_time))

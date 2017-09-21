@@ -4,7 +4,7 @@ import sys
 import discord
 import asyncio
 from datetime import datetime
-from destinygotg import Session, load_config
+from destinygotg import Session
 from initdb import Base, Discord, Account, Character, Bungie
 from sqlalchemy import exists, desc, func, and_
 from decimal import *
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt; plt.rcdefaults()
 from statDicts import stat_dict, mode_dict
 
 
-def run_bot(engine):
+def run_bot():
     # The regular bot definition things
     client = discord.Client()
     session = Session()
@@ -90,15 +90,15 @@ def run_bot(engine):
         elif message.content.startswith('Say goodbye'):
             await client.send_message(message.channel, 'beep boop')
 
-        elif message.content.startswith('!sql'):
-            role_list = [role.name for role in message.author.roles]
-            if "@administrator" in role_list and "bot developer" in role_list:
-                statement = message.content[5:]
-                connection = engine.connect()
-                channel = message.channel
-                await query_database(channel, statement, connection)
-            else:
-                await client.send_message(message.channel, "Permission denied!")
+        # elif message.content.startswith('!sql'):
+        #     role_list = [role.name for role in message.author.roles]
+        #     if "@administrator" in role_list and "bot developer" in role_list:
+        #         statement = message.content[5:]
+        #         connection = engine.connect()
+        #         channel = message.channel
+        #         await query_database(channel, statement, connection)
+        #     else:
+        #         await client.send_message(message.channel, "Permission denied!")
 
         # elif message.author.name == "Roscroft" and message.channel.is_private:
         #     if not message.content == "Roscroft":
@@ -223,9 +223,10 @@ def stat_request(request_dict):
     column = request_dict["column"]
     message = request_dict["message"]
     players = request_dict["players"]
+    players = [player.lower() for player in players]
     
     session = Session()
-    res = session.query(*(getattr(table, col) for col in [column]), Account.display_name).join(Account).filter(Account.display_name.in_(players), table.mode == mode).all()
+    res = session.query(*(getattr(table, col) for col in [column]), Account.display_name).join(Account).filter(func.lower(Account.display_name).in_(players), table.mode == mode).all()
     data = [(item[1], truncate_decimals(item[0])) for item in res if item[0] is not None]
     data = sorted(data, key=lambda x: x[1], reverse=True)
     return (data, message, players)
@@ -295,4 +296,3 @@ def time_left():
     until_release = str((release-today).days)
     output = "There are "+until_release+" days until release!"
     return output
-

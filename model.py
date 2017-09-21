@@ -14,9 +14,9 @@ def check_db():
     """Check to see if a database exists"""
     return os.path.isfile(os.environ['DBPATH'])
 
-def init_db(engine):
+def init_db(opts):
     """Sets up the tables for the database"""
-    initdb.init_db(engine)
+    initdb.init_db(opts)
 
 def check_manifest():
     """Check to see if manifest file exists"""
@@ -38,9 +38,9 @@ def get_manifest():
         zipfile.extractall()
     shutil.move(name[0], os.environ['MANIFEST_CONTENT'])
 
-def build_db():
+def build_db(opts):
     """Main function to build the full database"""
-    builddb.build_db()
+    builddb.build_db(opts)
 
-def run_discord(engine):
-    discordBot.run_bot(engine)
+def run_discord():
+    discordBot.run_bot()

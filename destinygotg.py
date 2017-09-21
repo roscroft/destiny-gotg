@@ -2,21 +2,50 @@
 import os
 import sys
 import model
+import argparse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+# Create the application-level engine and SessionMaker objects
+# Add echo=True to below line for SQL logging
 APP_PATH = "/etc/destinygotg"
 DBPATH = f"{APP_PATH}/guardians2.db"
 
-# Create the application-level engine and SessionMaker objects
-# Add echo=True to below line for SQL logging
-engine = create_engine(f"sqlite:///{DBPATH}")#, echo=True)
-Session = sessionmaker(bind=engine)
+Engine = create_engine(f"sqlite:///{DBPATH}")#, echo=True)
+Session = sessionmaker(bind=Engine)
 
 def main():
-    # Using the software development principle of "Only write what you need"
-
     """Run the application"""
+    parser = argparse.ArgumentParser(description="Build a Destiny clan database and run the Discord bot.")
+    parser.add_argument("--path", help="Specify a path for the database and configuration files")
+    parser.add_argument("--name", help="Specify a database name")
+    parser.add_argument("--nodisc", help="Do not run the bot automatically", action="store_true")
+    parser.add_argument("--update", help="Update the entire database", action="store_true")
+    parser.add_argument("--bungie", help="Build the Bungie table, default is whole database", action="store_true")
+    parser.add_argument("--account", help="Build the Account table, default is whole database", action="store_true")
+    parser.add_argument("--character", help="Build the Character table, default is whole database", action="store_true")
+    parser.add_argument("--stats", help="Build the CharacterTotalStats table, default is whole database", action="store_true")
+    parser.add_argument("--weapons", help="Build the CharacterWeaponStats table, default is whole database", action="store_true")
+    parser.add_argument("--exotics", help="Build the CharacterUniqueWeaponStats table, default is whole database", action="store_true")
+    parser.add_argument("--medals", help="Build the CharacterMedalStats table, default is whole database", action="store_true")
+    parser.add_argument("--account2", help="Fill the Account table with Character information", action="store_true")
+    parser.add_argument("--accountstats", help="Build the AccountTotalStats and AccountWeaponStats tables", action="store_true")
+    parser.add_argument("--refs", help="Build the Reference tables", action="store_true")
+    parser.add_argument("--clean", help="Delete the database and completely rebuild", action="store_true")
+    parser.add_argument("--write", help="Write JSON output files", action="store_true")
+    args = parser.parse_args()
+    if args.path != "":
+        APP_PATH = args.path
+    if args.name != "":
+        DBPATH = args.name
+
+    init_opts = {"clean": args.clean}
+
+    build_opts = {"bungie": args.bungie, "account": args.account, "character": args.character, "stats": args.stats,
+            "weapons": args.weapons, "exotics": args.exotics, "medals": args.medals, "account2": args.account2,
+            "accountstats": args.accountstats, "write": args.write, "refs": args.refs, "update": args.update, 
+            "clean": args.clean}
+
     # Ensure that the program is running on python 3.6+
     if not verify_python_version():
         print("This app requires python 3.6 or greater!")
@@ -34,14 +63,12 @@ def main():
     if not model.check_manifest():
         model.get_manifest()
     
-    if not model.check_db():
-        model.init_db(engine)
+    model.init_db(init_opts)
     
-    model.init_db(engine)
-    model.build_db()
+    model.build_db(build_opts)
     
-    model.run_discord(engine)
-    #run_flask()
+    if not args.nodisc:
+        model.run_discord()
 
 def set_app_path():
     """Ensures the APP_PATH dir exists"""
