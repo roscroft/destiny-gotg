@@ -382,6 +382,8 @@ def handle_filling_account_tables():
                             value = (update_dict["score"]*1.0)/kills
                         elif column == "averageScorePerLife":
                             value = (update_dict["score"]*1.0)/deaths
+                        elif column == "winLossRatio":
+                            value = (update_dict["activitiesWon"]*1.0)/activities
                         elif column.startswith("weaponKillsPrecisionKills"):
                             weapon = f"{column[25:]}"
                             weaponKills = update_dict[f"weaponKills{weapon}"]
