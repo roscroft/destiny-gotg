@@ -1,10 +1,10 @@
 #!/usr/bin/python
+"""Initializes the entire database."""
 import os
-import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from destinygotg import Engine
+from destinygotg import ENGINE
 
 Base = declarative_base()
 
@@ -406,7 +406,7 @@ class CharacterMedalStats(MedalStats, Base):
 #     __tablename__ = 'activityTypeReference'
 #     id = Column(Integer, primary_key=True)
 #     activity_type_name = Column(String(50))
-    
+
 # class ClassReference(Base):
 #     __tablename__ = 'classReference'
 #     id = Column(Integer, primary_key=True)
@@ -431,7 +431,8 @@ class LastUpdated(Base):
     last_updated = Column(DateTime)
 
 def init_db(opts):
-    Base.metadata.bind = Engine
+    """Initialized and optionally clears out the database"""
+    Base.metadata.bind = ENGINE
     if opts["clean"]:
-        Base.metadata.drop_all(Engine)
-    Base.metadata.create_all(Engine)
+        Base.metadata.drop_all(ENGINE)
+    Base.metadata.create_all(ENGINE)

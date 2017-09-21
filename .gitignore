@@ -5,5 +5,6 @@ testing/
 Figures/
 JSON/
 logging/
+databases/
 tags
 testscript.py

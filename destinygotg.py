@@ -1,79 +1,116 @@
 #!/usr/bin/python3.6
+"""This is the controller for the entire database and bot project."""
 import os
 import sys
-import model
+import json
 import argparse
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Create the application-level engine and SessionMaker objects
-# Add echo=True to below line for SQL logging
-APP_PATH = "/etc/destinygotg"
-DBPATH = f"{APP_PATH}/guardians2.db"
+import model
 
-Engine = create_engine(f"sqlite:///{DBPATH}")#, echo=True)
-Session = sessionmaker(bind=Engine)
+# Create the application-level engine and SESSIONMaker objects
+# Add echo=True to below line for SQL logging
+CONFIG = "config.json"
+
+def load_vars():
+    """Loads in environment variables."""
+    with open(CONFIG, 'r') as config_file:
+        config = json.load(config_file)
+        for value in config:
+            os.environ[value] = str(config[value])
+
+def write_vars(key, value):
+    """Allows changing of environment variables."""
+    with open(CONFIG, 'r+') as config_file:
+        config = json.load(config_file)
+    config[key] = value
+    with open(CONFIG, 'w+') as config_file:
+        json.dump(config, config_file)
+    load_vars()
+
+load_vars()
+
+ENGINE = create_engine(f"sqlite:///{os.environ['APP_PATH']}/{os.environ['DB_NAME']}")
+SESSION = sessionmaker(bind=ENGINE)
 
 def main():
     """Run the application"""
-    parser = argparse.ArgumentParser(description="Build a Destiny clan database and run the Discord bot.")
-    parser.add_argument("--path", help="Specify a path for the database and configuration files")
-    parser.add_argument("--name", help="Specify a database name")
-    parser.add_argument("--nodisc", help="Do not run the bot automatically", action="store_true")
-    parser.add_argument("--update", help="Update the entire database", action="store_true")
-    parser.add_argument("--bungie", help="Build the Bungie table, default is whole database", action="store_true")
-    parser.add_argument("--account", help="Build the Account table, default is whole database", action="store_true")
-    parser.add_argument("--character", help="Build the Character table, default is whole database", action="store_true")
-    parser.add_argument("--stats", help="Build the CharacterTotalStats table, default is whole database", action="store_true")
-    parser.add_argument("--weapons", help="Build the CharacterWeaponStats table, default is whole database", action="store_true")
-    parser.add_argument("--exotics", help="Build the CharacterUniqueWeaponStats table, default is whole database", action="store_true")
-    parser.add_argument("--medals", help="Build the CharacterMedalStats table, default is whole database", action="store_true")
-    parser.add_argument("--account2", help="Fill the Account table with Character information", action="store_true")
-    parser.add_argument("--accountstats", help="Build the AccountTotalStats and AccountWeaponStats tables", action="store_true")
-    parser.add_argument("--refs", help="Build the Reference tables", action="store_true")
-    parser.add_argument("--clean", help="Delete the database and completely rebuild", action="store_true")
-    parser.add_argument("--write", help="Write JSON output files", action="store_true")
+    parser = argparse.ArgumentParser(
+        description="Build a Destiny clan database and run the Discord bot.")
+    parser.add_argument(
+        "--path", help="Specify a path for the database and configuration files")
+    parser.add_argument(
+        "--name", help="Specify a database name")
+    parser.add_argument(
+        "-n", "--nodisc", help="Do not run the bot automatically", action="store_true")
+    parser.add_argument(
+        "-u", "--update", help="Update the entire database", action="store_true")
+    parser.add_argument("-b", "--bungie", help="Build the Bungie table", action="store_true")
+    parser.add_argument("-a", "--account", help="Build the Account table", action="store_true")
+    parser.add_argument("-c", "--character", help="Build the Character table", action="store_true")
+    parser.add_argument(
+        "-s", "--stats", help="Build the CharacterTotalStats table", action="store_true")
+    parser.add_argument(
+        "-k", "--weapons", help="Build the CharacterWeaponStats table", action="store_true")
+    parser.add_argument(
+        "-e", "--exotics", help="Build the CharacterUniqueWeaponStats table", action="store_true")
+    parser.add_argument(
+        "-m", "--medals", help="Build the CharacterMedalStats table", action="store_true")
+    parser.add_argument(
+        "-f", "--account2", help="Finish building the Account table", action="store_true")
+    parser.add_argument(
+        "-t", "--accountstats", help="Build the AccountTotalStats and AccountWeaponStats tables",
+        action="store_true")
+    parser.add_argument("-r", "--refs", help="Build the Reference tables", action="store_true")
+    parser.add_argument(
+        "-l", "--clean", help="Delete the database and completely rebuild", action="store_true")
+    parser.add_argument("-w", "--write", help="Write JSON output files", action="store_true")
     args = parser.parse_args()
-    if args.path != "":
-        APP_PATH = args.path
-    if args.name != "":
-        DBPATH = args.name
+    if args.path is not None:
+        write_vars("APP_PATH", args.path)
+    if args.name is not None:
+        write_vars("DB_NAME", args.name)
+    if args.write:
+        write_vars("WRITE_FILES", int(args.write))
 
     init_opts = {"clean": args.clean}
 
-    build_opts = {"bungie": args.bungie, "account": args.account, "character": args.character, "stats": args.stats,
-            "weapons": args.weapons, "exotics": args.exotics, "medals": args.medals, "account2": args.account2,
-            "accountstats": args.accountstats, "write": args.write, "refs": args.refs, "update": args.update, 
-            "clean": args.clean}
+    build_opts = {"bungie": args.bungie, "account": args.account, "character": args.character,
+                  "stats": args.stats, "weapons": args.weapons, "exotics": args.exotics,
+                  "medals": args.medals, "account2": args.account2,
+                  "accountstats": args.accountstats, "refs": args.refs, "update": args.update,
+                  "clean": args.clean}
 
     # Ensure that the program is running on python 3.6+
     if not verify_python_version():
         print("This app requires python 3.6 or greater!")
         return
     # Make sure the APP_PATH directory exists
-    set_app_path()
+    # set_app_path()
 
     # Ensure a correct config file exists
     if not config_exists():
         generate_config()
-    
+
     # Load the config values into environment vars
-    load_config()
-    
+    load_vars()
+
     if not model.check_manifest():
         model.get_manifest()
-    
+
     model.init_db(init_opts)
-    
+
     model.build_db(build_opts)
-    
+
     if not args.nodisc:
         model.run_discord()
 
-def set_app_path():
-    """Ensures the APP_PATH dir exists"""
-    if not os.path.isdir(APP_PATH):
-        os.mkdir(APP_PATH)
+# def set_app_path():
+#     """Ensures the APP_PATH dir exists"""
+#     if not os.path.isdir(APP_PATH):
+#         os.mkdir(APP_PATH)
 
 def verify_python_version():
     """Ensure the script is being run in python 3.6"""
@@ -88,34 +125,26 @@ def verify_python_version():
 def generate_config():
     """Generate and store a new config file"""
     # make sure the APP_PATH directory exists
-    config = open(f"{APP_PATH}/config", "w+")
     apikey = input("Please enter your Bungie API Key: ")
     clanid = input("Please enter your Clan ID: ")
     disc_apikey = input("Please enter your Discord API Key: ")
-    config.write(f"BUNGIE_APIKEY:{apikey}\n")
-    config.write(f"BUNGIE_CLANID:{clanid}\n")
-    config.write(f"DISCORD_APIKEY:{disc_apikey}\n")
-    config.write(f"DBPATH:{DBPATH}\n")
-    config.write(f"MANIFEST_CONTENT:{APP_PATH}/manifest.content\n")
-    config.close()
+    db_name = input("Please enter a filename for the database: ")
+    config_dict = {"BUNGIE_APIKEY": apikey, "BUNGIE_CLANID": clanid, "DISCORD_APIKEY": disc_apikey,
+                   "DB_NAME": db_name, "MANIFEST_NAME": "manifest.content"}
+    with open(CONFIG, 'w+') as config_file:
+        json.dump(config_dict, config_file)
 
 def config_exists():
     """Check if there are any missing fields, or if the file doesn't exist"""
-    if os.path.exists(f"{APP_PATH}/config"):
+    if os.path.exists(f"{CONFIG}"):
         return True
-    else:
-        print("No config file")
-        return False
+    print("No config file")
+    return False
     #TODO: Implement config file checker to see if it has all fields
 
-def load_config():
-    """Load configs from the config file"""
-    config = open(f"{APP_PATH}/config", "r").readlines()
-    for value in config:
-        value = value.strip().split(":")
-        os.environ[value[0]] = value[1]
 
 def run_flask():
+    """Runs the Flask portion of the project. Currently useless."""
     os.environ['FLASK_APP'] = "views/flask/app.py"
     os.system("flask run --host=0.0.0.0")
 

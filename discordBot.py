@@ -4,7 +4,7 @@ import sys
 import discord
 import asyncio
 from datetime import datetime
-from destinygotg import Session
+from destinygotg import SESSION
 from initdb import Base, Discord, Account, Character, Bungie
 from sqlalchemy import exists, desc, func, and_
 from decimal import *
@@ -19,7 +19,7 @@ from statDicts import stat_dict, mode_dict
 def run_bot():
     # The regular bot definition things
     client = discord.Client()
-    session = Session()
+    session = SESSION()
 
     @client.event
     async def on_ready():
@@ -50,7 +50,7 @@ def run_bot():
             player = message.content
             print(player)
             # valid = session.query(exists().where(and_(Account.display_name == message.content, Account.membership_type == 2))).scalar()
-            all_players = [item[0].lower() for item in Session().query(Account.display_name).all()]
+            all_players = [item[0].lower() for item in SESSION().query(Account.display_name).all()]
             valid = player.lower() in all_players
             print(valid)
             return valid
@@ -132,7 +132,7 @@ def run_bot():
 
         elif message.content.startswith("!clangraph"):
             player = await register_handler(message.author)
-            all_players = [item[0] for item in Session().query(Account.display_name).all()]
+            all_players = [item[0] for item in SESSION().query(Account.display_name).all()]
             all_players = [p.replace(" ", "%") for p in all_players]
             content = message.content
             content += " vs "
@@ -149,7 +149,7 @@ def run_bot():
             pass
 
         elif message.content.startswith("!members"):
-            num_members = Session().query(func.count(Bungie.id)).first()[0]
+            num_members = SESSION().query(func.count(Bungie.id)).first()[0]
             await client.send_message(message.channel, num_members)
 
         elif message.content.startswith('!light'):
@@ -164,7 +164,7 @@ def run_bot():
     
 def check_players(player_list):
     player_list = [p.replace("%", " ") for p in player_list]
-    all_players = [item[0].lower() for item in Session().query(Account.display_name).all()]
+    all_players = [item[0].lower() for item in SESSION().query(Account.display_name).all()]
     players_are_valid = [True if player.lower() in all_players else False for player in player_list]
     return all(players_are_valid)
 
@@ -225,7 +225,7 @@ def stat_request(request_dict):
     players = request_dict["players"]
     players = [player.lower() for player in players]
     
-    session = Session()
+    session = SESSION()
     res = session.query(*(getattr(table, col) for col in [column]), Account.display_name).join(Account).filter(func.lower(Account.display_name).in_(players), table.mode == mode).all()
     data = [(item[1], truncate_decimals(item[0])) for item in res if item[0] is not None]
     data = sorted(data, key=lambda x: x[1], reverse=True)
@@ -269,7 +269,7 @@ def clan_graph_request(data, message):
 
 def light_level_request(player):
     """Retrieves the character light levels of a player"""
-    session = Session()
+    session = SESSION()
     data = session.query(Character.light_level, ClassReference.class_name).join(Account).join(ClassReference, and_(ClassReference.id==Character.class_hash)).filter(Account.display_name == player).all()
     return data
 
