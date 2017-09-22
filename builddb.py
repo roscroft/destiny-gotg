@@ -96,14 +96,14 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         return []
     # Sometimes we get arrays, other times we get dictionaries. Wrap the dicts in a list to avoid
     # headache later.
-    if group.isinstance(dict):
+    if isinstance(group, dict):
         group = group.items()
     for elem in group:
         if elem is None:
             continue
         # build_dict uses a nifty dynamic dictionary indexing function that allows us to grab
         # info from multiply-nested fields in the dict
-        if elem.isinstance(tuple):
+        if isinstance(elem, tuple):
             # We're in a dict, so we need to add info to the insert dict from the key and the value
             tuple_key_info = {}
             if table == CharacterTotalStats or table == CharacterWeaponStats:
@@ -186,7 +186,7 @@ def handle_bungie_table():
     # Destiny 2 changes results per page to be 100. Because there is a max of 100 people in
     # the clan, we don't need the extra stuff here anymore.
     session = SESSION()
-    request_session = requests.SESSION()
+    request_session = requests.Session()
     info_map = {'values': {'id': [['bungieNetUserInfo', 'membershipId']],
                            'id_2':[['destinyUserInfo', 'membershipId']],
                            'bungie_name':[['bungieNetUserInfo', 'displayName']],
@@ -208,9 +208,9 @@ def handle_bungie_table():
 
 def handle_account_table():
     """Retrieve JSONs for users, listing their Destiny accounts. Fills account table."""
-    def account_url(uid, membership_type):
+    def account_url(id, membership_type):
         """Builds the account URL."""
-        return f"{URL_START}/User/GetMembershipsById/{uid}/{membership_type}"
+        return f"{URL_START}/User/GetMembershipsById/{id}/{membership_type}"
     query_table = Bungie
     info_map = {'attrs': {'id': 'id', 'name': 'bungie_name', 'membership_type': 'membership_type'},
                 'kwargs': {'id': 'id'},
@@ -247,10 +247,9 @@ def handle_character_table():
 
 def handle_character_total_table():
     """Fills the CharacterTotalStats table."""
-    def activity_url(membership_type, membership_id, uid):
+    def activity_url(membership_type, membership_id, id):
         """Builds activity URL."""
-        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/
-                Character/{uid}/Stats/"""
+        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/"""
     query_table = Character
     info_map = {'attrs': {'id': 'id', 'membership_id': 'membership_id', 'name': 'display_name',
                           'membership_type': 'membership_type'},
@@ -266,10 +265,9 @@ def handle_character_total_table():
 
 def handle_weapon_stats_table():
     """Fills the CharacterWeaponStats table."""
-    def weapon_url(membership_type, membership_id, uid):
+    def weapon_url(membership_type, membership_id, id):
         """Builds weapon URL."""
-        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/
-                  Character/{uid}/Stats/?groups=2"""
+        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=2"""
     query_table = Character
     info_map = {'attrs': {'id': 'id', 'membership_id': 'membership_id', 'name': 'display_name',
                           'membership_type': 'membership_type'},
@@ -285,10 +283,9 @@ def handle_weapon_stats_table():
 
 def handle_exotic_weapon_table():
     """Fills the CharacterExoticWeaponStats table."""
-    def weapon_url(membership_type, membership_id, uid):
+    def weapon_url(membership_type, membership_id, id):
         """Builds exotic weapon URL."""
-        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/
-                Character/{uid}/Stats/?groups=103"""
+        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=103"""
     query_table = Character
     info_map = {'attrs': {'id': 'id', 'membership_id': 'membership_id', 'name': 'display_name',
                           'membership_type':'membership_type'},
@@ -304,9 +301,9 @@ def handle_exotic_weapon_table():
 
 def handle_medal_table():
     """Fills the CharacterMedalStats table."""
-    def medal_url(uid, membership_type):
+    def medal_url(id, membership_type):
         """Builds the medals URL."""
-        return f"{OLD_URL_START}/Destiny/Stats/Account/{membership_type}/{uid}/?Groups=Medals"
+        return f"{OLD_URL_START}/Destiny/Stats/Account/{membership_type}/{id}/?Groups=Medals"
     query_table = Account
     info_map = {'attrs': {'id': 'id', 'name': 'display_name', 'membership_type': 'membership_type'},
                 'kwargs': {'id': 'id'},
@@ -576,9 +573,9 @@ def remove_duplicates(add_list):
     zipped_list = [(item.id, item.__tablename__, item) for item in add_list]
     seen = set()
     final_list = []
-    for uid, tablename, item in zipped_list:
-        if not (uid, tablename) in seen:
-            seen.add((uid, tablename))
+    for id, tablename, item in zipped_list:
+        if not (id, tablename) in seen:
+            seen.add((id, tablename))
             final_list.append(item)
     return final_list
 
