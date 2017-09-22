@@ -1,28 +1,33 @@
 #!/usr/bin/python3.6
+"""Runs the Discord bot and handles all Discord-related function"""
+
 import os
-import sys
-import discord
-import asyncio
 from datetime import datetime
-from destinygotg import SESSION
-from initdb import Base, Discord, Account, Character, Bungie
-from sqlalchemy import exists, desc, func, and_
-from decimal import *
+from decimal import Decimal
+from sqlalchemy import exists, func, and_
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.mlab as mlab
-import matplotlib.pyplot as plt; plt.rcdefaults()
+import matplotlib.pyplot as plt
+
+import discord
+
+from destinygotg import SESSION
+from initdb import Discord, Account, Character, Bungie, ClassReference
 from statDicts import stat_dict, mode_dict
+
+plt.rcdefaults()
+mpl.use('Agg')
 
 
 def run_bot():
+    """Actually runs the bot"""
     # The regular bot definition things
     client = discord.Client()
     session = SESSION()
 
     @client.event
     async def on_ready():
+        """Prints bot initialization info"""
         print('Logged in as')
         print(client.user.name)
         print(client.user.id)
@@ -30,26 +35,32 @@ def run_bot():
 
     @client.event
     async def query_database(channel, statement, connection):
+        """Performs a simple sql query against the database"""
         result = connection.execute(statement)
         result_list = [row for row in result]
         await client.send_message(channel, result_list)
-    
+
     @client.event
     async def register_handler(discord_author):
+        """Registers a user or returns their Destiny name if it exists"""
         disc_id = discord_author.id
         user_is_registered = session.query(exists().where(Discord.id == disc_id)).scalar()
         if user_is_registered:
-            destiny_name = session.query(Account.display_name).join(Discord).filter(Discord.id == disc_id).first()[0]
+            destiny_name = session.query(Account.display_name).join(Discord).filter(
+                Discord.id == disc_id).first()[0]
         else:
             destiny_name = await register_user(discord_author)
         return destiny_name
 
     @client.event
     async def register_user(discord_author):
+        """Registers a user based on their reply"""
         def check_if_valid_user(message):
+            """Checks if the player response is an actual user"""
             player = message.content
             print(player)
-            # valid = session.query(exists().where(and_(Account.display_name == message.content, Account.membership_type == 2))).scalar()
+            # valid = session.query(exists().where(
+            # and_(Account.display_name == message.content, Account.membership_type == 2))).scalar()
             all_players = [item[0].lower() for item in SESSION().query(Account.display_name).all()]
             valid = player.lower() in all_players
             print(valid)
@@ -57,32 +68,38 @@ def run_bot():
         #Need to send a DM requesting the PSN name
         destination = discord_author
         disc_name = discord_author.name
-        message = await client.send_message(destination, f"{disc_name}, please enter your PSN display name.")
-        valid = False 
+        message = await client.send_message(
+            destination, f"{disc_name}, please enter your PSN display name.")
+        valid = False
         while not valid:
             name_msg = await client.wait_for_message(author=discord_author, channel=message.channel)
             valid = check_if_valid_user(name_msg)
             if not valid:
-                await client.send_message(destination, "Please enter your PSN display name, and nothing else.")
+                await client.send_message(
+                    destination, "Please enter your PSN display name, and nothing else.")
         # Next line does the whole loop by itself
         # name_msg = await client.wait_for_message(author=discord_author,check=check_if_valid_user)
         dest_name = name_msg.content
         discord_dict = {'id' : discord_author.id, 'discord_name' : disc_name}
-        discord_dict['membership_id'] = session.query(Account.id).filter(Account.display_name == dest_name).first()[0]
+        discord_dict['membership_id'] = session.query(Account.id).filter(
+            Account.display_name == dest_name).first()[0]
         new_discord_user = Discord(**discord_dict)
         session.add(new_discord_user)
         session.commit()
-        await client.send_message(destination, f"{disc_name}, you have been successfully registered!")
+        await client.send_message(
+            destination, f"{disc_name}, you have been successfully registered!")
         return dest_name
 
     @client.event
     async def on_message(message):
+        """Handles commands based on messages sent"""
         if message.content.startswith('!timeleft'):
             output = time_left()
             await client.send_message(message.channel, output)
 
         elif message.content.startswith('!help'):
-            await client.send_message(message.channel, 'See the #command-list channel for a list of commands.')
+            await client.send_message(
+                message.channel, 'See the #command-list channel for a list of commands.')
 
         elif message.content.startswith('Right Gary?'):
             await client.send_message(message.channel, 'Right.')
@@ -102,7 +119,8 @@ def run_bot():
 
         # elif message.author.name == "Roscroft" and message.channel.is_private:
         #     if not message.content == "Roscroft":
-        #         await client.send_message(discord.Object(id='322173351059521537'), message.content)
+        #         await client.send_message(discord.Object(id='322173351059521537'),
+        # message.content)
 
         elif message.content.startswith('!channel-id'):
             print(message.channel.id)
@@ -111,7 +129,7 @@ def run_bot():
             player = await register_handler(message.author)
             content = message.content
             return_dict, error_msg = validate(content, player)
-            if return_dict == None:
+            if return_dict is None:
                 await client.send_message(message.channel, error_msg)
             else:
                 data, msg, players = stat_request(return_dict)
@@ -122,7 +140,8 @@ def run_bot():
                     output = multi_stat_format(data, msg)
                     await client.send_message(message.channel, embed=output)
             #if message.channel.id is not '342754108534554624':
-           #     await client.send_message(message.channel, "Please use the #stat channel for stat requests.")
+           #     await client.send_message(message.channel,
+           #  "Please use the #stat channel for stat requests.")
             #else:
             # valid, players, code, stat = validate(player, content)
             # if valid and len(players) == 0:
@@ -138,7 +157,7 @@ def run_bot():
             content += " vs "
             content += " ".join(all_players)
             return_dict, error_msg = validate(content, player)
-            if return_dict == None:
+            if return_dict is None:
                 await client.send_message(message.channel, error_msg)
             else:
                 data, msg, players = stat_request(return_dict)
@@ -161,25 +180,26 @@ def run_bot():
             await client.send_message(message.channel, output)
 
     client.run(os.environ['DISCORD_APIKEY'])
-    
+
 def check_players(player_list):
+    """Returns true if all players listed are actual players. Case insensitive."""
     player_list = [p.replace("%", " ") for p in player_list]
     all_players = [item[0].lower() for item in SESSION().query(Account.display_name).all()]
     players_are_valid = [True if player.lower() in all_players else False for player in player_list]
     return all(players_are_valid)
 
 def validate(request, player):
+    """Takes in a request and validates it; returns either an error or a request_dict"""
     #Table name, primary keys (id and mode), column name(s), player name(s), message
-    #TODO: update this with other modes
     info = request.split(" ")
     try:
-        command = info[0]
+        # command = info[0]
         c_mode = info[1]
         c_stat = info[2]
         multi = False
         if len(info) > 3:
             multi = True
-            vs = info[3]
+            isvs = info[3]
             player_list = info[4:]
     except IndexError:
         error = "Improperly formatted request. Please see the #command-list channel."
@@ -189,7 +209,7 @@ def validate(request, player):
     valid_mode = c_mode in mode_dict.keys()
     valid_stat = c_stat in stat_dict.keys()
     if multi:
-        valid_vs = vs == "vs"
+        valid_vs = isvs == "vs"
         valid_player_list = check_players(player_list)
     if not valid_command:
         error = "Invalid command. Try !help for a list of possible commands."
@@ -205,7 +225,8 @@ def validate(request, player):
             error = "Use 'vs' without quotes to compare stats with others."
             return None, error
         elif not valid_player_list:
-            error = "One or more of the players you listed is not in the clan, or is not spelled properly."
+            error = ("One or more of the players you listed is not in the clan, "
+                     "or is not spelled properly.")
             return None, error
     return_dict = {}
     return_dict["mode"] = mode_dict[c_mode]
@@ -218,31 +239,37 @@ def validate(request, player):
     return return_dict, ""
 
 def stat_request(request_dict):
+    """Uses a request_dict to build a stat response"""
     mode = request_dict["mode"]
     table = request_dict["table"]
     column = request_dict["column"]
     message = request_dict["message"]
     players = request_dict["players"]
     players = [player.lower() for player in players]
-    
+
     session = SESSION()
-    res = session.query(*(getattr(table, col) for col in [column]), Account.display_name).join(Account).filter(func.lower(Account.display_name).in_(players), table.mode == mode).all()
+    attr = (getattr(table, col) for col in [column])
+    res = session.query(*(attr), Account.display_name).join(Account).filter(
+        func.lower(Account.display_name).in_(players), table.mode == mode).all()
     data = [(item[1], truncate_decimals(item[0])) for item in res if item[0] is not None]
     data = sorted(data, key=lambda x: x[1], reverse=True)
     return (data, message, players)
 
 def single_stat_format(data, message, players):
+    """Returns an inline formatted request response"""
     return f"```{message} for {players[0]}: {data[0][1]}```"
 
 def multi_stat_format(data, message):
-    em = discord.Embed(title = f"{message}", colour=0xADD8E6)
+    """Takes in multi-stat request data and builds a returnable embed"""
+    embed = discord.Embed(title=f"{message}", colour=0xADD8E6)
     if len(data) > 10:
         data = data[:9]
     for (name, num) in data:
-        em.add_field(name=name, value=num)
-    return em
+        embed.add_field(name=name, value=num)
+    return embed
 
 def clan_graph_request(data, message):
+    """Takes in request data and builds a graph from it"""
     plt.clf()
     #num_bins = 45
     #n, bins, patches = plt.hist(nums, num_bins, facecolor='blue', alpha=0.5)
@@ -252,9 +279,9 @@ def clan_graph_request(data, message):
     objects = [item[0] for item in data]
     #objects = [" " if item != player else item for item in objects]
     values = [item[1] for item in data]
-    
-    fig, ax = plt.subplots(figsize=(20,6))
-    ax.set_facecolor("#F3F3F3")
+
+    fig, axes = plt.subplots(figsize=(20, 6))
+    axes.set_facecolor("#F3F3F3")
     index = np.arange(len(objects))
     plt.bar(index, values, alpha=0.4, color="gold", edgecolor="black", align='center')
     #0096DB
@@ -270,28 +297,32 @@ def clan_graph_request(data, message):
 def light_level_request(player):
     """Retrieves the character light levels of a player"""
     session = SESSION()
-    data = session.query(Character.light_level, ClassReference.class_name).join(Account).join(ClassReference, and_(ClassReference.id==Character.class_hash)).filter(Account.display_name == player).all()
+    data = session.query(Character.light_level, ClassReference.class_name).join(Account).join(
+        ClassReference, and_(ClassReference.id == Character.class_hash)).filter(
+            Account.display_name == player).all()
     return data
 
 def truncate_decimals(num):
+    """Checks for significant figures and truncates decimals accordingly"""
     #Apparently I have to write my own damn significant figures checker
-    if num%1==0:
+    if num % 1 == 0:
         result = num
     elif num > 10000:
         result = Decimal(num).quantize(Decimal('1.'))
     else:
         def first_power_of_ten(power, num):
+            """Returns the first power of ten less than a number"""
             if num > power:
                 return power
-            else:
-                return first_power_of_ten(power/10, num)
+            return first_power_of_ten(power/10, num)
         power = first_power_of_ten(1000, num)
         prec = power/1000
         result = Decimal(num).quantize(Decimal(str(prec)))
     return result
 
 def time_left():
-    release = datetime.date(2017,9,6)
+    """Returns the amount of time left until release."""
+    release = datetime.date(2017, 9, 6)
     today = datetime.date.today()
     until_release = str((release-today).days)
     output = "There are "+until_release+" days until release!"

@@ -1,15 +1,14 @@
 #!/usr/bin/python
 """Model for the app, handles the manifest and all database operations."""
 import os
-import json
-import sqlite3
-import requests
 import zipfile
 import shutil
 
+import requests
+
 import initdb
 import builddb
-import discordBot
+import discordbot
 
 def check_db():
     """Check to see if a database exists"""
@@ -45,4 +44,4 @@ def build_db(opts):
 
 def run_discord():
     """Runs the Discord bot"""
-    discordBot.run_bot()
+    discordbot.run_bot()
