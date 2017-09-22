@@ -1,13 +1,16 @@
+#!/usr/bin/python3.6
+"""Testing purposes only"""
 import os
-import sys
 import json
 import requests
 
-write_files = True
+WRITE = True
 URL_START = "https://bungie.net/Platform"
 APP_PATH = "/etc/destinygotg"
 
+
 def testscript():
+    """Test stuff"""
     # Specify a URL
     destinyMembershipId = 4611686018456448671
     characterId = 2305843009266030136
@@ -28,13 +31,15 @@ def testscript():
     out_file = "testJSON.json"
     # Request a JSON
     request_session = requests.Session()
-    data = json_request(request_session, url, out_file)
+    json_request(request_session, url, out_file)
     # Write the JSON
 
 def make_header():
+    """Makes the header"""
     return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
 
 def json_request(request_session, url, out_file):
+    """Performs a JSON request"""
     print(url)
     headers = make_header()
     res = request_session.get(url, headers=headers)
@@ -46,18 +51,18 @@ def json_request(request_session, url, out_file):
         return None
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
-        if write_files:
-            with open(f"JSON/{out_file}","w+") as f:
-                json.dump(data, f)
+        if WRITE:
+            with open(f"JSON/{out_file}", "w+") as write_file:
+                json.dump(data, write_file)
         print("Writing file...")
         return data
     else:
         print("Error Status: " + error_stat)
-        return None 
+        return None
 
 if __name__ == "__main__":
-    config = open(f"{APP_PATH}/config", "r").readlines()
-    for value in config:
-        value = value.strip().split(":")
-        os.environ[value[0]] = value[1]
+    with open(CONFIG, 'r') as config_file:
+        config = json.load(config_file)
+        for value in config:
+            os.environ[value] = str(config[value])
     testscript()

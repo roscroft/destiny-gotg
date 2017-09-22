@@ -234,9 +234,9 @@ def handle_character_table():
                 'kwargs': {'id': 'membership_id'},
                 'url_params': {'membership_id': 'membership_id',
                                'membership_type': 'membership_type'},
-                'values': {'id': [['characterId']], 'level': [['baseCharacterLevel']], 
-                           'class_hash': [['classHash']], 'class_type': [['classType']], 
-                           'last_played': [['dateLastPlayed']], 'light_level': [['light']], 
+                'values': {'id': [['characterId']], 'level': [['baseCharacterLevel']],
+                           'class_hash': [['classHash']], 'class_type': [['classType']],
+                           'last_played': [['dateLastPlayed']], 'light_level': [['light']],
                            'minutes_played': [['minutesPlayedTotal']], 'race_hash': [['raceHash']],
                            'race_type': [['raceType']]},
                 'statics': {'membership_id': 'membership_id'},
@@ -573,9 +573,9 @@ def remove_duplicates(add_list):
     zipped_list = [(item.id, item.__tablename__, item) for item in add_list]
     seen = set()
     final_list = []
-    for id, tablename, item in zipped_list:
-        if not (id, tablename) in seen:
-            seen.add((id, tablename))
+    for uid, tablename, item in zipped_list:
+        if not (uid, tablename) in seen:
+            seen.add((uid, tablename))
             final_list.append(item)
     return final_list
 

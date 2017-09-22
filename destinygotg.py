@@ -140,8 +140,6 @@ def config_exists():
         return True
     print("No config file")
     return False
-    #TODO: Implement config file checker to see if it has all fields
-
 
 def run_flask():
     """Runs the Flask portion of the project. Currently useless."""
