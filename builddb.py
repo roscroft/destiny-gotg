@@ -14,12 +14,15 @@ from sqlalchemy.inspection import inspect
 from destinygotg import SESSION
 from initdb import LastUpdated, Bungie, Account, Character, CharacterTotalStats, \
         CharacterWeaponStats, CharacterExoticWeaponStats, CharacterMedalStats, \
-        AccountTotalStats, AccountWeaponStats
+        AccountTotalStats, AccountWeaponStats, ClassReference, WeaponReference#, \
         # AccountExoticWeaponStats, AccountMedalStats
 
 URL_START = "https://bungie.net/Platform"
 OLD_URL_START = "https://bungie.net/d1/Platform"
 UPDATE_DIFF = 1 # Number of days between updates
+REQUEST_SESSION = requests.session()
+SESSION = SESSION()
+
 
 def make_header():
     """Takes the APIKEY from the config file and makes a header."""
@@ -78,19 +81,75 @@ def build_db(opts):
 #           ,'statics':{'static1':'attr1', ...}
 #           ,'primary_keys':{'key_name1':'attr1', ...}}
 
-def request_and_insert(session, request_session, info_map, static_map, url, out_file, message, iterator, table):
+def request_and_insert(table_builder):
+    """Uses a table_builder object to handle request and insertions."""
+    add_list = []
+    data = json_request(table_builder.get_url(), table_builder.get_file(), table_builder.get_msg())
+    
+    if data is None:
+        print("No data retrieved.")
+        return []
+    
+    group = dynamic_dict_index(data, table_builder.iterator)
+    
+    if group is None:
+        print("Nothing to insert.")
+        return []
+    
+    if isinstance(group, dict):
+        group = group.items()
+    for elem in group:
+        if elem is None:
+            continue
+        # build_dict uses a nifty dynamic dictionary indexing function that allows us to grab
+        # info from multiply-nested fields in the dict
+        if isinstance(elem, tuple):
+            # We're in a dict, so we need to add info to the insert dict from the key and the value
+            tuple_key_info = {}
+            if table_builder.table == CharacterTotalStats or 
+               table_builder.table == CharacterWeaponStats:
+                tuple_key_info = {'mode':elem[0]}
+                # This is as normal
+                tuple_value_info = build_dict(elem[1], table_builder.values)
+                # Combine the dicts
+                insert_dict = {**tuple_key_info, **tuple_value_info}
+            else:
+                insert_dict = build_dict(elem[1], table_builder.values)
+        else:
+            insert_dict = build_dict(elem, table_builder.values)
+        #Handle Bungie's weird time format
+        for key in insert_dict.keys():
+            if key == "last_played" or key == "period":
+                insert_dict[key] = datetime.strptime(insert_dict[key], "%Y-%m-%dT%H:%M:%SZ")
+        # print(insert_dict)
+        #Statics are pre-defined values - maybe the id from user.id in define_params
+        if hasattr(table_builder, 'statics'):
+            insert_dict = {**insert_dict, **static_map}
+        #Create a new element for insertion using kwargs
+        insert_elem = table_builder.table(**insert_dict)
+        primary_key_map = {}
+        for key in table_builder.primary_keys:
+            primary_key_map[key] = getattr(insert_elem, key)
+        #Upsert the element
+        add_list.append(upsert(table, primary_key_map, insert_elem))
+    #Get rid of the None elements - they've been updated already
+    add_list = [item for item in add_list if item is not None]
+    return add_list
+
+def request_and_insert(info_map, static_map, url, out_file, message):
     """Does everything else"""
+    table = info_map['table']
     #Figure out if we need to update. We have kwargs and the table name, so just check LastUpdated
     # for it.
     add_list = []
     #Actual request done here
-    data = json_request(request_session, url, out_file, message)
+    data = json_request(url, out_file, message)
     if data is None:
         print("No data retrieved.")
         return []
     # dynamic_dict_index gives us the specific iterator in the json we'll be using - could be games,
     # characters, weapons, etc.
-    group = dynamic_dict_index(data, iterator)
+    group = dynamic_dict_index(data, info_map['iterator'])
     if group is None:
         print("Nothing to insert.")
         return []
@@ -130,19 +189,58 @@ def request_and_insert(session, request_session, info_map, static_map, url, out_
         for key in info_map['primary_keys']:
             primary_key_map[key] = getattr(insert_elem, key)
         #Upsert the element
-        add_list.append(upsert(table, primary_key_map, insert_elem, session))
+        add_list.append(upsert(table, primary_key_map, insert_elem))
     #Get rid of the None elements - they've been updated already
     add_list = [item for item in add_list if item is not None]
     return add_list
 
-def define_params(query_table, info_map, url_function, iterator, table):
+def handle_table_builder(url_function, query_table, info_map, iterator, table):
+    table_builder = TableBuilder(url_function, query_table, info_map, iterator, table)
+    
+class RequestInfo(object):
+    """Contains info necessary for handling a request."""
+
+    def __init__(self, url_function):
+        pass
+
+class TableBuilder(object):
+    """Contains all of the necessary info to build a table."""
+
+    attr_map = {}
+    url_params = {}
+
+    def __init__(self, url_function, query_table, info_map, iterator, table):
+        self.url_function = url_function
+        self.query_table = query_table
+        self.info_map = info_map
+        self.iterator = iterator
+        self.table = table
+    
+    def retrieve_params(self):
+        """Uses the info_map to retrieve necessary parameters."""
+
+    def get_url(self):
+        """Builds the actual url string."""
+        return url_function(**url_params)
+
+    def get_file(self):
+        """Builds the out file name."""
+        return f"{attr_map['name']}_{table.__tablename__}.json"
+
+    def get_msg(self):
+        """Builds the print message."""
+        return f"Fetching {self.table.__tablename__} data for: {self.attr_map['name']}"
+
+def request_and_insert(table_builder):
+
+    
+
+def define_params(query_table, info_map):
     """Does like everything"""
     #Build a single request session for the duration of the table creation
-    request_session = requests.session()
-    session = SESSION()
     total_add_list = []
     #Elems is what we'll be iterating through - could be users, characters, etc.
-    elems = session.query(query_table).all()
+    elems = SESSION.query(query_table).all()
     for elem in elems:
         # Attrs are the attributes associated with the elem. User.id or user.membership_type,
         # for example. AKA fields in the database.
@@ -151,42 +249,39 @@ def define_params(query_table, info_map, url_function, iterator, table):
             try:
                 attr_map[key] = getattr(elem, value)
             except AttributeError:
-                attr_map[key] = getattr(session.query(Account).filter_by(
+                attr_map[key] = getattr(SESSION.query(Account).filter_by(
                     id=attr_map['membership_id']).first(), value)
         #url_params are used to build the request URL.
         url_params = build_value_dict(info_map['url_params'], attr_map)
-        url = url_function(**url_params)
+        url = info_map['url'](**url_params)
         out_file = f"{attr_map['name']}_{table.__tablename__}.json"
         message = f"Fetching {table.__tablename__} data for: {attr_map['name']}"
         #Statics actually need to get passed to the insert function so they can be put in the table.
         static_map = build_value_dict(info_map['statics'], attr_map)
         #Kwargs are used to check if the database needs updating for the current elem.
         kwargs = build_value_dict(info_map['kwargs'], attr_map)
-        kwargs['table_name'] = table.__tablename__
-        to_update = needs_update(kwargs, session)
+        kwargs['table_name'] = info_map['table'].__tablename__
+        to_update = needs_update(kwargs)
         to_update = True
         if not to_update:
             print(f"Not updating {table.__tablename__} table for user: {attr_map['name']}")
             add_list = []
-        add_list = request_and_insert(session, request_session, info_map, static_map, url, out_file,
-                                      message, iterator, table)
+        add_list = request_and_insert(info_map, static_map, url, out_file, message)
         total_add_list = total_add_list + add_list
         #Upsert into LastUpdated
         update_id = attr_map[info_map['kwargs']['id']]
-        update_item = set_last_updated(update_id, table, session)
+        update_item = set_last_updated(update_id, info_map['table'])
         total_add_list = total_add_list + [update_item]
     total_add_list = [item for item in total_add_list if item is not None]
     # final_list = remove_duplicates(total_add_list)
     final_list = total_add_list
-    session.add_all(final_list)
-    session.commit()
+    SESSION.add_all(final_list)
+    SESSION.commit()
 
 def handle_bungie_table():
     """Fills Bungie table with all users in the clan"""
     # Destiny 2 changes results per page to be 100. Because there is a max of 100 people in
     # the clan, we don't need the extra stuff here anymore.
-    session = SESSION()
-    request_session = requests.Session()
     info_map = {'values': {'id': [['bungieNetUserInfo', 'membershipId']],
                            'id_2':[['destinyUserInfo', 'membershipId']],
                            'bungie_name':[['bungieNetUserInfo', 'displayName']],
@@ -194,17 +289,16 @@ def handle_bungie_table():
                            'membership_type':[['bungieNetUserInfo', 'membershipType']],
                            'membership_type_2':[['destinyUserInfo', 'membershipType']]},
                 'kwargs': {'id': 'id'},
-                'primary_keys': ['id']}
-    clan_url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
+                'primary_keys': ['id'],
+                'iterator': ['Response', 'results'],
+                'table': Bungie}
+    url = f"{URL_START}/GroupV2/{os.environ['BUNGIE_CLANID']}/Members/?currentPage=1"
     out_file = "clanUsers.json"
     message = "Fetching list of clan users."
-    iterator = ['Response', 'results']
-    table = Bungie
-    add_list = request_and_insert(session, request_session, info_map, {}, clan_url,
-                                  out_file, message, iterator, table)
+    add_list = request_and_insert(info_map, {}, url, out_file, message)
     final_list = remove_duplicates(add_list)
-    session.add_all(final_list)
-    session.commit()
+    SESSION.add_all(final_list)
+    SESSION.commit()
 
 def handle_account_table():
     """Retrieve JSONs for users, listing their Destiny accounts. Fills account table."""
@@ -218,10 +312,11 @@ def handle_account_table():
                 'values': {'id': [['membershipId']], 'membership_type' : [['membershipType']],
                            'display_name': [['displayName']]},
                 'statics': {'bungie_id': 'id'},
-                'primary_keys' : ['id']}
-    iterator = ['Response', 'destinyMemberships']
-    table = Account
-    define_params(query_table, info_map, account_url, iterator, table)
+                'primary_keys' : ['id'],
+                'url': account_url,
+                'iterator': ['Response', 'destinyMemberships'],
+                'table': Account}
+    define_params(query_table, info_map)
 
 def handle_character_table():
     """Fills the Character table."""
@@ -240,10 +335,11 @@ def handle_character_table():
                            'minutes_played': [['minutesPlayedTotal']], 'race_hash': [['raceHash']],
                            'race_type': [['raceType']]},
                 'statics': {'membership_id': 'membership_id'},
-                'primary_keys': ['id']}
-    iterator = ['Response', 'characters', 'data']
-    table = Character
-    define_params(query_table, info_map, character_url, iterator, table)
+                'primary_keys': ['id'],
+                'url': character_url,
+                'iterator': ['Response', 'characters', 'data'],
+                'table': Character}
+    define_params(query_table, info_map)
 
 def handle_character_total_table():
     """Fills the CharacterTotalStats table."""
@@ -258,16 +354,17 @@ def handle_character_total_table():
                                'membership_id':'membership_id'},
                 'values': {'': [['allTime'], ['basic', 'value']]},
                 'statics': {'id': 'id'},
-                'primary_keys': ['id', 'mode']}
-    iterator = ['Response']
-    table = CharacterTotalStats
-    define_params(query_table, info_map, activity_url, iterator, table)
+                'primary_keys': ['id', 'mode'],
+                'url': activity_url,
+                'iterator': ['Response'],
+                'table': CharacterTotalStats}
+    define_params(query_table, info_map)
 
 def handle_weapon_stats_table():
     """Fills the CharacterWeaponStats table."""
     def weapon_url(membership_type, membership_id, id):
         """Builds weapon URL."""
-        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=2"""
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=2"
     query_table = Character
     info_map = {'attrs': {'id': 'id', 'membership_id': 'membership_id', 'name': 'display_name',
                           'membership_type': 'membership_type'},
@@ -276,16 +373,17 @@ def handle_weapon_stats_table():
                                'membership_id':'membership_id'},
                 'values': {'': [['allTime'], ['basic', 'value']]},
                 'statics': {'id': 'id'},
-                'primary_keys': ['id', 'mode']}
-    iterator = ['Response']
-    table = CharacterWeaponStats
-    define_params(query_table, info_map, weapon_url, iterator, table)
+                'primary_keys': ['id', 'mode'],
+                'url': weapon_url,
+                'iterator': ['Response'],
+                'table': CharacterWeaponStats}
+    define_params(query_table, info_map)
 
 def handle_exotic_weapon_table():
     """Fills the CharacterExoticWeaponStats table."""
-    def weapon_url(membership_type, membership_id, id):
+    def exotic_url(membership_type, membership_id, id):
         """Builds exotic weapon URL."""
-        return f"""{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/?groups=103"""
+        return f"{URL_START}/Destiny2/{membership_type}/Account/{membership_id}/Character/{id}/Stats/UniqueWeapons/"
     query_table = Character
     info_map = {'attrs': {'id': 'id', 'membership_id': 'membership_id', 'name': 'display_name',
                           'membership_type':'membership_type'},
@@ -294,10 +392,11 @@ def handle_exotic_weapon_table():
                                'membership_id': 'membership_id'},
                 'values': {'': [['allTime'], ['basic', 'value']]},
                 'statics': {'id': 'id'},
-                'primary_keys': ['id', 'mode']}
-    iterator = ['Response']
-    table = CharacterExoticWeaponStats
-    define_params(query_table, info_map, weapon_url, iterator, table)
+                'primary_keys': ['id', 'mode'],
+                'url': exotic_url,
+                'iterator': ['Response'],
+                'table': CharacterExoticWeaponStats}
+    # define_params(query_table, info_map)
 
 def handle_medal_table():
     """Fills the CharacterMedalStats table."""
@@ -310,29 +409,29 @@ def handle_medal_table():
                 'url_params': {'id': 'id', 'membership_type': 'membership_type'},
                 'values': {'': [[], ['basic', 'value']]},
                 'statics': {'id': 'id'},
-                'primary_keys': ['id']}
-    iterator = ['Response', 'mergedAllCharacters', 'merged', 'allTime']
-    table = CharacterMedalStats
-    define_params(query_table, info_map, medal_url, iterator, table)
+                'primary_keys': ['id'],
+                'url': medal_url,
+                'iterator': ['Response', 'mergedAllCharacters', 'merged', 'allTime'],
+                'table': CharacterMedalStats}
+    # define_params(query_table, info_map)
 
 def handle_account_updates():
     """Fills account with remaining columns needing aggregation from character table."""
     # Need to add records for max_light_level and minutes_played
     # First, grab all account records
-    session = SESSION()
     table = Account
-    elems = session.query(table).all()
+    elems = SESSION.query(table).all()
     for elem in elems:
-        max_light = session.query(func.max(Character.light_level)).join(Account).filter(
+        max_light = SESSION.query(func.max(Character.light_level)).join(Account).filter(
             Character.membership_id == elem.id).first()[0]
-        minutes_played = session.query(func.sum(Character.minutes_played)).join(Account).filter(
+        minutes_played = SESSION.query(func.sum(Character.minutes_played)).join(Account).filter(
             Character.membership_id == elem.id).first()[0]
-        most_recently_played = session.query(func.max(Character.last_played)).join(Account).filter(
+        most_recently_played = SESSION.query(func.max(Character.last_played)).join(Account).filter(
             Character.membership_id == elem.id).first()[0]
-        session.query(Account).filter(Account.id == elem.id).update(
+        SESSION.query(Account).filter(Account.id == elem.id).update(
             {'max_light': max_light, 'total_minutes_played': minutes_played,
              'most_recently_played': most_recently_played})
-    session.commit()
+    SESSION.commit()
 
 def handle_filling_account_tables():
     """Fills account tables from the character tables. Rebuilds Float columns cleverly."""
@@ -341,7 +440,6 @@ def handle_filling_account_tables():
     # 2. Anything that is a float needs to be averaged.
     # In fact, let's just ignore anything that is a float, and recalculate those at out convenience.
     # Every stat group has an activitiesEntered column we can use for per game stats.
-    session = SESSION()
     table_list = [(CharacterTotalStats, AccountTotalStats),
                   (CharacterWeaponStats, AccountWeaponStats)]
                   # (CharacterExoticWeaponStats, AccountExoticWeaponStats),
@@ -349,7 +447,7 @@ def handle_filling_account_tables():
     mode_list = ["allPvP", "allStrikes", "story", "patrol"]
     add_list = []
     for src_table, dst_table in table_list:
-        elems = session.query(Account).all()
+        elems = SESSION.query(Account).all()
         for elem in elems:
             print(f"Updating {dst_table.__tablename__} table for {elem.display_name}.")
             for mode in mode_list:
@@ -363,7 +461,7 @@ def handle_filling_account_tables():
                 for column in basics:
                     col = [column]
                     attr = (getattr(src_table, column) for column in col)
-                    value = session.query(func.sum(*attr)).join(Character).filter(
+                    value = SESSION.query(func.sum(*attr)).join(Character).filter(
                         Character.membership_id == elem.id, src_table.mode == mode).first()[0]
                     update_dict[column] = value
                 for column in pgas:
@@ -412,83 +510,63 @@ def handle_filling_account_tables():
                 for key in primary_key_list:
                     primary_key_map[key] = getattr(insert_elem, key)
                 #Upsert the element
-                add_list.append(upsert(dst_table, primary_key_map, insert_elem, session))
+                add_list.append(upsert(dst_table, primary_key_map, insert_elem))
     add_list = [item for item in add_list if item is not None]
-    session.add_all(add_list)
-    session.commit()
+    SESSION.add_all(add_list)
+    SESSION.commit()
 
 # def handle_filling_account_table_averages():
-#     session = SESSION()
 #     table_list = [AccountTotalStats, AccountWeaponStats]
 #     for table in table_list:
 
 
 def handle_reference_tables():
     """Connects to the manifest.content database and builds the necessary reference tables."""
-    session = SESSION()
-    def build_reference_table(table_name, table, statement, dictionary, condition=None):
+    def build_reference_table(table_name, table, statement, info_map, condition=None):
+        """Equivalent of the define_params function for the ref tables"""
         print(f"Building {table_name} reference table...")
         add_list = []
-        con = sqlite3.connect(os.environ['MANIFEST_CONTENT'])
+        con = sqlite3.connect(f"{os.environ['APP_PATH']}/{os.environ['MANIFEST_NAME']}")
         cur = con.cursor()
         with con:
             cur.execute(statement)
             group = cur.fetchall()
             for item in group:
                 item_info = json.loads(item[1])
-                item_dict = {}
                 if not condition is None and condition(item_info):
                     continue
-                for (key,value) in dictionary['info'].items():
-                    item_dict[key] = item_info[value]
+                item_dict = build_dict(item_info, info_map['values'])
                 new_item_def = table(**item_dict)
-                inspection = inspect(new_item_def)
-                object_dict = inspection.dict
                 primary_key_map = {}
-                for key in dictionary['primary_keys']:
-                    primary_key_map[key] = object_dict[key]
-                add_list.append(upsert(table, primary_key_map, new_item_def, session))
-        session.add_all(add_list)
-        session.commit()
+                for key in info_map['primary_keys']:
+                    primary_key_map[key] = getattr(new_item_def, key)
+                add_list.append(upsert(table, primary_key_map, new_item_def))
+        add_list = [item for item in add_list if item is not None]
+        SESSION.add_all(add_list)
+        SESSION.commit()
 
     # Classes
-    class_table = ClassReference
-    class_info = {'info':{'id':'classHash', 'class_name':'className'}, 'primary_keys':{'id'}}
+    class_info = {'values': {'id': [['hash']],
+                             'class_name':[['displayProperties', 'name']]},
+                  'primary_keys':['id']}
     class_statement = "SELECT * FROM DestinyClassDefinition"
-    class_dict = build_reference_table("class", class_table, class_statement, class_info)
+    build_reference_table("class", ClassReference, class_statement, class_info)
 
     # Weapons
-    weapon_table = WeaponReference
-    weapon_info = {'info':{'id':'itemHash', 'weapon_name':'itemName', 'weapon_type':'itemTypeName'}, 'weapon_rarity':'tierTypeName', 'primary_keys':{'id'}}
+    weapon_info = {'values': {'id': [['hash']],
+                              'weapon_name': [['displayProperties', 'name']],
+                              'weapon_type': [['itemTypeDisplayName']],
+                              'weapon_rarity': [['inventory', 'tierTypeName']]},
+                   'primary_keys': ['id']}
     weapon_statement = "SELECT * FROM DestinyInventoryItemDefinition"
     def weapon_condition(info):
-        weapon_types = ['Rocket Launcher', 'Scout Rifle', 'Fusion Rifle', 'Sniper Rifle', 'Shotgun', 'Machine Gun', 'Pulse Rifle', 'Auto Rifle', 'Hand Cannon', 'Sidearm']
-        return not ("itemTypeName" in info and info['itemTypeName'] in weapon_types)
-    weapon_dict = build_reference_table("weapon", weapon_table, weapon_statement, weapon_info, weapon_condition)
-
-    # Activities
-    activity_table = ActivityReference
-    activity_info = {'info':{'id':'activityHash', 'activity_name':'activityName', 'activity_type_hash':'activityTypeHash'}, 'primary_keys':{'id'}}
-    activity_statement = "SELECT * FROM DestinyActivityDefinition"
-    def activity_condition(info):
-        return not ("activityName" in info)
-    activity_dict = build_reference_table("activity", activity_table, activity_statement, activity_info, activity_condition)
-
-    # Activity types
-    activity_type_table = ActivityTypeReference
-    activity_type_info = {'info':{'id':'activityTypeHash', 'activity_type_name':'activityTypeName'}, 'primary_keys':{'id'}}
-    activity_type_statement = "SELECT * FROM DestinyActivityTypeDefinition"
-    def activity_type_condition(info):
-        return not ("activityTypeName" in info)
-    activity_type_dict = build_reference_table("activity type", activity_type_table, activity_type_statement, activity_type_info, activity_type_condition)
-
-    # Buckets
-    bucket_table = BucketReference
-    bucket_info = {'info':{'id':'bucketHash', 'bucket_name':'bucketName'}, 'primary_keys':{'id'}}
-    bucket_statement = "SELECT * FROM DestinyInventoryBucketDefinition"
-    def bucket_condition(info): 
-        return not ("bucketName" in info)
-    bucket_dict = build_reference_table("bucket", bucket_table, bucket_statement, bucket_info, bucket_condition)
+        """Checks if the item is a weapon or not"""
+        weapon_types = ['Rocket Launcher', 'Scout Rifle', 'Fusion Rifle', 'Sniper Rifle',
+                        'Shotgun', 'Machine Gun', 'Pulse Rifle', 'Auto Rifle', 'Hand Cannon',
+                        'Sidearm', 'Submachinegun']
+        return not ("itemTypeDisplayName" in info and info['itemTypeDisplayName'] in weapon_types)
+    build_reference_table(
+        "weapon", WeaponReference, weapon_statement, weapon_info, weapon_condition)
 
 def dynamic_dict_index(dct, value):
     """Allows for dynamic indexing of a dictionary given a value list."""
@@ -523,12 +601,12 @@ def build_dict(dct, value_map):
                 out_dict[key] = dynamic_dict_index(loop_dict, val_list[1])
     return out_dict
 
-def json_request(request_session, url, out_file, message=""):
+def json_request(url, out_file, message=""):
     """Performs a JSON request and potentially writes to a file."""
     print(f"Connecting to Bungie: {url}")
     print(message)
     headers = make_header()
-    res = request_session.get(url, headers=headers)
+    res = REQUEST_SESSION.get(url, headers=headers)
     #print(res.text)
     try:
         data = res.json()
@@ -538,29 +616,29 @@ def json_request(request_session, url, out_file, message=""):
     error_stat = data['ErrorStatus']
     if error_stat == "Success":
         if os.environ["WRITE_FILES"]:
-            with open(f"JSON/{out_file}", "w+") as writefile:
-                json.dump(data, writefile)
+            with open(f"JSON/{out_file}", "w+") as write_file:
+                json.dump(data, write_file)
         return data
     else:
         print("Error Status: " + error_stat)
         return None
 
-def upsert(table, primary_key_map, obj, session):
+def upsert(table, primary_key_map, obj):
     """Decides whether to insert or update an object."""
-    first = session.query(table).filter_by(**primary_key_map).first()
+    first = SESSION.query(table).filter_by(**primary_key_map).first()
     if first != None:
         keys = table.__table__.columns.keys()
-        session.query(table).filter_by(**primary_key_map).update(
+        SESSION.query(table).filter_by(**primary_key_map).update(
             {column: getattr(obj, column) for column in keys})
         return None
     return obj
 
-def needs_update(kwargs, session):
+def needs_update(kwargs):
     """Given a primary key list, returns True if a record hasn't been updated in the last
     UPDATE_DIFF period."""
     now = datetime.now()
     try:
-        last_update = session.query(LastUpdated).filter_by(**kwargs).first().last_updated
+        last_update = SESSION.query(LastUpdated).filter_by(**kwargs).first().last_updated
         print("Fetching last update...")
         days_since = (now - last_update).days
         # print (f"Days since update: {days_since}")
@@ -579,13 +657,13 @@ def remove_duplicates(add_list):
             final_list.append(item)
     return final_list
 
-def set_last_updated(update_id, table, session):
+def set_last_updated(update_id, table):
     """Updates the LastUpdated table with the time a primary key/table pair was updated."""
     update_dict = {'id': update_id, 'table_name': table.__tablename__,
                    'last_updated': datetime.now()}
     update_elem = LastUpdated(**update_dict)
     update_primary_key = {'id' : update_dict['id'], 'table_name' : update_dict['table_name']}
-    return upsert(LastUpdated, update_primary_key, update_elem, session)
+    return upsert(LastUpdated, update_primary_key, update_elem)
 
 def build_value_dict(target_map, attr_map):
     """Takes a target and the attribute map, and returns a dict with the require attrs."""

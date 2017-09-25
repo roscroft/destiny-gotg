@@ -1,20 +1,19 @@
 #!/usr/bin/python
 """Initializes the entire database."""
-import os
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from destinygotg import ENGINE
 
-Base = declarative_base()
+BASE = declarative_base()
 
-class Bungie(Base):
+class Bungie(BASE):
     __tablename__ = 'bungie'
     id = Column(String(50), primary_key=True)
     bungie_name = Column(String(50), nullable=False)
     membership_type = Column(Integer, nullable=False)
 
-class Account(Base):
+class Account(BASE):
     __tablename__ = 'account'
     id = Column(Integer, primary_key=True)
     display_name = Column(String(50), nullable=False)
@@ -25,7 +24,7 @@ class Account(Base):
     max_light = Column(Integer)
     most_recently_played = Column(DateTime)
 
-class Character(Base):
+class Character(BASE):
     __tablename__ = 'character'
     id = Column(Integer, primary_key=True)
     membership_id = Column(Integer, ForeignKey('account.id'))
@@ -39,7 +38,7 @@ class Character(Base):
     race_hash = Column(Integer)
     race_type = Column(Integer)
 
-class Discord(Base):
+class Discord(BASE):
     __tablename__ = 'discord'
     id = Column(Integer, primary_key=True)
     membership_id = Column(Integer, ForeignKey('account.id'), primary_key=True)
@@ -356,75 +355,75 @@ class MedalStats(object):
     medalsWinningScore = Column(Integer)
     medalsZoneCapturedBInitial = Column(Integer)
 
-class AccountTotalStats(TotalStats, Base):
+class AccountTotalStats(TotalStats, BASE):
     __tablename__ = "accountTotalStats"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
 
-class CharacterTotalStats(TotalStats, Base):
+class CharacterTotalStats(TotalStats, BASE):
     __tablename__ = "characterTotalStats"
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
 
-class AccountWeaponStats(WeaponStats, Base):
+class AccountWeaponStats(WeaponStats, BASE):
     __tablename__ = "accountWeaponStats"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
 
-class CharacterWeaponStats(WeaponStats, Base):
+class CharacterWeaponStats(WeaponStats, BASE):
     __tablename__ = "characterWeaponStats"
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
 
-class AccountExoticWeaponStats(WeaponStats, Base):
+class AccountExoticWeaponStats(BASE):
     __tablename__ = "accountExoticWeaponStats"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
 
-class CharacterExoticWeaponStats(WeaponStats, Base):
+class CharacterExoticWeaponStats(BASE):
     __tablename__ = "characterExoticWeaponStats"
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
 
-class AccountMedalStats(MedalStats, Base):
+class AccountMedalStats(MedalStats, BASE):
     __tablename__ = "accountMedalStats"
     id = Column(Integer, ForeignKey('account.id'), primary_key=True)
     account = relationship(Account)
 
-class CharacterMedalStats(MedalStats, Base):
+class CharacterMedalStats(MedalStats, BASE):
     __tablename__ = "characterMedalStats"
     id = Column(Integer, ForeignKey('character.id'), primary_key=True)
     character = relationship(Character)
 
-# class ActivityReference(Base):
-#     __tablename__ = 'activityReference'
-#     id = Column(Integer, primary_key=True)
-#     activity_name = Column(String(50))
-#     activity_type_hash = Column(String(50))
+class ActivityReference(BASE):
+    __tablename__ = 'activityReference'
+    id = Column(Integer, primary_key=True)
+    activity_name = Column(String(50))
+    activity_type_hash = Column(String(50))
 
-# class ActivityTypeReference(Base):
-#     __tablename__ = 'activityTypeReference'
-#     id = Column(Integer, primary_key=True)
-#     activity_type_name = Column(String(50))
+class ActivityTypeReference(BASE):
+    __tablename__ = 'activityTypeReference'
+    id = Column(Integer, primary_key=True)
+    activity_type_name = Column(String(50))
 
-# class ClassReference(Base):
-#     __tablename__ = 'classReference'
-#     id = Column(Integer, primary_key=True)
-#     class_name = Column(String(50))
+class ClassReference(BASE):
+    __tablename__ = 'classReference'
+    id = Column(Integer, primary_key=True)
+    class_name = Column(String(50))
 
-# class WeaponReference(Base):
-#     __tablename__ = 'weaponReference'
-#     id = Column(Integer, primary_key=True)
-#     weapon_name = Column(String(50))
-#     weapon_type = Column(String(50))
-#     weapon_rarity = Column(String(50))
+class WeaponReference(BASE):
+    __tablename__ = 'weaponReference'
+    id = Column(Integer, primary_key=True)
+    weapon_name = Column(String(50))
+    weapon_type = Column(String(50))
+    weapon_rarity = Column(String(50))
 
-# class BucketReference(Base):
-#     __tablename__ = 'bucketReference'
-#     id = Column(Integer, primary_key=True)
-#     bucket_name = Column(String(50))
+class BucketReference(BASE):
+    __tablename__ = 'bucketReference'
+    id = Column(Integer, primary_key=True)
+    bucket_name = Column(String(50))
 
-class LastUpdated(Base):
+class LastUpdated(BASE):
     __tablename__ = 'lastUpdated'
     id = Column(Integer, primary_key=True)
     table_name = Column(String(50), primary_key=True)
@@ -432,7 +431,7 @@ class LastUpdated(Base):
 
 def init_db(opts):
     """Initialized and optionally clears out the database"""
-    Base.metadata.bind = ENGINE
+    BASE.metadata.bind = ENGINE
     if opts["clean"]:
-        Base.metadata.drop_all(ENGINE)
-    Base.metadata.create_all(ENGINE)
+        BASE.metadata.drop_all(ENGINE)
+    BASE.metadata.create_all(ENGINE)

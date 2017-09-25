@@ -3,6 +3,7 @@
 import os
 import zipfile
 import shutil
+# import json
 
 import requests
 
@@ -25,8 +26,10 @@ def check_manifest():
 def get_manifest():
     """Pulls the requested definitions into the manifest database"""
     manifest_url = "http://www.bungie.net/Platform/Destiny2/Manifest/"
-    res = requests.get(manifest_url)
+    res = requests.get(manifest_url, headers=make_header())
     manifest = res.json()
+    # with open("manifestJSON.json", "w+") as write_file:
+    #     json.dump(manifest, write_file)
     mani_url = f"http://www.bungie.net/{manifest['Response']['mobileWorldContentPaths']['en']}"
     #Download the file, write it to MANZIP
     res = requests.get(mani_url)
@@ -35,8 +38,9 @@ def get_manifest():
     #Extract the file contents, and rename the extracted file
     with zipfile.ZipFile(f"{os.environ['APP_PATH']}/MANZIP") as zip_file:
         name = zip_file.namelist()
-        zip_file.extractall()
-    shutil.move(name[0], f"{os.environ['APP_PATH']}/{os.environ['MANIFEST_NAME']}")
+        zip_file.extractall(f"{os.environ['APP_PATH']}/")
+    shutil.move(f"{os.environ['APP_PATH']}/{name[0]}",
+                f"{os.environ['APP_PATH']}/{os.environ['MANIFEST_NAME']}")
 
 def build_db(opts):
     """Main function to build the full database"""
@@ -45,3 +49,7 @@ def build_db(opts):
 def run_discord():
     """Runs the Discord bot"""
     discordbot.run_bot()
+
+def make_header():
+    """Takes the APIKEY from the config file and makes a header."""
+    return {'X-API-KEY':os.environ['BUNGIE_APIKEY']}
