@@ -6,8 +6,9 @@ from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import exists, func, and_
 import numpy as np
-import matplotlib as mpl
+import matplotlib as mpl; mpl.use('Agg')
 import matplotlib.pyplot as plt
+plt.rcdefaults()
 
 import discord
 
@@ -15,8 +16,6 @@ from destinygotg import SESSION
 from initdb import Discord, Account, Character, Bungie, ClassReference
 from statDicts import stat_dict, mode_dict
 
-plt.rcdefaults()
-mpl.use('Agg')
 
 
 def run_bot():
@@ -32,13 +31,6 @@ def run_bot():
         print(client.user.name)
         print(client.user.id)
         print('------')
-
-    @client.event
-    async def query_database(channel, statement, connection):
-        """Performs a simple sql query against the database"""
-        result = connection.execute(statement)
-        result_list = [row for row in result]
-        await client.send_message(channel, result_list)
 
     @client.event
     async def register_handler(discord_author):
@@ -93,91 +85,84 @@ def run_bot():
     @client.event
     async def on_message(message):
         """Handles commands based on messages sent"""
-        if message.content.startswith('!timeleft'):
+        content = message.content
+        channel = message.channel
+
+        if content.startswith('!timeleft'):
             output = time_left()
-            await client.send_message(message.channel, output)
+            await client.send_message(channel, output)
 
-        elif message.content.startswith('!help'):
+        elif content.startswith('!help'):
             await client.send_message(
-                message.channel, 'See the #command-list channel for a list of commands.')
+                channel, 'See the #command-list channel for a list of commands.')
 
-        elif message.content.startswith('Right Gary?'):
-            await client.send_message(message.channel, 'Right.')
+        elif content.startswith('Right Gary?'):
+            await client.send_message(channel, 'Right.')
 
-        elif message.content.startswith('Say goodbye'):
-            await client.send_message(message.channel, 'beep boop')
+        elif content.startswith('Say goodbye'):
+            await client.send_message(channel, 'beep boop')
 
-        # elif message.content.startswith('!sql'):
-        #     role_list = [role.name for role in message.author.roles]
-        #     if "@administrator" in role_list and "bot developer" in role_list:
-        #         statement = message.content[5:]
-        #         connection = engine.connect()
-        #         channel = message.channel
-        #         await query_database(channel, statement, connection)
-        #     else:
-        #         await client.send_message(message.channel, "Permission denied!")
-
-        # elif message.author.name == "Roscroft" and message.channel.is_private:
-        #     if not message.content == "Roscroft":
+        # elif message.author.name == "Roscroft" and channel.is_private:
+        #     if not content == "Roscroft":
         #         await client.send_message(discord.Object(id='322173351059521537'),
-        # message.content)
+        # content)
 
-        elif message.content.startswith('!channel-id'):
-            print(message.channel.id)
+        elif content.startswith('!channel-id'):
+            print(channel.id)
 
-        elif message.content.startswith("!stat"):
+        elif content.startswith("!stat"):
             player = await register_handler(message.author)
-            content = message.content
+            content = content
             return_dict, error_msg = validate(content, player)
             if return_dict is None:
-                await client.send_message(message.channel, error_msg)
+                await client.send_message(channel, error_msg)
             else:
                 data, msg, players = stat_request(return_dict)
                 if len(data) == 1:
                     output = single_stat_format(data, msg, players)
-                    await client.send_message(message.channel, output)
+                    await client.send_message(channel, output)
                 else:
                     output = multi_stat_format(data, msg)
-                    await client.send_message(message.channel, embed=output)
-            #if message.channel.id is not '342754108534554624':
-           #     await client.send_message(message.channel,
+                    await client.send_message(channel, embed=output)
+            #if channel.id is not '342754108534554624':
+           #     await client.send_message(channel,
            #  "Please use the #stat channel for stat requests.")
             #else:
             # valid, players, code, stat = validate(player, content)
             # if valid and len(players) == 0:
             #     output = single_stat_request(player, code, stat)
             #     #await client.send_message(discord.Object(id='342754108534554624'), output)
-            #     await client.send_message(message.channel, output)# embed=output)
+            #     await client.send_message(channel, output)# embed=output)
 
-        elif message.content.startswith("!clangraph"):
+        elif content.startswith("!clangraph"):
             player = await register_handler(message.author)
             all_players = [item[0] for item in SESSION().query(Account.display_name).all()]
             all_players = [p.replace(" ", "%") for p in all_players]
-            content = message.content
+            content = content
             content += " vs "
             content += " ".join(all_players)
             return_dict, error_msg = validate(content, player)
             if return_dict is None:
-                await client.send_message(message.channel, error_msg)
+                await client.send_message(channel, error_msg)
             else:
                 data, msg, players = stat_request(return_dict)
                 clan_graph_request(data, msg)
-                await client.send_file(message.channel, './Figures/hist.png')
+                await client.send_file(channel, './Figures/hist.png')
 
-        elif message.content.startswith("!clanstat"):
+        elif content.startswith("!clanstat"):
             pass
 
-        elif message.content.startswith("!members"):
+        elif content.startswith("!members"):
             num_members = SESSION().query(func.count(Bungie.id)).first()[0]
-            await client.send_message(message.channel, num_members)
+            await client.send_message(channel, num_members)
 
-        elif message.content.startswith('!light'):
+        elif content.startswith('!light'):
             player = await register_handler(message.author)
             data = light_level_request(player)
             output = ""
             for item in data:
                 output += f"{item[1]}: {item[0]} "
-            await client.send_message(message.channel, output)
+            await client.send_message(channel, output)
 
     client.run(os.environ['DISCORD_APIKEY'])
 
@@ -304,7 +289,6 @@ def light_level_request(player):
 
 def truncate_decimals(num):
     """Checks for significant figures and truncates decimals accordingly"""
-    #Apparently I have to write my own damn significant figures checker
     if num % 1 == 0:
         result = num
     elif num > 10000:
